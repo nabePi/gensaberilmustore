@@ -1,0 +1,11 @@
+# Tooling / IDE
+.claude/
+.tokensave/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*

@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Buku Anak - GenSa Berilmu</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;500;600;700;800&family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body class="kids-body">
+
+<header class="site-header kids-header">
+  <div class="container header-inner">
+    <div class="header-left">
+      <a href="index.html" class="logo">
+        <img src="https://d33tu7komhhdsg.cloudfront.net/fL0bTwfYBTXRta-Ne8XDN_vScOqHAKlW4IHMcivnhbI/auto/0/250/no/1/bG9jYWw6Ly8vYnVzaW5lc3MvMjAyMS0xMi9neTZlZThjZWUwOTI0MGUyNmFhYWNlL2FsYnVtcy9wcm9maWxlL3BkZnRvanBnbWUtMS1jdXRvdXQucG5n.webp" height="50" alt="Logo" title="Logo" loading="eager" style="object-fit:contain;height:50px;" fetchpriority="high" class="h-[50px] w-auto">
+      </a>
+      <nav class="main-nav">
+        <a href="index.html" class="nav-link">Beranda</a>
+        <a href="index.html#produk" class="nav-link">Produk</a>
+        <a href="kids.html" class="nav-link">Buku Anak</a>
+      </nav>
+    </div>
+    <div class="search-bar">
+      <svg viewBox="0 0 24 24" class="icon-search"><path d="M10 4a6 6 0 104.47 10.03l4.75 4.75 1.41-1.41-4.75-4.75A6 6 0 0010 4zm0 2a4 4 0 110 8 4 4 0 010-8z"/></svg>
+      <input type="text" placeholder="Cari buku anak...">
+    </div>
+    <div class="header-actions">
+      <a href="cart.html" class="icon-btn cart-btn" aria-label="Keranjang">
+        <svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" role="img" width="25" height="25" viewBox="0 0 24 24" class="icon-cart"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M6.331 8H17.67a2 2 0 0 1 1.977 2.304l-1.255 8.152A3 3 0 0 1 15.426 21H8.574a3 3 0 0 1-2.965-2.544l-1.255-8.152A2 2 0 0 1 6.331 8"></path><path d="M9 11V6a3 3 0 0 1 6 0v5"></path></g></svg>
+        <span class="cart-count" id="cartCount">0</span>
+      </a>
+      <a href="login.html" class="btn btn-outline">
+        <svg viewBox="0 0 24 24" class="btn-icon" aria-hidden="true"><path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4M10 17l5-5-5-5M15 12H3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Masuk
+      </a>
+      <a href="signup.html" class="btn btn-solid">
+        <svg viewBox="0 0 24 24" class="btn-icon" aria-hidden="true"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2M12 11a4 4 0 100-8 4 4 0 000 8z" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Daftar
+      </a>
+    </div>
+    <button class="mobile-toggle" id="mobileToggle" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</header>
+
+<main>
+  <section class="kids-hero">
+    <div class="container kids-hero-inner">
+      <div class="kids-hero-text">
+        <span class="kids-badge">Selamat Datang, Kecil!</span>
+        <h1>Dunia Buku yang Ceria dan Penuh Warna</h1>
+        <p>Temukan ribuan buku edukatif, dongeng seru, dan aktivitas menyenangkan untuk si kecil. Belajar jadi lebih happy!</p>
+        <div class="kids-hero-actions">
+          <a href="#kategori" class="btn btn-solid kids-btn">Jelajahi Kategori</a>
+          <a href="#buku" class="btn btn-outline kids-btn-outline">Lihat Buku Populer</a>
+        </div>
+      </div>
+      <div class="kids-hero-image">
+        <img src="assets/generated/hero-kids.png" alt="Anak-anak Muslim membaca buku bersama">
+      </div>
+    </div>
+  </section>
+
+  <section class="kids-section kids-cream" id="kategori">
+    <div class="container">
+      <div class="kids-section-head">
+        <span class="kids-section-badge">Pilih Sesuai Usia</span>
+        <h2>Kategori Usia</h2>
+        <p>Buku terbaik untuk setiap tahap tumbuh kembang si kecil</p>
+      </div>
+      <div class="kids-age-grid">
+        <a href="#" class="kids-age-card age-baby">
+          <div class="kids-age-image">
+            <img src="assets/generated/age-0-2.png" alt="Kategori 0-2 Tahun">
+          </div>
+          <span class="kids-age-title">0 - 2 Tahun</span>
+          <span class="kids-age-desc">Board book &amp; sensory</span>
+        </a>
+        <a href="#" class="kids-age-card age-toddler">
+          <div class="kids-age-image">
+            <img src="assets/generated/age-3-6.png" alt="Kategori 3-6 Tahun">
+          </div>
+          <span class="kids-age-title">3 - 6 Tahun</span>
+          <span class="kids-age-desc">Dongeng &amp; aktivitas</span>
+        </a>
+        <a href="#" class="kids-age-card age-kid">
+          <div class="kids-age-image">
+            <img src="assets/generated/age-7-9.png" alt="Kategori 7-9 Tahun">
+          </div>
+          <span class="kids-age-title">7 - 9 Tahun</span>
+          <span class="kids-age-desc">Komik &amp; pengetahuan</span>
+        </a>
+        <a href="#" class="kids-age-card age-tween">
+          <div class="kids-age-image">
+            <img src="assets/generated/age-10-12.png" alt="Kategori 10-12 Tahun">
+          </div>
+          <span class="kids-age-title">10 - 12 Tahun</span>
+          <span class="kids-age-desc">Novel &amp; inspirasi</span>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <section class="kids-section kids-mint" id="buku">
+    <div class="container">
+      <div class="kids-section-head">
+        <span class="kids-section-badge">Paling Disukai</span>
+        <h2>Buku Populer Anak</h2>
+        <p>Koleksi cerita dan edukasi yang bikin si kecil semangat belajar</p>
+      </div>
+      <div class="kids-products">
+        <div class="product-card kids-product">
+          <div class="product-image">
+            <img src="assets/generated/book-petualangan.png" alt="Petualangan Si Kecil">
+          </div>
+          <div class="product-info">
+            <h3 class="product-title">Petualangan Si Kecil</h3>
+            <p class="product-author">GenSa Kids</p>
+            <div class="product-price">
+              <span class="price-final">Rp 45.000</span>
+              <span class="price-old">Rp 60.000</span>
+            </div>
+            <button class="btn btn-solid btn-sm">Tambah ke Keranjang</button>
+          </div>
+        </div>
+        <div class="product-card kids-product">
+          <div class="product-image">
+            <img src="assets/generated/book-dongeng.png" alt="Dongeng Sebelum Tidur">
+          </div>
+          <div class="product-info">
+            <h3 class="product-title">Dongeng Sebelum Tidur</h3>
+            <p class="product-author">GenSa Kids</p>
+            <div class="product-price">
+              <span class="price-final">Rp 52.000</span>
+              <span class="price-old">Rp 70.000</span>
+            </div>
+            <button class="btn btn-solid btn-sm">Tambah ke Keranjang</button>
+          </div>
+        </div>
+        <div class="product-card kids-product">
+          <div class="product-image">
+            <img src="assets/generated/book-warna.png" alt="Belajar Warna & Bentuk">
+          </div>
+          <div class="product-info">
+            <h3 class="product-title">Belajar Warna &amp; Bentuk</h3>
+            <p class="product-author">GenSa Kids</p>
+            <div class="product-price">
+              <span class="price-final">Rp 38.000</span>
+              <span class="price-old">Rp 50.000</span>
+            </div>
+            <button class="btn btn-solid btn-sm">Tambah ke Keranjang</button>
+          </div>
+        </div>
+        <div class="product-card kids-product">
+          <div class="product-image">
+            <img src="assets/generated/book-nabi.png" alt="Kisah Nabi untuk Anak">
+          </div>
+          <div class="product-info">
+            <h3 class="product-title">Kisah Nabi untuk Anak</h3>
+            <p class="product-author">GenSa Kids</p>
+            <div class="product-price">
+              <span class="price-final">Rp 55.000</span>
+              <span class="price-old">Rp 75.000</span>
+            </div>
+            <button class="btn btn-solid btn-sm">Tambah ke Keranjang</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="kids-section kids-coral">
+    <div class="container">
+      <div class="kids-section-head">
+        <span class="kids-section-badge">Murah Meriah</span>
+        <h2>Buku Diskon</h2>
+        <p>Dapatkan buku favorit si kecil dengan harga spesial, stok terbatas!</p>
+      </div>
+      <div class="kids-products">
+        <div class="product-card kids-product">
+          <div class="product-image">
+            <span class="discount-tag">-30%</span>
+            <img src="assets/generated/diskon-1.png" alt="Aku Sayang Orang Tua">
+          </div>
+          <div class="product-info">
+            <h3 class="product-title">Aku Sayang Orang Tua</h3>
+            <p class="product-author">GenSa Kids</p>
+            <div class="product-price">
+              <span class="price-final">Rp 35.000</span>
+              <span class="price-old">Rp 50.000</span>
+            </div>
+            <button class="btn btn-solid btn-sm">Tambah ke Keranjang</button>
+          </div>
+        </div>
+        <div class="product-card kids-product">
+          <div class="product-image">
+            <span class="discount-tag">-25%</span>
+            <img src="assets/generated/diskon-2.png" alt="Cerita Lebaran Seru">
+          </div>
+          <div class="product-info">
+            <h3 class="product-title">Cerita Lebaran Seru</h3>
+            <p class="product-author">GenSa Kids</p>
+            <div class="product-price">
+              <span class="price-final">Rp 41.250</span>
+              <span class="price-old">Rp 55.000</span>
+            </div>
+            <button class="btn btn-solid btn-sm">Tambah ke Keranjang</button>
+          </div>
+        </div>
+        <div class="product-card kids-product">
+          <div class="product-image">
+            <span class="discount-tag">-40%</span>
+            <img src="assets/generated/diskon-3.png" alt="Sekolah di Hutan">
+          </div>
+          <div class="product-info">
+            <h3 class="product-title">Sekolah di Hutan</h3>
+            <p class="product-author">GenSa Kids</p>
+            <div class="product-price">
+              <span class="price-final">Rp 30.000</span>
+              <span class="price-old">Rp 50.000</span>
+            </div>
+            <button class="btn btn-solid btn-sm">Tambah ke Keranjang</button>
+          </div>
+        </div>
+        <div class="product-card kids-product">
+          <div class="product-image">
+            <span class="discount-tag">-20%</span>
+            <img src="assets/generated/diskon-4.png" alt="Harta Karun Ilmu">
+          </div>
+          <div class="product-info">
+            <h3 class="product-title">Harta Karun Ilmu</h3>
+            <p class="product-author">GenSa Kids</p>
+            <div class="product-price">
+              <span class="price-final">Rp 48.000</span>
+              <span class="price-old">Rp 60.000</span>
+            </div>
+            <button class="btn btn-solid btn-sm">Tambah ke Keranjang</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="kids-section kids-yellow">
+    <div class="container">
+      <div class="kids-promo">
+        <div class="kids-promo-text">
+          <span class="kids-section-badge">Spesial</span>
+          <h2>Paket Hadiah Si Kecil</h2>
+          <p>Dapatkan bundling buku anak dengan harga spesial dan bonus sticker lucu. Cocok untuk kado ulang tahun atau hadiah prestasi!</p>
+          <a href="#" class="btn btn-solid kids-btn">Lihat Paket Hadiah</a>
+        </div>
+        <div class="kids-promo-image">
+          <img src="assets/generated/promo-gift.png" alt="Paket Hadiah Buku Anak">
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="kids-section kids-cta-section">
+    <div class="kids-cta-bg">
+      <img src="assets/generated/cta-kids-bg.png" alt="">
+    </div>
+    <div class="container kids-cta-wrap">
+      <div class="kids-cta">
+        <h2>Yuk, Jelajahi Dunia Buku Bersama GenSa Berilmu!</h2>
+        <p>Setiap buku adalah petualangan baru untuk si kecil. Temukan koleksi lengkapnya sekarang.</p>
+        <a href="index.html" class="btn btn-solid kids-btn">Kembali ke Beranda</a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <div class="container footer-top">
+    <div class="footer-col about">
+      <img src="https://d33tu7komhhdsg.cloudfront.net/fL0bTwfYBTXRta-Ne8XDN_vScOqHAKlW4IHMcivnhbI/auto/0/250/no/1/bG9jYWw6Ly8vYnVzaW5lc3MvMjAyMS0xMi9neTZlZThjZWUwOTI0MGUyNmFhYWNlL2FsYnVtcy9wcm9maWxlL3BkZnRvanBnbWUtMS1jdXRvdXQucG5n.webp" height="50" alt="Logo" title="Logo" loading="eager" style="object-fit:contain;height:50px;" fetchpriority="high" class="footer-logo h-[50px] w-auto">
+      <p><strong>GenSa Berilmu</strong> adalah toko online resmi dari PT. Generasi Shalahuddin Berilmu. Kami berkomitmen menyediakan berbagai produk edukasi, buku anak, dan kebutuhan keluarga berkualitas untuk mendukung tumbuh kembang generasi yang cerdas dan berkarakter.</p>
+    </div>
+    <div class="footer-col">
+      <h4>MENU</h4>
+      <ul>
+        <li><a href="#">Terms &amp; Conditions</a></li>
+        <li><a href="#">Privacy Policy</a></li>
+        <li><a href="#">Tentang Kami</a></li>
+        <li><a href="#">Daftar Reseller</a></li>
+        <li><a href="#">My Account</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>KONTAK KAMI</h4>
+      <ul class="contact-list">
+        <li>
+          <span class="contact-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"/></svg>
+          </span>
+          <a href="https://wa.me/6281234567890">0812-3456-7890</a>
+        </li>
+        <li>
+          <span class="contact-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+          </span>
+          <a href="mailto:info@gensaberilmu.co.id">info@gensaberilmu.co.id</a>
+        </li>
+        <li class="address">
+          <span class="contact-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          </span>
+          <span>Jl. Raya Bogor KM. 29, Cibinong, Bogor 16912, Indonesia</span>
+        </li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>SOSIAL MEDIA</h4>
+      <div class="social-icons">
+        <a href="#" aria-label="X">
+          <svg viewBox="0 0 24 24" class="social-icon"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+        </a>
+        <a href="#" aria-label="Instagram">
+          <svg viewBox="0 0 24 24" class="social-icon"><rect x="2" y="2" width="20" height="20" rx="5" ry="5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37z" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </a>
+        <a href="#" aria-label="Facebook">
+          <svg viewBox="0 0 24 24" class="social-icon"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+        </a>
+        <a href="#" aria-label="YouTube">
+          <svg viewBox="0 0 24 24" class="social-icon"><path d="M23.498 6.186a3.016 3.016 0 00-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 00.502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 002.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 002.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+        </a>
+      </div>
+    </div>
+  </div>
+  <div class="container footer-bottom">
+    <p>&copy; 2025 PT. Generasi Shalahuddin Berilmu</p>
+  </div>
+</footer>
+
+<script src="script.js"></script>
+</body>
+</html>
