@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kelola Pesanan - Admin Panel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="container header-inner">
+    <div class="header-left">
+      <a href="index.html" class="logo">
+        <img src="https://d33tu7komhhdsg.cloudfront.net/fL0bTwfYBTXRta-Ne8XDN_vScOqHAKlW4IHMcivnhbI/auto/0/250/no/1/bG9jYWw6Ly8vYnVzaW5lc3MvMjAyMS0xMi9neTZlZThjZWUwOTI0MGUyNmFhYWNlL2FsYnVtcy9wcm9maWxlL3BkZnRvanBnbWUtMS1jdXRvdXQucG5n.webp" height="50" alt="Logo">
+      </a>
+      <nav class="main-nav">
+        <a href="index.html" class="nav-link">Beranda</a>
+        <a href="admin.html" class="nav-link" style="color:var(--orange);font-weight:700;">Admin</a>
+      </nav>
+    </div>
+    <div class="header-actions" id="headerActions">
+      <a href="cart.html" class="icon-btn cart-btn" aria-label="Keranjang">
+        <svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" role="img" width="25" height="25" viewBox="0 0 24 24" class="icon-cart"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M6.331 8H17.67a2 2 0 01 1.977 2.304l-1.255 8.152A3 3 0 0115.426 21H8.574a3 3 0 01-2.965-2.544l-1.255-8.152A2 2 0 016.331 8"></path><path d="M9 11V6a3 3 0 016 0v5"></path></g></svg>
+      </a>
+    </div>
+    <button class="mobile-toggle" id="mobileToggle" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</header>
+
+<main>
+  <div class="container">
+    <section class="member-layout">
+
+      <aside class="member-sidebar">
+        <div class="member-profile" id="adminProfile"></div>
+        <nav class="member-nav">
+          <a href="admin.html" class="member-nav-link">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Dashboard
+          </a>
+          <a href="admin-pesanan.html" class="member-nav-link active">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 11H5a2 2 0 00-2 2v6a2 2 0 002 2h14a2 2 0 002-2v-6a2 2 0 00-2-2h-4M9 11V5a2 2 0 012-2h2a2 2 0 012 2v6M9 11h6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Pesanan
+          </a>
+          <a href="admin-board.html" class="member-nav-link">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3H4a1 1 0 00-1 1v16a1 1 0 001 1h5V3zM20 3h-5v8h5a1 1 0 001-1V4a1 1 0 00-1-1zM10 13h5v9h-5a1 1 0 01-1-1v-7a1 1 0 011-1zM20 13h-5v9h5a1 1 0 001-1v-7a1 1 0 00-1-1z" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Board
+          </a>
+          <a href="admin-fulfillment.html" class="member-nav-link">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9L12 3zm0 13l5.5-3.1L12 10 6.5 12.9 12 16z" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Fulfillment
+          </a>
+          <a href="admin-produk.html" class="member-nav-link">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4M4 7l8 4M4 7v10l8 4m0-10v10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Produk
+          </a>
+          <a href="admin-member.html" class="member-nav-link">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8zM23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Member
+          </a>
+          <a href="admin-pos.html" class="member-nav-link">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a2 2 0 100 4 2 2 0 000-4zM6 8h12v11a2 2 0 01-2 2H8a2 2 0 01-2-2V8zm-2 0v11a4 4 0 004 4h8a4 4 0 004-4V8h2a2 2 0 012 2v3a2 2 0 01-2 2h-2v-2h2v-3H4v3h2v2H4a2 2 0 01-2-2v-3a2 2 0 012-2h2z" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            POS
+          </a>
+          <a href="admin-afiliasi.html" class="member-nav-link">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Afiliasi
+          </a>
+          <a href="admin-laporan.html" class="member-nav-link">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 20V10M12 20V4M6 20v-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Laporan
+          </a>
+          <a href="admin-laporan-lengkap.html" class="member-nav-link">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 17v-2a2 2 0 012-2h6a2 2 0 012 2v2M9 11V9a2 2 0 012-2h6a2 2 0 012 2v2M9 5V3a2 2 0 012-2h6a2 2 0 012 2v2M4 5h16M4 9h16M4 13h16M4 17h16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Laporan Lengkap
+          </a>
+          <a href="admin-pengaturan.html" class="member-nav-link">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12.22 2h-.44a2 2 0 00-2 2v.18a2 2 0 01-1 1.73l-.43.25a2 2 0 01-2 0l-.15-.08a2 2 0 00-2.73.73l-.22.38a2 2 0 00.73 2.73l.15.1a2 2 0 011 1.72v.51a2 2 0 01-1 1.74l-.15.09a2 2 0 00-.73 2.73l.22.38a2 2 0 002.73.73l.15-.08a2 2 0 012 0l.43.25a2 2 0 011 1.73V20a2 2 0 002 2h.44a2 2 0 002-2v-.18a2 2 0 011-1.73l.43-.25a2 2 0 012 0l.15.08a2 2 0 002.73-.73l.22-.39a2 2 0 00-.73-2.73l-.15-.08a2 2 0 01-1-1.74v-.5a2 2 0 011-1.74l.15-.09a2 2 0 00.73-2.73l-.22-.38a2 2 0 00-2.73-.73l-.15.08a2 2 0 01-2 0l-.43-.25a2 2 0 01-1-1.73V4a2 2 0 00-2-2z" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Pengaturan
+          </a>
+        </nav>
+        <button type="button" class="btn btn-outline member-logout" id="logoutBtn">
+          <svg viewBox="0 0 24 24" class="btn-icon" aria-hidden="true"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Keluar
+        </button>
+      </aside>
+
+      <div class="member-content">
+        <div class="member-page-head">
+          <div>
+            <h1>Kelola Pesanan</h1>
+            <p class="member-greeting">Manajemen semua pesanan pelanggan</p>
+          </div>
+          <span class="member-count" id="orderCount">0 pesanan</span>
+        </div>
+
+        <div class="member-toolbar">
+          <div class="admin-toolbar-left">
+            <input type="text" class="member-filter" id="searchInput" placeholder="Cari ID pesanan atau email...">
+            <select class="member-filter" id="statusFilter">
+              <option value="">Semua Status</option>
+              <option value="pending">Menunggu Pembayaran</option>
+              <option value="paid">Lunas</option>
+              <option value="packed">Dikemas</option>
+              <option value="shipping">Dikirim</option>
+              <option value="completed">Selesai</option>
+              <option value="cancelled">Dibatalkan</option>
+            </select>
+          </div>
+          <div class="admin-toolbar-right">
+            <button type="button" class="btn btn-outline btn-sm" id="exportBtn">Export CSV</button>
+          </div>
+        </div>
+
+        <div id="ordersTable"></div>
+        <div class="member-empty" id="ordersEmpty" style="display:none;">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 11H5a2 2 0 00-2 2v6a2 2 0 002 2h14a2 2 0 002-2v-6a2 2 0 00-2-2h-4M9 11V5a2 2 0 012-2h2a2 2 0 012 2v6M9 11h6" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <p>Tidak ada pesanan ditemukan.</p>
+        </div>
+      </div>
+
+    </section>
+  </div>
+</main>
+
+<div class="admin-modal" id="orderModal">
+  <div class="admin-modal-backdrop" data-close="orderModal"></div>
+  <div class="admin-modal-content admin-modal-content--lg">
+    <div class="admin-modal-head">
+      <h3 id="modalTitle">Detail Pesanan</h3>
+      <button type="button" class="admin-modal-close" data-close="orderModal">&times;</button>
+    </div>
+    <div class="admin-modal-body" id="modalBody"></div>
+    <div class="admin-modal-actions" id="modalActions"></div>
+  </div>
+</div>
+
+<footer class="site-footer">
+  <div class="container footer-bottom">
+    <p>&copy; 2025 PT. Generasi Shalahuddin Berilmu - Admin Panel</p>
+  </div>
+</footer>
+
+<script src="script.js"></script>
+<script src="admin-shared.js"></script>
+<script src="admin-pesanan.js"></script>
+</body>
+</html>
