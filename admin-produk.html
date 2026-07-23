@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kelola Produk - Admin Panel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="container header-inner">
+    <div class="header-left">
+      <a href="index.html" class="logo">
+        <img src="https://d33tu7komhhdsg.cloudfront.net/fL0bTwfYBTXRta-Ne8XDN_vScOqHAKlW4IHMcivnhbI/auto/0/250/no/1/bG9jYWw6Ly8vYnVzaW5lc3MvMjAyMS0xMi9neTZlZThjZWUwOTI0MGUyNmFhYWNlL2FsYnVtcy9wcm9maWxlL3BkZnRvanBnbWUtMS1jdXRvdXQucG5n.webp" height="50" alt="Logo">
+      </a>
+      <nav class="main-nav">
+        <a href="index.html" class="nav-link">Beranda</a>
+        <a href="admin.html" class="nav-link" style="color:var(--orange);font-weight:700;">Admin</a>
+      </nav>
+    </div>
+    <div class="header-actions" id="headerActions"></div>
+    <button class="mobile-toggle" id="mobileToggle" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</header>
+
+<main>
+  <div class="container">
+    <section class="member-layout">
+
+      <aside class="member-sidebar">
+        <div class="member-profile" id="adminProfile"></div>
+        <nav class="member-nav">
+          <a href="admin.html" class="member-nav-link">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Dashboard
+          </a>
+          <a href="admin-pesanan.html" class="member-nav-link">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 11H5a2 2 0 00-2 2v6a2 2 0 002 2h14a2 2 0 002-2v-6a2 2 0 00-2-2h-4M9 11V5a2 2 0 012-2h2a2 2 0 012 2v6M9 11h6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Pesanan
+          </a>
+          <a href="admin-board.html" class="member-nav-link">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3H4a1 1 0 00-1 1v16a1 1 0 001 1h5V3zM20 3h-5v8h5a1 1 0 001-1V4a1 1 0 00-1-1zM10 13h5v9h-5a1 1 0 01-1-1v-7a1 1 0 011-1zM20 13h-5v9h5a1 1 0 001-1v-7a1 1 0 00-1-1z" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Board
+          </a>
+          <a href="admin-fulfillment.html" class="member-nav-link">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9L12 3zm0 13l5.5-3.1L12 10 6.5 12.9 12 16z" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Fulfillment
+          </a>
+          <a href="admin-produk.html" class="member-nav-link active">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4M4 7l8 4M4 7v10l8 4m0-10v10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Produk
+          </a>
+          <a href="admin-member.html" class="member-nav-link">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8zM23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Member
+          </a>
+          <a href="admin-pos.html" class="member-nav-link">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a2 2 0 100 4 2 2 0 000-4zM6 8h12v11a2 2 0 01-2 2H8a2 2 0 01-2-2V8zm-2 0v11a4 4 0 004 4h8a4 4 0 004-4V8h2a2 2 0 012 2v3a2 2 0 01-2 2h-2v-2h2v-3H4v3h2v2H4a2 2 0 01-2-2v-3a2 2 0 012-2h2z" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            POS
+          </a>
+          <a href="admin-afiliasi.html" class="member-nav-link">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Afiliasi
+          </a>
+          <a href="admin-laporan.html" class="member-nav-link">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 20V10M12 20V4M6 20v-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Laporan
+          </a>
+          <a href="admin-laporan-lengkap.html" class="member-nav-link">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 17v-2a2 2 0 012-2h6a2 2 0 012 2v2M9 11V9a2 2 0 012-2h6a2 2 0 012 2v2M9 5V3a2 2 0 012-2h6a2 2 0 012 2v2M4 5h16M4 9h16M4 13h16M4 17h16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Laporan Lengkap
+          </a>
+          <a href="admin-pengaturan.html" class="member-nav-link">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12.22 2h-.44a2 2 0 00-2 2v.18a2 2 0 01-1 1.73l-.43.25a2 2 0 01-2 0l-.15-.08a2 2 0 00-2.73.73l-.22.38a2 2 0 00.73 2.73l.15.1a2 2 0 011 1.72v.51a2 2 0 01-1 1.74l-.15.09a2 2 0 00-.73 2.73l.22.38a2 2 0 002.73.73l.15-.08a2 2 0 012 0l.43.25a2 2 0 011 1.73V20a2 2 0 002 2h.44a2 2 0 002-2v-.18a2 2 0 011-1.73l.43-.25a2 2 0 012 0l.15.08a2 2 0 002.73-.73l.22-.39a2 2 0 00-.73-2.73l-.15-.08a2 2 0 01-1-1.74v-.5a2 2 0 011-1.74l.15-.09a2 2 0 00.73-2.73l-.22-.38a2 2 0 00-2.73-.73l-.15.08a2 2 0 01-2 0l-.43-.25a2 2 0 01-1-1.73V4a2 2 0 00-2-2z" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Pengaturan
+          </a>
+        </nav>
+        <button type="button" class="btn btn-outline member-logout" id="logoutBtn">
+          <svg viewBox="0 0 24 24" class="btn-icon" aria-hidden="true"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Keluar
+        </button>
+      </aside>
+
+      <div class="member-content">
+        <div class="member-page-head">
+          <div>
+            <h1>Kelola Produk</h1>
+            <p class="member-greeting">Manajemen katalog produk toko</p>
+          </div>
+          <div class="member-page-head-actions">
+            <span class="member-count" id="productCount">0 produk</span>
+            <button type="button" class="btn btn-solid" id="addProductBtn">+ Tambah Produk</button>
+          </div>
+        </div>
+
+        <div class="member-toolbar">
+          <div class="admin-toolbar-left">
+            <input type="text" class="member-filter" id="searchInput" placeholder="Cari nama produk atau penulis...">
+            <select class="member-filter" id="categoryFilter">
+              <option value="">Semua Kategori</option>
+              <option value="new">Buku Baru</option>
+              <option value="bestseller">Bestseller</option>
+              <option value="intl">Intl Bestseller</option>
+              <option value="keislaman">Keislaman</option>
+              <option value="klasik">Klasik & Rekomendasi</option>
+              <option value="lainnya">Lainnya</option>
+              <option value="custom">Custom Produk</option>
+            </select>
+            <select class="member-filter" id="stockFilter">
+              <option value="">Semua Stok</option>
+              <option value="instock">Stok Tersedia</option>
+              <option value="lowstock">Stok Menipis (<10)</option>
+              <option value="outofstock">Habis</option>
+            </select>
+          </div>
+        </div>
+
+        <div id="productsTable"></div>
+        <div class="member-empty" id="productsEmpty" style="display:none;">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4M4 7l8 4M4 7v10l8 4m0-10v10" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <p>Tidak ada produk ditemukan.</p>
+        </div>
+      </div>
+
+    </section>
+  </div>
+</main>
+
+<div class="admin-modal" id="productModal">
+  <div class="admin-modal-backdrop" data-close="productModal"></div>
+  <div class="admin-modal-content admin-modal-content--lg">
+    <div class="admin-modal-head">
+      <h3 id="productModalTitle">Tambah Produk</h3>
+      <button type="button" class="admin-modal-close" data-close="productModal">&times;</button>
+    </div>
+    <div class="admin-modal-body">
+      <form id="productForm">
+        <input type="hidden" id="productId">
+        <div class="admin-form-row">
+          <div class="form-group">
+            <label for="productName">Nama Produk</label>
+            <input type="text" id="productName" required placeholder="Judul buku atau produk">
+          </div>
+          <div class="form-group">
+            <label for="productAuthor">Penulis / Author</label>
+            <input type="text" id="productAuthor" required placeholder="Nama penulis">
+          </div>
+        </div>
+        <div class="admin-form-row">
+          <div class="form-group">
+            <label for="productPrice">Harga (Rp)</label>
+            <input type="number" id="productPrice" required placeholder="0" min="0">
+          </div>
+          <div class="form-group">
+            <label for="productDiscount">Diskon (%)</label>
+            <input type="number" id="productDiscount" value="0" min="0" max="100">
+          </div>
+        </div>
+        <div class="admin-form-row">
+          <div class="form-group">
+            <label for="productStock">Stok</label>
+            <input type="number" id="productStock" value="100" min="0">
+          </div>
+          <div class="form-group">
+            <label for="productCategory">Kategori</label>
+            <select id="productCategory">
+              <option value="new">Buku Baru</option>
+              <option value="bestseller">Bestseller</option>
+              <option value="intl">Intl Bestseller</option>
+              <option value="keislaman">Keislaman</option>
+              <option value="klasik">Klasik & Rekomendasi</option>
+              <option value="lainnya">Lainnya</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="productImage">URL Gambar</label>
+          <input type="url" id="productImage" placeholder="https://...">
+        </div>
+        <div class="form-group">
+          <label for="productDesc">Deskripsi</label>
+          <textarea id="productDesc" rows="3" placeholder="Deskripsi singkat produk..."></textarea>
+        </div>
+      </form>
+    </div>
+    <div class="admin-modal-actions">
+      <button type="button" class="btn btn-outline" data-close="productModal">Batal</button>
+      <button type="button" class="btn btn-solid" id="saveProductBtn">Simpan Produk</button>
+    </div>
+  </div>
+</div>
+
+<footer class="site-footer">
+  <div class="container footer-bottom">
+    <p>&copy; 2025 PT. Generasi Shalahuddin Berilmu - Admin Panel</p>
+  </div>
+</footer>
+
+<script src="script.js"></script>
+<script src="admin-shared.js"></script>
+<script src="admin-produk.js"></script>
+</body>
+</html>
