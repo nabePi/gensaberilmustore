@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Konfigurasi Tampilan - Admin Panel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="container header-inner">
+    <div class="header-left">
+      <a href="index.html" class="logo">
+        <img src="https://d33tu7komhhdsg.cloudfront.net/fL0bTwfYBTXRta-Ne8XDN_vScOqHAKlW4IHMcivnhbI/auto/0/250/no/1/bG9jYWw6Ly8vYnVzaW5lc3MvMjAyMS0xMi9neTZlZThjZWUwOTI0MGUyNmFhYWNlL2FsYnVtcy9wcm9maWxlL3BkZnRvanBnbWUtMS1jdXRvdXQucG5n.webp" height="50" alt="Logo">
+      </a>
+      <nav class="main-nav">
+        <a href="index.html" class="nav-link">Beranda</a>
+        <a href="admin.html" class="nav-link" style="color:var(--orange);font-weight:700;">Admin</a>
+      </nav>
+    </div>
+    <div class="header-actions" id="headerActions"></div>
+    <button class="mobile-toggle" id="mobileToggle" aria-label="Menu"><span></span><span></span><span></span></button>
+  </div>
+</header>
+
+<main>
+  <div class="container">
+    <section class="member-layout">
+
+      <aside class="member-sidebar">
+        <div class="member-profile" id="adminProfile"></div>
+        <nav class="member-nav">
+          <a href="admin.html" class="member-nav-link"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Dashboard</a>
+          <a href="admin-pesanan.html" class="member-nav-link"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 11H5a2 2 0 00-2 2v6a2 2 0 002 2h14a2 2 0 002-2v-6a2 2 0 00-2-2h-4M9 11V5a2 2 0 012-2h2a2 2 0 012 2v6M9 11h6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Pesanan</a>
+          <a href="admin-board.html" class="member-nav-link"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3H4a1 1 0 00-1 1v16a1 1 0 001 1h5V3zM20 3h-5v8h5a1 1 0 001-1V4a1 1 0 00-1-1zM10 13h5v9h-5a1 1 0 01-1-1v-7a1 1 0 011-1zM20 13h-5v9h5a1 1 0 001-1v-7a1 1 0 00-1-1z" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Board</a>
+          <a href="admin-fulfillment.html" class="member-nav-link"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9L12 3zm0 13l5.5-3.1L12 10 6.5 12.9 12 16z" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Fulfillment</a>
+          <a href="admin-produk.html" class="member-nav-link"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4M4 7l8 4M4 7v10l8 4m0-10v10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Produk</a>
+          <a href="admin-member.html" class="member-nav-link"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8zM23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Member</a>
+          <a href="admin-pos.html" class="member-nav-link"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a2 2 0 100 4 2 2 0 000-4zM6 8h12v11a2 2 0 01-2 2H8a2 2 0 01-2-2V8zm-2 0v11a4 4 0 004 4h8a4 4 0 004-4V8h2a2 2 0 012 2v3a2 2 0 01-2 2h-2v-2h2v-3H4v3h2v2H4a2 2 0 01-2-2v-3a2 2 0 012-2h2z" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>POS</a>
+          <a href="admin-afiliasi.html" class="member-nav-link"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Afiliasi</a>
+          <a href="admin-laporan.html" class="member-nav-link"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 20V10M12 20V4M6 20v-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Laporan</a>
+          <a href="admin-laporan-lengkap.html" class="member-nav-link"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 17v-2a2 2 0 012-2h6a2 2 0 012 2v2M9 11V9a2 2 0 012-2h6a2 2 0 012 2v2M9 5V3a2 2 0 012-2h6a2 2 0 012 2v2M4 5h16M4 9h16M4 13h16M4 17h16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Laporan Lengkap</a>
+          <a href="admin-konfigurasi.html" class="member-nav-link active"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 21v-7a1 1 0 011-1h14a1 1 0 011 1v7M9 7h6M9 11h6m-8 7h10M7 3h10a2 2 0 012 2v14a2 2 0 01-2 2H7a2 2 0 01-2-2V5a2 2 0 012-2z" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Konfigurasi</a>
+          <a href="admin-pengaturan.html" class="member-nav-link"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12.22 2h-.44a2 2 0 00-2 2v.18a2 2 0 01-1 1.73l-.43.25a2 2 0 01-2 0l-.15-.08a2 2 0 00-2.73.73l-.22.38a2 2 0 00.73 2.73l.15.1a2 2 0 011 1.72v.51a2 2 0 01-1 1.74l-.15.09a2 2 0 00-.73 2.73l.22.38a2 2 0 002.73.73l.15-.08a2 2 0 012 0l.43.25a2 2 0 011 1.73V20a2 2 0 002 2h.44a2 2 0 002-2v-.18a2 2 0 011-1.73l.43-.25a2 2 0 012 0l.15.08a2 2 0 002.73-.73l.22-.39a2 2 0 00-.73-2.73l-.15-.08a2 2 0 01-1-1.74v-.5a2 2 0 011-1.74l.15-.09a2 2 0 00.73-2.73l-.22-.38a2 2 0 00-2.73-.73l-.15.08a2 2 0 01-2 0l-.43-.25a2 2 0 01-1-1.73V4a2 2 0 00-2-2z" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Pengaturan</a>
+        </nav>
+        <button type="button" class="btn btn-outline member-logout" id="logoutBtn"><svg viewBox="0 0 24 24" class="btn-icon" aria-hidden="true"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Keluar</button>
+      </aside>
+
+      <div class="member-content">
+        <div class="member-page-head">
+          <div>
+            <h1>Konfigurasi Tampilan</h1>
+            <p class="member-greeting">Atur banner hero dan buku yang tampil di halaman Beranda serta Buku Anak</p>
+          </div>
+        </div>
+
+        <div class="admin-tabs">
+          <button type="button" class="admin-tab active" data-tab="home">Beranda</button>
+          <button type="button" class="admin-tab" data-tab="kids">Buku Anak</button>
+        </div>
+
+        <form id="configForm" class="admin-settings-form">
+          <div class="admin-tab-panel active" id="panelHome">
+            <div class="admin-settings-section">
+              <h3>Banner Hero Beranda</h3>
+              <div class="admin-form-row">
+                <div class="form-group form-group--wide">
+                  <label for="homeHeroMain">Gambar Banner Utama (URL)</label>
+                  <input type="text" id="homeHeroMain" placeholder="https://...">
+                </div>
+              </div>
+              <div class="admin-form-row">
+                <div class="form-group">
+                  <label for="homeHeroSide1">Gambar Banner Samping 1 (URL)</label>
+                  <input type="text" id="homeHeroSide1" placeholder="https://...">
+                </div>
+                <div class="form-group">
+                  <label for="homeHeroSide2">Gambar Banner Samping 2 (URL)</label>
+                  <input type="text" id="homeHeroSide2" placeholder="https://...">
+                </div>
+              </div>
+            </div>
+
+            <div class="admin-settings-section">
+              <h3>Gambar Promo per Section</h3>
+              <div class="admin-form-row">
+                <div class="form-group">
+                  <label for="homePromoNewBooks">Buku Terbaru</label>
+                  <input type="text" id="homePromoNewBooks" placeholder="https://...">
+                </div>
+                <div class="form-group">
+                  <label for="homePromoBestseller">Bestseller</label>
+                  <input type="text" id="homePromoBestseller" placeholder="https://...">
+                </div>
+              </div>
+              <div class="admin-form-row">
+                <div class="form-group">
+                  <label for="homePromoIntlBestseller">International Bestseller</label>
+                  <input type="text" id="homePromoIntlBestseller" placeholder="https://...">
+                </div>
+                <div class="form-group">
+                  <label for="homePromoKeislaman">Keislaman Kiwari</label>
+                  <input type="text" id="homePromoKeislaman" placeholder="https://...">
+                </div>
+              </div>
+              <div class="admin-form-row">
+                <div class="form-group">
+                  <label for="homePromoKlasik">Rujukan Islam Klasik</label>
+                  <input type="text" id="homePromoKlasik" placeholder="https://...">
+                </div>
+              </div>
+            </div>
+
+            <div class="admin-settings-section">
+              <h3>Pilih Buku per Section</h3>
+              <p class="admin-cell-sub" style="margin-bottom:16px;">Centang produk yang ingin ditampilkan. Urutan akan mengikuti urutan centang (atas ke bawah).</p>
+
+              <div class="config-section-picker">
+                <div class="form-group">
+                  <label>Buku Terbaru</label>
+                  <input type="text" class="product-filter" data-target="homeNewBooks" placeholder="Cari produk...">
+                  <div class="product-checklist" id="homeNewBooks"></div>
+                </div>
+              </div>
+              <div class="config-section-picker">
+                <div class="form-group">
+                  <label>Bestseller</label>
+                  <input type="text" class="product-filter" data-target="homeBestseller" placeholder="Cari produk...">
+                  <div class="product-checklist" id="homeBestseller"></div>
+                </div>
+              </div>
+              <div class="config-section-picker">
+                <div class="form-group">
+                  <label>International Bestseller</label>
+                  <input type="text" class="product-filter" data-target="homeIntlBestseller" placeholder="Cari produk...">
+                  <div class="product-checklist" id="homeIntlBestseller"></div>
+                </div>
+              </div>
+              <div class="config-section-picker">
+                <div class="form-group">
+                  <label>Keislaman Kiwari</label>
+                  <input type="text" class="product-filter" data-target="homeKeislaman" placeholder="Cari produk...">
+                  <div class="product-checklist" id="homeKeislaman"></div>
+                </div>
+              </div>
+              <div class="config-section-picker">
+                <div class="form-group">
+                  <label>Rujukan Islam Klasik</label>
+                  <input type="text" class="product-filter" data-target="homeKlasik" placeholder="Cari produk...">
+                  <div class="product-checklist" id="homeKlasik"></div>
+                </div>
+              </div>
+              <div class="config-section-picker">
+                <div class="form-group">
+                  <label>Lainnya</label>
+                  <input type="text" class="product-filter" data-target="homeLainnya" placeholder="Cari produk...">
+                  <div class="product-checklist" id="homeLainnya"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="admin-tab-panel" id="panelKids">
+            <div class="admin-settings-section">
+              <h3>Hero Buku Anak</h3>
+              <div class="admin-form-row">
+                <div class="form-group">
+                  <label for="kidsHeroBadge">Badge</label>
+                  <input type="text" id="kidsHeroBadge" placeholder="Selamat Datang, Kecil!">
+                </div>
+                <div class="form-group">
+                  <label for="kidsHeroImage">Gambar Hero (URL)</label>
+                  <input type="text" id="kidsHeroImage" placeholder="https://... atau assets/...">
+                </div>
+              </div>
+              <div class="admin-form-row">
+                <div class="form-group">
+                  <label for="kidsHeroTitle">Judul</label>
+                  <input type="text" id="kidsHeroTitle" placeholder="Dunia Buku yang Ceria dan Penuh Warna">
+                </div>
+              </div>
+              <div class="admin-form-row">
+                <div class="form-group form-group--wide">
+                  <label for="kidsHeroDescription">Deskripsi</label>
+                  <textarea id="kidsHeroDescription" rows="3" placeholder="Temukan ribuan buku edukatif..."></textarea>
+                </div>
+              </div>
+            </div>
+
+            <div class="admin-settings-section">
+              <h3>Promo Buku Anak</h3>
+              <div class="admin-form-row">
+                <div class="form-group">
+                  <label for="kidsPromoBadge">Badge</label>
+                  <input type="text" id="kidsPromoBadge" placeholder="Spesial">
+                </div>
+                <div class="form-group">
+                  <label for="kidsPromoImage">Gambar Promo (URL)</label>
+                  <input type="text" id="kidsPromoImage" placeholder="https://... atau assets/...">
+                </div>
+              </div>
+              <div class="admin-form-row">
+                <div class="form-group">
+                  <label for="kidsPromoTitle">Judul</label>
+                  <input type="text" id="kidsPromoTitle" placeholder="Paket Hadiah Si Kecil">
+                </div>
+              </div>
+              <div class="admin-form-row">
+                <div class="form-group form-group--wide">
+                  <label for="kidsPromoDescription">Deskripsi</label>
+                  <textarea id="kidsPromoDescription" rows="3" placeholder="Dapatkan bundling buku anak..."></textarea>
+                </div>
+              </div>
+            </div>
+
+            <div class="admin-settings-section">
+              <h3>Pilih Buku Buku Anak</h3>
+              <div class="config-section-picker">
+                <div class="form-group">
+                  <label>Buku Populer Anak</label>
+                  <input type="text" class="product-filter" data-target="kidsPopular" placeholder="Cari produk...">
+                  <div class="product-checklist" id="kidsPopular"></div>
+                </div>
+              </div>
+              <div class="config-section-picker">
+                <div class="form-group">
+                  <label>Buku Diskon</label>
+                  <input type="text" class="product-filter" data-target="kidsDiscount" placeholder="Cari produk...">
+                  <div class="product-checklist" id="kidsDiscount"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="admin-form-actions">
+            <p class="admin-save-msg" id="saveMsg">Konfigurasi berhasil disimpan!</p>
+            <button type="submit" class="btn btn-solid">Simpan Konfigurasi</button>
+          </div>
+        </form>
+      </div>
+
+    </section>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="container footer-bottom"><p>&copy; 2025 PT. Generasi Shalahuddin Berilmu - Admin Panel</p></div>
+</footer>
+
+<script src="script.js"></script>
+<script src="admin-shared.js"></script>
+<script src="admin-konfigurasi.js"></script>
+</body>
+</html>

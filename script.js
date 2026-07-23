@@ -89,6 +89,61 @@ function promoCard(img, alt) {
   return `<div class="promo-card"><img src="${img}" alt="${alt}" loading="lazy"></div>`;
 }
 
+function lsRead(key, fallback) {
+  try { return JSON.parse(localStorage.getItem(key)) || fallback; }
+  catch (e) { return fallback; }
+}
+
+function getHomeConfig() {
+  return lsRead('gensaberilmu_home_config', null);
+}
+
+function getKidsConfig() {
+  return lsRead('gensaberilmu_kids_config', null);
+}
+
+function findProductById(id) {
+  const sources = [newBooks, bestseller, intlBestseller, keislaman, klasik, lainnya];
+  for (const arr of sources) {
+    const found = arr.find(p => p.id === id);
+    if (found) return found;
+  }
+  const custom = lsRead('gensaberilmu_products', []);
+  return custom.find(p => p.id === id) || null;
+}
+
+function resolveProducts(configIds, fallbackProducts) {
+  if (!Array.isArray(configIds) || configIds.length === 0) return fallbackProducts;
+  const resolved = configIds.map(id => findProductById(id)).filter(Boolean);
+  return resolved.length > 0 ? resolved : fallbackProducts;
+}
+
+function resolveImage(configUrl, fallbackUrl) {
+  return (configUrl && String(configUrl).trim()) ? configUrl : fallbackUrl;
+}
+
+function kidsProductCard(p) {
+  const ribbon = p.ribbon ? `<span class="ribbon ${p.ribbon.type}">${p.ribbon.text}</span>` : '';
+  const discount = p.discount > 0 ? `<span class="discount-tag">-${p.discount}%</span>` : '';
+  return `
+  <article class="product-card kids-product" data-id="${p.id}">
+    <div class="product-image">
+      ${discount}
+      ${ribbon}
+      <img src="${p.image}" alt="${p.title}" loading="lazy">
+    </div>
+    <div class="product-info">
+      <h3 class="product-title">${p.title}</h3>
+      <p class="product-author">${p.author}</p>
+      <div class="product-price">
+        <span class="price-final">${rupiah(p.finalPrice)}</span>
+        ${p.discount > 0 ? `<span class="price-old">${rupiah(p.price)}</span>` : ''}
+      </div>
+      <button class="btn btn-solid btn-sm add-btn" aria-label="Tambah ke keranjang">Tambah ke Keranjang</button>
+    </div>
+  </article>`;
+}
+
 function blogCard(b) {
   return `
   <article class="blog-card">
@@ -228,41 +283,87 @@ const publishers = [
 
 // ---------- render (homepage only) ----------
 if (document.getElementById('rowNewBooks')) {
+  const homeConfig = getHomeConfig();
+  const hero = homeConfig ? homeConfig.hero || {} : {};
+  const promos = homeConfig ? homeConfig.promos || {} : {};
+  const sections = homeConfig ? homeConfig.sections || {} : {};
+
+  const heroMain = document.querySelector('.hero-main img');
+  const heroSide = document.querySelectorAll('.hero-side img');
+  if (heroMain) heroMain.src = resolveImage(hero.main, heroMain.src);
+  if (heroSide[0]) heroSide[0].src = resolveImage(hero.side1, heroSide[0].src);
+  if (heroSide[1]) heroSide[1].src = resolveImage(hero.side2, heroSide[1].src);
+
   document.getElementById('rowNewBooks').innerHTML =
-    promoCard(`${CDN}/admin-uploads/image-apr-27-2026-12-00-36-am-1777222977.webp`, 'Buku Terbaru') +
-    newBooks.map(productCard).join('');
+    promoCard(resolveImage(promos.newBooks, `${CDN}/admin-uploads/image-apr-27-2026-12-00-36-am-1777222977.webp`), 'Buku Terbaru') +
+    resolveProducts(sections.newBooks, newBooks).map(productCard).join('');
 
   initCarousel(document.getElementById('carouselNewBooks'));
 
   document.getElementById('rowBestseller').innerHTML =
-    promoCard(`${CDN}/admin-uploads/image-apr-27-2026-12-02-31-am-1777222993.webp`, 'Buku Bestseller') +
-    bestseller.map(productCard).join('');
+    promoCard(resolveImage(promos.bestseller, `${CDN}/admin-uploads/image-apr-27-2026-12-02-31-am-1777222993.webp`), 'Buku Bestseller') +
+    resolveProducts(sections.bestseller, bestseller).map(productCard).join('');
 
   initCarousel(document.getElementById('carouselBestseller'));
 
   document.getElementById('rowIntlBestseller').innerHTML =
-    promoCard(`${CDN}/admin-uploads/image-apr-27-2026-12-06-42-am-1777223256.webp`, 'International Bestseller') +
-    intlBestseller.map(productCard).join('');
+    promoCard(resolveImage(promos.intlBestseller, `${CDN}/admin-uploads/image-apr-27-2026-12-06-42-am-1777223256.webp`), 'International Bestseller') +
+    resolveProducts(sections.intlBestseller, intlBestseller).map(productCard).join('');
 
   initCarousel(document.getElementById('carouselIntlBestseller'));
 
   document.getElementById('rowKeislaman').innerHTML =
-    promoCard(`${CDN}/admin-uploads/image-apr-27-2026-12-09-02-am-1777223387.webp`, 'Keislaman Kiwari') +
-    keislaman.map(productCard).join('');
+    promoCard(resolveImage(promos.keislaman, `${CDN}/admin-uploads/image-apr-27-2026-12-09-02-am-1777223387.webp`), 'Keislaman Kiwari') +
+    resolveProducts(sections.keislaman, keislaman).map(productCard).join('');
 
   initCarousel(document.getElementById('carouselKeislaman'));
 
   document.getElementById('rowKlasik').innerHTML =
-    promoCard(`${CDN}/admin-uploads/image-apr-27-2026-12-19-32-am-1777224216.webp`, 'Rujukan Islam Klasik') +
-    klasik.map(productCard).join('');
+    promoCard(resolveImage(promos.klasik, `${CDN}/admin-uploads/image-apr-27-2026-12-19-32-am-1777224216.webp`), 'Rujukan Islam Klasik') +
+    resolveProducts(sections.klasik, klasik).map(productCard).join('');
 
   initCarousel(document.getElementById('carouselKlasik'));
 
-  document.getElementById('rowLainnya').innerHTML = lainnya.map(productCard).join('');
+  document.getElementById('rowLainnya').innerHTML = resolveProducts(sections.lainnya, lainnya).map(productCard).join('');
 
   initCarousel(document.getElementById('carouselLainnya'));
 
   document.getElementById('rowBlog').innerHTML = blogPosts.map(blogCard).join('');
+}
+
+// ---------- render (kids page only) ----------
+if (document.body.classList.contains('kids-body')) {
+  const kidsConfig = getKidsConfig();
+  const hero = kidsConfig ? kidsConfig.hero || {} : {};
+  const sections = kidsConfig ? kidsConfig.sections || {} : {};
+  const promo = kidsConfig ? kidsConfig.promo || {} : {};
+
+  const heroBadge = document.querySelector('.kids-hero-text .kids-badge');
+  const heroTitle = document.querySelector('.kids-hero-text h1');
+  const heroDesc = document.querySelector('.kids-hero-text p');
+  const heroImg = document.querySelector('.kids-hero-image img');
+  if (heroBadge) heroBadge.textContent = hero.badge || heroBadge.textContent;
+  if (heroTitle) heroTitle.textContent = hero.title || heroTitle.textContent;
+  if (heroDesc) heroDesc.textContent = hero.description || heroDesc.textContent;
+  if (heroImg) heroImg.src = resolveImage(hero.image, heroImg.src);
+
+  const popularContainer = document.getElementById('kidsPopular');
+  const discountContainer = document.getElementById('kidsDiscount');
+  if (popularContainer) {
+    popularContainer.innerHTML = resolveProducts(sections.popular, [newBooks[0], newBooks[1], newBooks[2], newBooks[3]]).map(kidsProductCard).join('');
+  }
+  if (discountContainer) {
+    discountContainer.innerHTML = resolveProducts(sections.discount, [newBooks[4], newBooks[5], newBooks[6], newBooks[7]]).map(kidsProductCard).join('');
+  }
+
+  const promoBadge = document.querySelector('.kids-promo-text .kids-section-badge');
+  const promoTitle = document.querySelector('.kids-promo-text h2');
+  const promoDesc = document.querySelector('.kids-promo-text p');
+  const promoImg = document.querySelector('.kids-promo-image img');
+  if (promoBadge) promoBadge.textContent = promo.badge || promoBadge.textContent;
+  if (promoTitle) promoTitle.textContent = promo.title || promoTitle.textContent;
+  if (promoDesc) promoDesc.textContent = promo.description || promoDesc.textContent;
+  if (promoImg) promoImg.src = resolveImage(promo.image, promoImg.src);
 }
 
 // ---------- interactions ----------

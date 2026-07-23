@@ -11,6 +11,8 @@
   const PRODUCTS_KEY = 'gensaberilmu_products';
   const SETTINGS_KEY = 'gensaberilmu_settings';
   const AFFILIATE_CONFIG_KEY = 'gensaberilmu_affiliate_config';
+  const HOME_CONFIG_KEY = 'gensaberilmu_home_config';
+  const KIDS_CONFIG_KEY = 'gensaberilmu_kids_config';
 
   function read(key, fallback) {
     try { return JSON.parse(localStorage.getItem(key)) || fallback; }
@@ -176,6 +178,69 @@
     return null;
   }
 
+  // ---------- homepage / kids page configuration ----------
+  function getHomeConfig() {
+    return read(HOME_CONFIG_KEY, null);
+  }
+
+  function saveHomeConfig(config) {
+    write(HOME_CONFIG_KEY, config);
+  }
+
+  function getKidsConfig() {
+    return read(KIDS_CONFIG_KEY, null);
+  }
+
+  function saveKidsConfig(config) {
+    write(KIDS_CONFIG_KEY, config);
+  }
+
+  function getDefaultHomeConfig() {
+    return {
+      hero: {
+        main: 'https://kontan.reneturos.com/storage/admin-uploads/image-may-5-2026-at-03-11-53-pm-1777968754.webp',
+        side1: 'https://kontan.reneturos.com/storage/admin-uploads/image-apr-24-2026-at-04-42-37-pm-1777966186.webp',
+        side2: 'https://kontan.reneturos.com/storage/admin-uploads/image-may-5-2026-at-02-36-04-pm-1777966586.webp'
+      },
+      promos: {
+        newBooks: 'https://kontan.reneturos.com/storage/admin-uploads/image-apr-27-2026-12-00-36-am-1777222977.webp',
+        bestseller: 'https://kontan.reneturos.com/storage/admin-uploads/image-apr-27-2026-12-02-31-am-1777222993.webp',
+        intlBestseller: 'https://kontan.reneturos.com/storage/admin-uploads/image-apr-27-2026-12-06-42-am-1777223256.webp',
+        keislaman: 'https://kontan.reneturos.com/storage/admin-uploads/image-apr-27-2026-12-09-02-am-1777223387.webp',
+        klasik: 'https://kontan.reneturos.com/storage/admin-uploads/image-apr-27-2026-12-19-32-am-1777224216.webp'
+      },
+      sections: {
+        newBooks: newBooks.map(function(p) { return p.id; }),
+        bestseller: bestseller.map(function(p) { return p.id; }),
+        intlBestseller: intlBestseller.map(function(p) { return p.id; }),
+        keislaman: keislaman.map(function(p) { return p.id; }),
+        klasik: klasik.map(function(p) { return p.id; }),
+        lainnya: lainnya.map(function(p) { return p.id; })
+      }
+    };
+  }
+
+  function getDefaultKidsConfig() {
+    return {
+      hero: {
+        badge: 'Selamat Datang, Kecil!',
+        title: 'Dunia Buku yang Ceria dan Penuh Warna',
+        description: 'Temukan ribuan buku edukatif, dongeng seru, dan aktivitas menyenangkan untuk si kecil. Belajar jadi lebih happy!',
+        image: 'assets/generated/hero-kids.png'
+      },
+      sections: {
+        popular: ['nb1', 'nb2', 'nb3', 'nb4'],
+        discount: ['nb5', 'nb6', 'nb7', 'nb8']
+      },
+      promo: {
+        badge: 'Spesial',
+        title: 'Paket Hadiah Si Kecil',
+        description: 'Dapatkan bundling buku anak dengan harga spesial dan bonus sticker lucu. Cocok untuk kado ulang tahun atau hadiah prestasi!',
+        image: 'assets/generated/promo-gift.png'
+      }
+    };
+  }
+
   // ---------- auth guard ----------
   var admin = read(ADMIN_KEY, null);
   if (!admin) {
@@ -244,7 +309,7 @@
 
   window.AdminAPI = {
     admin: admin,
-    keys: { ADMIN_KEY, USER_KEY, ORDERS_KEY, RECIPIENTS_KEY, AFFILIATE_KEY, AFFILIATE_PRODUCTS_KEY, PROFILE_KEY, PRODUCTS_KEY, SETTINGS_KEY, AFFILIATE_CONFIG_KEY },
+    keys: { ADMIN_KEY, USER_KEY, ORDERS_KEY, RECIPIENTS_KEY, AFFILIATE_KEY, AFFILIATE_PRODUCTS_KEY, PROFILE_KEY, PRODUCTS_KEY, SETTINGS_KEY, AFFILIATE_CONFIG_KEY, HOME_CONFIG_KEY, KIDS_CONFIG_KEY },
     read, write, escapeHtml, rupiah, formatDate, shortDate, encodeWhatsApp, generateId, nowStr,
     STATUS_META, AFFILIATE_COMMISSION_RATES,
     allProducts, findProduct, allOrders, allMembers, allRecipients,
@@ -252,6 +317,7 @@
     saveOrders, saveCustomProducts, saveSettings, getSettings,
     deleteOrder, updateOrderStatus, addCustomProduct, updateCustomProduct, deleteCustomProduct,
     getAffiliateConfig, saveAffiliateConfig, setAffiliateProduct, removeAffiliateProduct, getEffectiveCommissionRate,
+    getHomeConfig, saveHomeConfig, getDefaultHomeConfig, getKidsConfig, saveKidsConfig, getDefaultKidsConfig,
     showToast, openModal, closeModal
   };
 })();
