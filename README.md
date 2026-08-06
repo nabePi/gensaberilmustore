@@ -37,9 +37,22 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 | `pnpm typecheck` | Run TypeScript type check |
 | `pnpm format` | Run Prettier |
 | `pnpm test` | Run tests |
-| `pnpm db:generate` | Generate database client |
-| `pnpm db:migrate` | Run database migrations |
+| `pnpm db:generate` | Generate Prisma database client |
+| `pnpm db:migrate` | Run Prisma migration deploy |
+| `pnpm db:migrate:dev` | Create and run migrations in development |
+| `pnpm db:studio` | Open Prisma Studio |
 | `pnpm db:seed` | Seed the database |
+
+## Database
+
+This project uses [Prisma](https://www.prisma.io/) with PostgreSQL.
+
+- Edit `prisma/schema.prisma` to change the data model.
+- Run `pnpm db:generate` to regenerate the Prisma Client after any schema change.
+- Run `pnpm db:migrate:dev` to create and apply migrations during local development.
+- Run `pnpm db:studio` to explore the database with Prisma Studio.
+
+Make sure `DATABASE_URL` is set in `.env` before running migrations or Studio.
 
 ## Project Structure
 
