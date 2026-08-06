@@ -9,10 +9,20 @@ Next.js 15 App Router + TypeScript project for Gensa Berilmu Store.
 
 ## Local Development
 
-```bash
-pnpm install
-pnpm dev
-```
+1. Copy the environment file and adjust it if your local Postgres uses different credentials:
+
+   ```bash
+   cp .env.example .env
+   ```
+
+2. Install dependencies and start the dev server:
+
+   ```bash
+   pnpm install
+   pnpm dev
+   ```
+
+   The default `.env.example` points to a local PostgreSQL database: `genstore` on `localhost:5432` with user `postgres` / password `postgres`.
 
 Open [http://localhost:3000](http://localhost:3000) in your browser.
 
