@@ -26,6 +26,43 @@ Next.js 15 App Router + TypeScript project for Gensa Berilmu Store.
 
 Open [http://localhost:3000](http://localhost:3000) in your browser.
 
+## Environment Variables
+
+All runtime secrets and configuration are validated via `src/env.ts` (using Zod) before the app boots. Copy `.env.example` to `.env` and fill in the required values:
+
+```bash
+cp .env.example .env
+```
+
+### Required variables
+
+| Variable                           | Description               | Validation                             |
+| ---------------------------------- | ------------------------- | -------------------------------------- |
+| `NODE_ENV`                         | Runtime environment       | `development`, `test`, or `production` |
+| `DATABASE_URL`                     | PostgreSQL connection URL | Must start with `postgresql://`        |
+| `NEXTAUTH_SECRET` or `AUTH_SECRET` | Auth session secret       | Min 32 characters                      |
+| `JWT_SECRET`                       | Custom JWT secret         | Min 32 characters                      |
+
+You can use either `NEXTAUTH_SECRET` or `AUTH_SECRET` for the auth secret.
+
+### Placeholder variables
+
+The following variables are declared in the validator but are optional until the related feature is implemented:
+
+- `MIDTRANS_SERVER_KEY`, `MIDTRANS_CLIENT_KEY`, `MIDTRANS_ENV` (`sandbox` or `production`)
+- `FONNTE_TOKEN`
+- `RESEND_API_KEY`
+- `STORAGE_PROVIDER` (`s3` or `local`), `S3_ENDPOINT`, `S3_BUCKET`, `S3_KEY`, `S3_SECRET`
+- `SENTRY_DSN`
+
+To validate your environment without starting the dev server, run:
+
+```bash
+pnpm env:check
+```
+
+If any required variable is missing or invalid, the command will print a clear error message and exit with a non-zero status code.
+
 ## Scripts
 
 | Script                | Description                              |
@@ -36,6 +73,7 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 | `pnpm lint`           | Run ESLint                               |
 | `pnpm typecheck`      | Run TypeScript type check                |
 | `pnpm format`         | Run Prettier                             |
+| `pnpm env:check`      | Validate environment variables           |
 | `pnpm test`           | Run tests                                |
 | `pnpm db:generate`    | Generate Prisma database client          |
 | `pnpm db:migrate`     | Run Prisma migration deploy              |
