@@ -51,6 +51,20 @@ jobs:
     name: Unit Tests
     runs-on: ubuntu-latest
     needs: check
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: genstore
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -67,13 +81,22 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Wait for PostgreSQL
+        run: |
+          timeout 60 bash -c 'until printf "" 2>/dev/null >/dev/tcp/localhost/5432; do echo "Waiting for Postgres..."; sleep 2; done'
+
       - name: Generate Prisma Client
         run: pnpm db:generate
+
+      - name: Apply database migrations
+        run: pnpm db:migrate
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/genstore
 
       - name: Run unit tests
         run: pnpm test
         env:
           NODE_ENV: test
-          DATABASE_URL: postgresql://localhost:5432/genstore
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/genstore
           NEXTAUTH_SECRET: ci-at-least-32-characters-long-secret-key
           JWT_SECRET: ci-at-least-32-characters-long-secret-key
