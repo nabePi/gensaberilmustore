@@ -14,19 +14,19 @@ Sumber kebenaran token visual yang diekstrak dari prototype (`prototype/style.cs
 
 Aksen utama: **#95271B** (oranye kemerahan).
 
-| Token | Utility | Catatan |
-|-------|---------|---------|
-| `--color-brand` | `bg-brand`, `text-brand` | Default |
-| `--color-brand-50` … `900` | `bg-brand-50`, `text-brand-700`, dll. | Tints/shades via `color-mix` |
-| Hover solid button | `#c95d00` | Diambil dari `.btn-solid:hover` |
+| Token                      | Utility                               | Catatan                         |
+| -------------------------- | ------------------------------------- | ------------------------------- |
+| `--color-brand`            | `bg-brand`, `text-brand`              | Default                         |
+| `--color-brand-50` … `900` | `bg-brand-50`, `text-brand-700`, dll. | Tints/shades via `color-mix`    |
+| Hover solid button         | `#c95d00`                             | Diambil dari `.btn-solid:hover` |
 
 ### Neutral
 
 Skala abu-abu yang dipakai di teks, border, dan permukaan.
 
-| Token | Utility | Hex |
-|-------|---------|-----|
-| `--color-neutral-50` | `bg-neutral-50` | `#f9fafb` |
+| Token                 | Utility          | Hex       |
+| --------------------- | ---------------- | --------- |
+| `--color-neutral-50`  | `bg-neutral-50`  | `#f9fafb` |
 | `--color-neutral-100` | `bg-neutral-100` | `#f3f4f6` |
 | `--color-neutral-200` | `bg-neutral-200` | `#e5e7eb` |
 | `--color-neutral-300` | `bg-neutral-300` | `#d1d5db` |
@@ -40,36 +40,36 @@ Skala abu-abu yang dipakai di teks, border, dan permukaan.
 
 ### Accents
 
-| Token | Utility | Hex | Kegunaan |
-|-------|---------|-----|----------|
-| `--color-navy` | `bg-navy`, `text-navy` | `#142850` | Label preorder, price overlay |
-| `--color-red` | `bg-red`, `text-red` | `#dc2626` | Diskon, wishlist aktif, hapus |
-| `--color-green` | `bg-green`, `text-green` | `#16a34a` | Stok tersedia, success state |
+| Token           | Utility                  | Hex       | Kegunaan                      |
+| --------------- | ------------------------ | --------- | ----------------------------- |
+| `--color-navy`  | `bg-navy`, `text-navy`   | `#142850` | Label preorder, price overlay |
+| `--color-red`   | `bg-red`, `text-red`     | `#dc2626` | Diskon, wishlist aktif, hapus |
+| `--color-green` | `bg-green`, `text-green` | `#16a34a` | Stok tersedia, success state  |
 
 ### Surfaces
 
-| Token | Utility | Nilai |
-|-------|---------|-------|
-| `--color-background` | `bg-background` | `#ffffff` |
+| Token                | Utility           | Nilai                     |
+| -------------------- | ----------------- | ------------------------- |
+| `--color-background` | `bg-background`   | `#ffffff`                 |
 | `--color-foreground` | `text-foreground` | `neutral-950` (`#0a0a0a`) |
 
 ## Tipografi
 
 Semua ukuran dalam rem, dengan basis 16px.
 
-| Token | Utility | Pixel |
-|-------|---------|-------|
-| `--text-2xs` | `text-2xs` | 10px |
-| `--text-xs` | `text-xs` | 12px |
-| `--text-sm` | `text-sm` | 14px |
-| `--text-base` | `text-base` | 16px |
-| `--text-lg` | `text-lg` | 18px |
-| `--text-xl` | `text-xl` | 20px |
-| `--text-2xl` | `text-2xl` | 24px |
-| `--text-3xl` | `text-3xl` | 28px |
-| `--text-4xl` | `text-4xl` | 30px |
-| `--text-5xl` | `text-5xl` | 32px |
-| `--text-6xl` | `text-6xl` | 42px |
+| Token         | Utility     | Pixel |
+| ------------- | ----------- | ----- |
+| `--text-2xs`  | `text-2xs`  | 10px  |
+| `--text-xs`   | `text-xs`   | 12px  |
+| `--text-sm`   | `text-sm`   | 14px  |
+| `--text-base` | `text-base` | 16px  |
+| `--text-lg`   | `text-lg`   | 18px  |
+| `--text-xl`   | `text-xl`   | 20px  |
+| `--text-2xl`  | `text-2xl`  | 24px  |
+| `--text-3xl`  | `text-3xl`  | 28px  |
+| `--text-4xl`  | `text-4xl`  | 30px  |
+| `--text-5xl`  | `text-5xl`  | 32px  |
+| `--text-6xl`  | `text-6xl`  | 42px  |
 
 Weights: `font-normal` (400), `font-medium` (500), `font-semibold` (600), `font-bold` (700).
 
@@ -81,36 +81,36 @@ Base 4px. Tailwind spacing scale di-override menjadi pixel-equivalent.
 
 ## Border Radius
 
-| Token | Utility | Nilai |
-|-------|---------|-------|
-| `--radius-sm` | `rounded-sm` | 8px |
-| `--radius-md` | `rounded-md` | 10px |
-| `--radius-lg` | `rounded-lg` | 14px |
-| `--radius-xl` | `rounded-xl` | 20px |
-| `--radius-2xl` | `rounded-2xl` | 28px |
+| Token           | Utility        | Nilai |
+| --------------- | -------------- | ----- |
+| `--radius-sm`   | `rounded-sm`   | 8px   |
+| `--radius-md`   | `rounded-md`   | 10px  |
+| `--radius-lg`   | `rounded-lg`   | 14px  |
+| `--radius-xl`   | `rounded-xl`   | 20px  |
+| `--radius-2xl`  | `rounded-2xl`  | 28px  |
 | `--radius-full` | `rounded-full` | 999px |
 
 ## Shadow
 
-| Token | Utility | Nilai |
-|-------|---------|-------|
-| `--shadow-xs` | `shadow-xs` | `0 1px 2px rgba(0,0,0,0.04)` |
-| `--shadow-sm` | `shadow-sm` | `0 1px 4px rgba(0,0,0,0.08)` |
-| `--shadow-md` | `shadow-md` | `0 4px 24px rgba(0,0,0,0.04)` |
-| `--shadow-lg` | `shadow-lg` | `0 8px 32px rgba(0,0,0,0.06)` |
-| `--shadow-xl` | `shadow-xl` | `0 12px 28px rgba(0,0,0,0.08)` |
-| `--shadow-2xl` | `shadow-2xl` | `0 20px 50px rgba(0,0,0,0.2)` |
+| Token          | Utility      | Nilai                          |
+| -------------- | ------------ | ------------------------------ |
+| `--shadow-xs`  | `shadow-xs`  | `0 1px 2px rgba(0,0,0,0.04)`   |
+| `--shadow-sm`  | `shadow-sm`  | `0 1px 4px rgba(0,0,0,0.08)`   |
+| `--shadow-md`  | `shadow-md`  | `0 4px 24px rgba(0,0,0,0.04)`  |
+| `--shadow-lg`  | `shadow-lg`  | `0 8px 32px rgba(0,0,0,0.06)`  |
+| `--shadow-xl`  | `shadow-xl`  | `0 12px 28px rgba(0,0,0,0.08)` |
+| `--shadow-2xl` | `shadow-2xl` | `0 20px 50px rgba(0,0,0,0.2)`  |
 
 ## Breakpoints
 
 Di-override agar sesuai media query prototype.
 
-| Token | Nilai |
-|-------|-------|
-| `--breakpoint-sm` | 520px |
-| `--breakpoint-md` | 768px |
-| `--breakpoint-lg` | 900px |
-| `--breakpoint-xl` | 1024px |
+| Token              | Nilai  |
+| ------------------ | ------ |
+| `--breakpoint-sm`  | 520px  |
+| `--breakpoint-md`  | 768px  |
+| `--breakpoint-lg`  | 900px  |
+| `--breakpoint-xl`  | 1024px |
 | `--breakpoint-2xl` | 1280px |
 
 ## Container

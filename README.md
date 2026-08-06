@@ -28,20 +28,32 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ## Scripts
 
-| Script | Description |
-|--------|-------------|
-| `pnpm dev` | Start the development server |
-| `pnpm build` | Build for production |
-| `pnpm start` | Start the production server |
-| `pnpm lint` | Run ESLint |
-| `pnpm typecheck` | Run TypeScript type check |
-| `pnpm format` | Run Prettier |
-| `pnpm test` | Run tests |
-| `pnpm db:generate` | Generate Prisma database client |
-| `pnpm db:migrate` | Run Prisma migration deploy |
+| Script                | Description                              |
+| --------------------- | ---------------------------------------- |
+| `pnpm dev`            | Start the development server             |
+| `pnpm build`          | Build for production                     |
+| `pnpm start`          | Start the production server              |
+| `pnpm lint`           | Run ESLint                               |
+| `pnpm typecheck`      | Run TypeScript type check                |
+| `pnpm format`         | Run Prettier                             |
+| `pnpm test`           | Run tests                                |
+| `pnpm db:generate`    | Generate Prisma database client          |
+| `pnpm db:migrate`     | Run Prisma migration deploy              |
 | `pnpm db:migrate:dev` | Create and run migrations in development |
-| `pnpm db:studio` | Open Prisma Studio |
-| `pnpm db:seed` | Seed the database |
+| `pnpm db:studio`      | Open Prisma Studio                       |
+| `pnpm db:seed`        | Seed the database                        |
+
+## Code Quality & Git Hooks
+
+This repo uses ESLint, Prettier, Husky, lint-staged, and commitlint to keep the codebase consistent.
+
+- Hooks are installed automatically on `pnpm install` via the `prepare` script.
+- **`pre-commit`**: runs `lint-staged` (`eslint --fix` + `prettier --write` on staged files) and `pnpm typecheck`. Commits fail if lint errors or type errors remain.
+- **`commit-msg`**: enforces [Conventional Commits](https://www.conventionalcommits.org/), e.g. `feat: add cart page`, `fix(auth): handle expired token`.
+
+Run `pnpm format` to format the whole repo, and `pnpm lint` to check everything manually.
+
+**Do not bypass the hooks.** Using `--no-verify` (or `HUSKY=0`) is forbidden for contributors — every commit must be validated. If a hook fails, fix the underlying issue instead of skipping it.
 
 ## Database
 
