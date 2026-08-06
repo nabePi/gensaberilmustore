@@ -13,6 +13,7 @@
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
     "format": "prettier --write .",
+    "env:check": "tsx --env-file=.env scripts/env-check.ts",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate deploy",
     "db:migrate:dev": "prisma migrate dev",
@@ -25,7 +26,8 @@
     "@prisma/client": "^6.19.3",
     "next": "16.3.0",
     "react": "19.2.8",
-    "react-dom": "19.2.8"
+    "react-dom": "19.2.8",
+    "zod": "^3.25.4"
   },
   "devDependencies": {
     "@commitlint/cli": "^21.2.1",
@@ -43,6 +45,7 @@
     "prettier": "^3.9.6",
     "prisma": "^6.19.3",
     "tailwindcss": "^4",
+    "tsx": "^4.19.4",
     "typescript": "^5"
   },
   "lint-staged": {
