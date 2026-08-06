@@ -1,26 +1,126 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+@theme {
+  /* Brand */
+  --color-brand: #95271b;
+  --color-brand-50: color-mix(in oklab, var(--color-brand) 5%, white);
+  --color-brand-100: color-mix(in oklab, var(--color-brand) 10%, white);
+  --color-brand-200: color-mix(in oklab, var(--color-brand) 20%, white);
+  --color-brand-300: color-mix(in oklab, var(--color-brand) 35%, white);
+  --color-brand-400: color-mix(in oklab, var(--color-brand) 55%, white);
+  --color-brand-500: var(--color-brand);
+  --color-brand-600: color-mix(in oklab, var(--color-brand) 90%, black);
+  --color-brand-700: color-mix(in oklab, var(--color-brand) 75%, black);
+  --color-brand-800: color-mix(in oklab, var(--color-brand) 60%, black);
+  --color-brand-900: color-mix(in oklab, var(--color-brand) 45%, black);
+
+  /* Neutral */
+  --color-neutral-50: #f9fafb;
+  --color-neutral-100: #f3f4f6;
+  --color-neutral-200: #e5e7eb;
+  --color-neutral-300: #d1d5db;
+  --color-neutral-400: #9ca3af;
+  --color-neutral-500: #6b7280;
+  --color-neutral-600: #4b5563;
+  --color-neutral-700: #374151;
+  --color-neutral-800: #1f2937;
+  --color-neutral-900: #111827;
+  --color-neutral-950: #0a0a0a;
+
+  /* Semantic accents */
+  --color-navy: #142850;
+  --color-red: #dc2626;
+  --color-green: #16a34a;
+
+  /* Surfaces */
+  --color-background: #ffffff;
+  --color-foreground: var(--color-neutral-950);
+
+  /* Typography size scale (1rem = 16px) */
+  --text-2xs: 0.625rem; /* 10px */
+  --text-xs: 0.75rem; /* 12px */
+  --text-sm: 0.875rem; /* 14px */
+  --text-base: 1rem; /* 16px */
+  --text-lg: 1.125rem; /* 18px */
+  --text-xl: 1.25rem; /* 20px */
+  --text-2xl: 1.5rem; /* 24px */
+  --text-3xl: 1.75rem; /* 28px */
+  --text-4xl: 1.875rem; /* 30px */
+  --text-5xl: 2rem; /* 32px */
+  --text-6xl: 2.625rem; /* 42px */
+
+  /* Spacing (4px base) */
+  --spacing-px: 1px;
+  --spacing-0: 0px;
+  --spacing-1: 4px;
+  --spacing-2: 8px;
+  --spacing-3: 12px;
+  --spacing-4: 16px;
+  --spacing-5: 20px;
+  --spacing-6: 24px;
+  --spacing-7: 28px;
+  --spacing-8: 32px;
+  --spacing-9: 36px;
+  --spacing-10: 40px;
+  --spacing-11: 44px;
+  --spacing-12: 48px;
+  --spacing-14: 56px;
+  --spacing-16: 64px;
+  --spacing-20: 80px;
+  --spacing-24: 96px;
+  --spacing-28: 112px;
+  --spacing-32: 128px;
+  --spacing-36: 144px;
+  --spacing-40: 160px;
+  --spacing-44: 176px;
+  --spacing-48: 192px;
+  --spacing-52: 208px;
+  --spacing-56: 224px;
+  --spacing-60: 240px;
+  --spacing-64: 256px;
+  --spacing-72: 288px;
+  --spacing-80: 320px;
+  --spacing-96: 384px;
+
+  /* Border radius */
+  --radius-xs: 4px;
+  --radius-sm: 8px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
+  --radius-2xl: 28px;
+  --radius-full: 999px;
+
+  /* Shadows */
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-sm: 0 1px 4px rgba(0, 0, 0, 0.08);
+  --shadow-md: 0 4px 24px rgba(0, 0, 0, 0.04);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.06);
+  --shadow-xl: 0 12px 28px rgba(0, 0, 0, 0.08);
+  --shadow-2xl: 0 20px 50px rgba(0, 0, 0, 0.2);
+
+  /* Breakpoints matching prototype */
+  --breakpoint-sm: 520px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 900px;
+  --breakpoint-xl: 1024px;
+  --breakpoint-2xl: 1280px;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-source-sans-3), system-ui, sans-serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+@utility container-prototype {
+  width: 100%;
+  max-width: 1320px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 20px;
+  padding-right: 20px;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-background);
+  color: var(--color-foreground);
 }
