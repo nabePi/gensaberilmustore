@@ -1,0 +1,45 @@
+# Gensa Berilmu Store App
+
+Next.js 15 App Router + TypeScript project for Gensa Berilmu Store.
+
+## Requirements
+
+- Node.js >= 20.x
+- pnpm 11.x
+
+## Local Development
+
+```bash
+pnpm install
+pnpm dev
+```
+
+Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+## Scripts
+
+| Script | Description |
+|--------|-------------|
+| `pnpm dev` | Start the development server |
+| `pnpm build` | Build for production |
+| `pnpm start` | Start the production server |
+| `pnpm lint` | Run ESLint |
+| `pnpm typecheck` | Run TypeScript type check |
+| `pnpm format` | Run Prettier |
+| `pnpm test` | Run tests |
+| `pnpm db:generate` | Generate database client |
+| `pnpm db:migrate` | Run database migrations |
+| `pnpm db:seed` | Seed the database |
+
+## Project Structure
+
+```
+src/
+  app/        # Next.js App Router routes
+  components/ # React components
+  lib/        # Shared client-side utilities
+  server/     # Server-only code
+  db/         # Database schema and queries
+  types/      # Shared TypeScript types
+public/       # Static assets
+```
