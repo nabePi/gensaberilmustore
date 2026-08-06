@@ -14,6 +14,18 @@ enum Role {
   ADMIN
 }
 
+enum CoverType {
+  SOFTCOVER
+  HARDCOVER
+  EBOOK
+}
+
+enum RibbonType {
+  NEW
+  BEST
+  DISCOUNT
+}
+
 model User {
   id              String    @id @default(uuid())
   email           String    @unique
@@ -62,4 +74,105 @@ model PasswordResetToken {
 
   @@index([userId])
   @@index([tokenHash])
+}
+
+model Category {
+  id       String  @id @default(uuid())
+  name     String
+  slug     String  @unique
+  parentId String?
+  position Int     @default(0)
+  isActive Boolean @default(true)
+
+  parent   Category?         @relation("CategoryParent", fields: [parentId], references: [id], onDelete: SetNull)
+  children Category[]        @relation("CategoryParent")
+  products CategoryProduct[]
+
+  @@index([slug])
+  @@index([parentId])
+  @@index([isActive])
+  @@index([position])
+}
+
+model Tag {
+  id       String       @id @default(uuid())
+  name     String
+  slug     String       @unique
+  products ProductTag[]
+
+  @@index([slug])
+}
+
+model Product {
+  id              String      @id @default(uuid())
+  sku             String      @unique
+  slug            String      @unique
+  title           String
+  subtitle        String
+  author          String
+  imprint         String?
+  description     String
+  tocText         String?
+  highlightsText  String?
+  price           Int
+  discountPercent Int         @default(0)
+  finalPrice      Int
+  stock           Int         @default(0)
+  weightGram      Int
+  coverType       CoverType
+  pageCount       Int
+  publishYear     Int
+  isActive        Boolean     @default(true)
+  position        Int         @default(0)
+  ribbonType      RibbonType?
+  ribbonText      String?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  images     ProductImage[]
+  tags       ProductTag[]
+  categories CategoryProduct[]
+
+  @@index([slug])
+  @@index([sku])
+  @@index([isActive])
+  @@index([position])
+  @@index([coverType])
+  @@index([ribbonType])
+}
+
+model ProductImage {
+  id        String  @id @default(uuid())
+  productId String
+  url       String
+  altText   String?
+  position  Int     @default(0)
+  isPrimary Boolean @default(false)
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId])
+  @@index([position])
+}
+
+model ProductTag {
+  productId String
+  tagId     String
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  tag     Tag     @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([productId, tagId])
+  @@index([tagId])
+}
+
+model CategoryProduct {
+  productId  String
+  categoryId String
+
+  product  Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  category Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@id([productId, categoryId])
+  @@index([categoryId])
 }
