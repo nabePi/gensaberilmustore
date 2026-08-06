@@ -1,5 +1,7 @@
 # Gensa Berilmu Store App
 
+[![CI](https://github.com/nabePi/gensaberilmustore/actions/workflows/ci.yml/badge.svg)](https://github.com/nabePi/gensaberilmustore/actions/workflows/ci.yml)
+
 Next.js 15 App Router + TypeScript project for Gensa Berilmu Store.
 
 ## Requirements
