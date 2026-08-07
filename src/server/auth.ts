@@ -77,7 +77,7 @@ type WithAuthOptions = {
   role?: Role;
 };
 
-export function withAuth<Context = Record<string, never>>(
+export function withAuth<Context = { params: Promise<Record<string, never>> }>(
   handler: AuthHandler<Context>,
   options: WithAuthOptions = {},
 ) {
