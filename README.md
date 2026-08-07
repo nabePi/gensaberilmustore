@@ -106,6 +106,16 @@ This project uses [Prisma](https://www.prisma.io/) with PostgreSQL.
 
 Make sure `DATABASE_URL` is set in `.env` before running migrations or Studio.
 
+### Seeding
+
+Seed the database with an admin account, initial categories, 20 sample products, cities, and vouchers:
+
+```bash
+pnpm prisma db seed
+```
+
+The seed script (`prisma/seed.ts`) is idempotent, so it can be run multiple times without creating duplicate data.
+
 ## Project Structure
 
 ```
