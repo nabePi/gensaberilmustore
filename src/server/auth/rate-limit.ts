@@ -5,7 +5,7 @@ type RateLimitResult = {
   retryAfterSeconds: number;
 };
 
-function createRateLimiter(windowMs: number, maxAttempts: number) {
+export function createRateLimiter(windowMs: number, maxAttempts: number) {
   const buckets = new Map<string, Bucket>();
 
   function check(key: string): RateLimitResult {
