@@ -38,3 +38,7 @@ export const resetLoginRateLimit = loginLimiter.reset;
 
 const forgotPasswordLimiter = createRateLimiter(60 * 60 * 1000, 3);
 export const checkForgotPasswordRateLimit = forgotPasswordLimiter.check;
+
+const adminLoginLimiter = createRateLimiter(15 * 60 * 1000, 5);
+export const checkAdminLoginRateLimit = adminLoginLimiter.check;
+export const resetAdminLoginRateLimit = adminLoginLimiter.reset;

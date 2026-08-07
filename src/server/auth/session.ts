@@ -4,6 +4,7 @@ import { env } from '@/env';
 import { prisma } from '@/lib/db';
 
 export const SESSION_COOKIE_NAME = 'session';
+export const ADMIN_SESSION_COOKIE_NAME = 'admin_session';
 export const DEFAULT_SESSION_DURATION_MS = 24 * 60 * 60 * 1000; // 1 day
 
 const encodedSecret = new TextEncoder().encode(env.jwtSecret);
