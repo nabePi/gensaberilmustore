@@ -1,32 +1,41 @@
-const WINDOW_MS = 15 * 60 * 1000;
-const MAX_ATTEMPTS = 10;
-
 type Bucket = { count: number; resetAt: number };
-
-const buckets = new Map<string, Bucket>();
 
 type RateLimitResult = {
   limited: boolean;
   retryAfterSeconds: number;
 };
 
-export function checkLoginRateLimit(key: string): RateLimitResult {
-  const now = Date.now();
-  const bucket = buckets.get(key);
+function createRateLimiter(windowMs: number, maxAttempts: number) {
+  const buckets = new Map<string, Bucket>();
 
-  if (!bucket || bucket.resetAt <= now) {
-    buckets.set(key, { count: 1, resetAt: now + WINDOW_MS });
+  function check(key: string): RateLimitResult {
+    const now = Date.now();
+    const bucket = buckets.get(key);
+
+    if (!bucket || bucket.resetAt <= now) {
+      buckets.set(key, { count: 1, resetAt: now + windowMs });
+      return { limited: false, retryAfterSeconds: 0 };
+    }
+
+    if (bucket.count >= maxAttempts) {
+      return { limited: true, retryAfterSeconds: Math.ceil((bucket.resetAt - now) / 1000) };
+    }
+
+    bucket.count += 1;
     return { limited: false, retryAfterSeconds: 0 };
   }
 
-  if (bucket.count >= MAX_ATTEMPTS) {
-    return { limited: true, retryAfterSeconds: Math.ceil((bucket.resetAt - now) / 1000) };
+  function reset(key: string): void {
+    buckets.delete(key);
   }
 
-  bucket.count += 1;
-  return { limited: false, retryAfterSeconds: 0 };
+  return { check, reset };
 }
 
-export function resetLoginRateLimit(key: string): void {
-  buckets.delete(key);
-}
+const loginLimiter = createRateLimiter(15 * 60 * 1000, 10);
+export const checkLoginRateLimit = loginLimiter.check;
+export const resetLoginRateLimit = loginLimiter.reset;
+
+const adminLoginLimiter = createRateLimiter(15 * 60 * 1000, 5);
+export const checkAdminLoginRateLimit = adminLoginLimiter.check;
+export const resetAdminLoginRateLimit = adminLoginLimiter.reset;
