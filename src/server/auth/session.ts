@@ -1,4 +1,4 @@
-import { SignJWT } from 'jose';
+import { jwtVerify, SignJWT } from 'jose';
 
 import { env } from '@/env';
 import { prisma } from '@/lib/db';
@@ -45,4 +45,25 @@ export function sessionCookieOptions(expiresAt: Date) {
     expires: expiresAt,
     path: '/',
   };
+}
+
+export function clearedSessionCookieOptions() {
+  return sessionCookieOptions(new Date(0));
+}
+
+export type SessionTokenPayload = {
+  sid: string;
+  userId: string;
+};
+
+export async function verifySessionToken(token: string): Promise<SessionTokenPayload | null> {
+  try {
+    const { payload } = await jwtVerify(token, encodedSecret);
+    if (typeof payload.sid !== 'string' || typeof payload.sub !== 'string') {
+      return null;
+    }
+    return { sid: payload.sid, userId: payload.sub };
+  } catch {
+    return null;
+  }
 }
