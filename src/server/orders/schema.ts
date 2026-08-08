@@ -47,6 +47,19 @@ export const listMemberOrdersQuerySchema = z.object({
   status: z.enum(ORDER_STATUSES).optional(),
 });
 
+export const orderStatusUpdateSchema = z.object({
+  toStatus: z.enum(ORDER_STATUSES, { required_error: 'Status tujuan wajib diisi' }),
+  note: z.string().trim().max(500).optional(),
+});
+
+export const bulkOrderStatusUpdateSchema = z.object({
+  orderIds: z
+    .array(z.string().uuid('ID order tidak valid'))
+    .min(1, 'Minimal 1 order')
+    .max(100, 'Maksimal 100 order sekaligus'),
+  toStatus: z.enum(ORDER_STATUSES, { required_error: 'Status tujuan wajib diisi' }),
+});
+
 export const listAdminOrdersQuerySchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(100).default(20),
