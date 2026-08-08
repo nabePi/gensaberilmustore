@@ -1,5 +1,6 @@
 export const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024;
 export const MAX_IMAGES_PER_PRODUCT = 8;
+export const MAX_AVATAR_SIZE_BYTES = 2 * 1024 * 1024;
 
 const IMAGE_EXTENSION_BY_MIME: Record<string, string> = {
   'image/jpeg': 'jpg',
