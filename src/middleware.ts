@@ -5,18 +5,11 @@ import { getAdminSession, getSession } from '@/server/auth';
 
 export const config = {
   runtime: 'nodejs',
-  matcher: [
-    '/admin/:path*',
-    '/api/admin/:path*',
-    '/member/:path*',
-    '/api/member/:path*',
-    '/api/cart/:path*',
-    '/api/orders/:path*',
-  ],
+  matcher: ['/admin/:path*', '/api/admin/:path*', '/member/:path*', '/api/member/:path*'],
 };
 
 const ADMIN_PREFIXES = ['/admin', '/api/admin'];
-const MEMBER_PREFIXES = ['/member', '/api/member', '/api/cart', '/api/orders'];
+const MEMBER_PREFIXES = ['/member', '/api/member'];
 
 function unauthorized(request: NextRequest, loginPath: string): NextResponse {
   if (request.nextUrl.pathname.startsWith('/api/')) {

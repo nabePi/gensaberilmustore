@@ -17,6 +17,7 @@ const cartInclude = {
       product: {
         select: {
           id: true,
+          slug: true,
           title: true,
           isActive: true,
           stock: true,
@@ -152,6 +153,7 @@ export function serializeCart(cart: CartWithItems) {
     return {
       id: item.id,
       productId: item.productId,
+      slug: product.slug,
       title: product.title,
       imageUrl: product.images[0]?.url ?? null,
       priceSnapshot: item.priceSnapshot,

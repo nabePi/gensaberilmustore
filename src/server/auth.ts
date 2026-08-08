@@ -1,4 +1,5 @@
 import type { Role } from '@prisma/client';
+import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
@@ -48,6 +49,11 @@ export function getSession(request: NextRequest): Promise<SessionUser | null> {
 
 export function getAdminSession(request: NextRequest): Promise<SessionUser | null> {
   return loadSession(request.cookies.get(ADMIN_SESSION_COOKIE_NAME)?.value);
+}
+
+export async function getSessionUser(): Promise<SessionUser | null> {
+  const cookieStore = await cookies();
+  return loadSession(cookieStore.get(SESSION_COOKIE_NAME)?.value);
 }
 
 export class UnauthorizedError extends Error {}

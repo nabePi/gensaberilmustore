@@ -45,7 +45,7 @@ describe('middleware', () => {
   });
 
   it('returns 401 for a protected member API route without a session', async () => {
-    const response = await middleware(requestFor('/api/orders'));
+    const response = await middleware(requestFor('/api/member/profile'));
     expect(response.status).toBe(401);
   });
 
@@ -77,15 +77,23 @@ describe('middleware', () => {
     expect(response.status).toBe(401);
   });
 
-  it('passes through a protected cart API route for a valid member session', async () => {
+  it('passes through a protected member API route for a valid member session', async () => {
     const buyer = await createTestUser('BUYER');
     const { token } = await createSession({ userId: buyer.id });
 
     const response = await middleware(
-      requestFor('/api/cart/items', `${SESSION_COOKIE_NAME}=${token}`),
+      requestFor('/api/member/profile', `${SESSION_COOKIE_NAME}=${token}`),
     );
 
     expect(response.headers.get('x-middleware-next')).toBe('1');
+  });
+
+  it('passes through cart and order API routes for guests, since they manage their own auth', async () => {
+    const cartResponse = await middleware(requestFor('/api/cart/items'));
+    expect(cartResponse.headers.get('x-middleware-next')).toBe('1');
+
+    const ordersResponse = await middleware(requestFor('/api/orders'));
+    expect(ordersResponse.headers.get('x-middleware-next')).toBe('1');
   });
 
   it('passes through unrelated paths regardless of session state', async () => {
