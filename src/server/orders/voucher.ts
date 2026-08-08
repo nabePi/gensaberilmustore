@@ -1,5 +1,7 @@
 import type { Prisma, PrismaClient, Voucher } from '@prisma/client';
 
+import { validateVoucherCode, type VoucherValidationReason } from '@/server/vouchers/validate';
+
 export class VoucherValidationError extends Error {}
 
 export type VoucherValidationResult = {
@@ -9,55 +11,27 @@ export type VoucherValidationResult = {
 
 type Db = PrismaClient | Prisma.TransactionClient;
 
-function computeDiscountAmount(voucher: Voucher, subtotal: number): number {
-  const rawDiscount =
-    voucher.type === 'PERCENT' ? Math.floor((subtotal * voucher.value) / 100) : voucher.value;
-
-  const cappedByMax =
-    voucher.maxDiscount !== null ? Math.min(rawDiscount, voucher.maxDiscount) : rawDiscount;
-
-  return Math.max(0, Math.min(cappedByMax, subtotal));
-}
+const REASON_MESSAGES: Record<VoucherValidationReason, string> = {
+  NOT_FOUND: 'Voucher tidak ditemukan atau tidak aktif',
+  INACTIVE: 'Voucher tidak ditemukan atau tidak aktif',
+  NOT_STARTED: 'Voucher belum berlaku',
+  EXPIRED: 'Voucher sudah kedaluwarsa',
+  WRONG_CHANNEL: 'Voucher tidak berlaku untuk channel ini',
+  MIN_PURCHASE_NOT_MET: 'Belanja belum mencapai minimum pembelian voucher',
+  QUOTA_EXCEEDED: 'Kuota voucher sudah habis',
+  USER_LIMIT_REACHED: 'Voucher sudah mencapai batas penggunaan Anda',
+};
 
 export async function validateVoucherForOrder(
   db: Db,
   code: string,
   { subtotal, userId }: { subtotal: number; userId: string | null },
 ): Promise<VoucherValidationResult> {
-  const voucher = await db.voucher.findUnique({ where: { code } });
+  const result = await validateVoucherCode(db, code, { subtotal, channel: 'ONLINE', userId });
 
-  if (!voucher || !voucher.isActive) {
-    throw new VoucherValidationError('Voucher tidak ditemukan atau tidak aktif');
+  if (!result.valid) {
+    throw new VoucherValidationError(REASON_MESSAGES[result.reason]);
   }
 
-  if (voucher.channel !== 'ALL' && voucher.channel !== 'ONLINE') {
-    throw new VoucherValidationError('Voucher tidak berlaku untuk channel ini');
-  }
-
-  const now = new Date();
-  if (voucher.startsAt && now < voucher.startsAt) {
-    throw new VoucherValidationError('Voucher belum berlaku');
-  }
-  if (voucher.expiresAt && now > voucher.expiresAt) {
-    throw new VoucherValidationError('Voucher sudah kedaluwarsa');
-  }
-
-  if (subtotal < voucher.minPurchase) {
-    throw new VoucherValidationError('Belanja belum mencapai minimum pembelian voucher');
-  }
-
-  if (voucher.quota !== null && voucher.usedCount >= voucher.quota) {
-    throw new VoucherValidationError('Kuota voucher sudah habis');
-  }
-
-  if (userId && voucher.perUserLimit !== null) {
-    const redemptionCount = await db.voucherRedemption.count({
-      where: { voucherId: voucher.id, userId },
-    });
-    if (redemptionCount >= voucher.perUserLimit) {
-      throw new VoucherValidationError('Voucher sudah mencapai batas penggunaan Anda');
-    }
-  }
-
-  return { voucher, discountAmount: computeDiscountAmount(voucher, subtotal) };
+  return { voucher: result.voucher, discountAmount: result.discountAmount };
 }
