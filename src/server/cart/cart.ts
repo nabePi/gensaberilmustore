@@ -21,6 +21,7 @@ const cartInclude = {
           isActive: true,
           stock: true,
           finalPrice: true,
+          discountPercent: true,
           images: {
             orderBy: [{ isPrimary: 'desc' }, { position: 'asc' }],
             take: 1,
@@ -81,6 +82,61 @@ export async function resolveCart(request: NextRequest): Promise<ResolvedCart> {
 export async function getCartById(cartId: string): Promise<CartWithItems> {
   const cart = await prisma.cart.findUniqueOrThrow({ where: { id: cartId }, include: cartInclude });
   return cart;
+}
+
+export async function mergeGuestCartIntoUserCart(
+  guestToken: string,
+  userId: string,
+): Promise<void> {
+  const guestCart = await prisma.cart.findUnique({ where: { guestToken }, include: cartInclude });
+
+  if (!guestCart) {
+    return;
+  }
+
+  if (guestCart.items.length === 0) {
+    await prisma.cart.delete({ where: { id: guestCart.id } });
+    return;
+  }
+
+  const memberCart = await prisma.cart.upsert({
+    where: { userId },
+    update: {},
+    create: { userId },
+    include: cartInclude,
+  });
+
+  await prisma.$transaction(async (tx) => {
+    for (const guestItem of guestCart.items) {
+      const existing = memberCart.items.find((item) => item.productId === guestItem.productId);
+      const cappedQuantity = Math.min(
+        (existing?.quantity ?? 0) + guestItem.quantity,
+        guestItem.product.stock,
+      );
+
+      if (cappedQuantity <= 0) {
+        continue;
+      }
+
+      if (existing) {
+        await tx.cartItem.update({
+          where: { id: existing.id },
+          data: { quantity: cappedQuantity, priceSnapshot: guestItem.product.finalPrice },
+        });
+      } else {
+        await tx.cartItem.create({
+          data: {
+            cartId: memberCart.id,
+            productId: guestItem.productId,
+            quantity: cappedQuantity,
+            priceSnapshot: guestItem.product.finalPrice,
+          },
+        });
+      }
+    }
+
+    await tx.cart.delete({ where: { id: guestCart.id } });
+  });
 }
 
 export function serializeCart(cart: CartWithItems) {
