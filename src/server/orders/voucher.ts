@@ -25,9 +25,13 @@ const REASON_MESSAGES: Record<VoucherValidationReason, string> = {
 export async function validateVoucherForOrder(
   db: Db,
   code: string,
-  { subtotal, userId }: { subtotal: number; userId: string | null },
+  {
+    subtotal,
+    userId,
+    channel = 'ONLINE',
+  }: { subtotal: number; userId: string | null; channel?: 'ONLINE' | 'POS' },
 ): Promise<VoucherValidationResult> {
-  const result = await validateVoucherCode(db, code, { subtotal, channel: 'ONLINE', userId });
+  const result = await validateVoucherCode(db, code, { subtotal, channel, userId });
 
   if (!result.valid) {
     throw new VoucherValidationError(REASON_MESSAGES[result.reason]);

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 
 import { prisma } from '@/lib/db';
+import { generateUniqueAffiliateCode } from '@/server/affiliate/code';
 import { withAuth } from '@/server/auth';
 
 type RouteContext = { params: Promise<{ id: string }> };
@@ -45,7 +46,10 @@ export const PATCH = withAuth<RouteContext>(
   async (request: NextRequest, { params }) => {
     const { id } = await params;
 
-    const existing = await prisma.user.findUnique({ where: { id }, select: { role: true } });
+    const existing = await prisma.user.findUnique({
+      where: { id },
+      select: { role: true, name: true, email: true },
+    });
     if (!existing || existing.role === 'ADMIN') {
       return NextResponse.json({ error: 'Member tidak ditemukan' }, { status: 404 });
     }
@@ -62,6 +66,23 @@ export const PATCH = withAuth<RouteContext>(
 
     const { role } = parsed.data;
 
+    let affiliateCode: string | null = null;
+    if (role === 'AFFILIATE') {
+      const profile = await prisma.affiliateProfile.findUnique({ where: { userId: id } });
+      if (!profile) {
+        affiliateCode = await generateUniqueAffiliateCode(
+          existing.name ?? existing.email,
+          async (candidate) =>
+            Boolean(
+              await prisma.affiliateProfile.findUnique({
+                where: { code: candidate },
+                select: { id: true },
+              }),
+            ),
+        );
+      }
+    }
+
     const member = await prisma.$transaction(async (tx) => {
       const updated = await tx.user.update({
         where: { id },
@@ -71,6 +92,23 @@ export const PATCH = withAuth<RouteContext>(
 
       if (role === 'BUYER') {
         await tx.affiliateProfile.updateMany({ where: { userId: id }, data: { isActive: false } });
+      } else if (role === 'AFFILIATE') {
+        if (affiliateCode) {
+          await tx.affiliateProfile.create({
+            data: {
+              userId: id,
+              code: affiliateCode,
+              payoutBankName: '',
+              payoutBankAccount: '',
+              payoutBankHolder: '',
+            },
+          });
+        } else {
+          await tx.affiliateProfile.updateMany({
+            where: { userId: id },
+            data: { isActive: true },
+          });
+        }
       }
 
       return updated;

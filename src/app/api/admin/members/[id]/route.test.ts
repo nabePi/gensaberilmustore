@@ -109,6 +109,46 @@ describe('PATCH /api/admin/members/[id]', () => {
     expect(profile?.isActive).toBe(false);
   });
 
+  it('creates an affiliate profile with a generated code when promoted from buyer to affiliate', async () => {
+    const cookie = await createAdminCookie();
+    const member = await createTestUser('BUYER');
+
+    const response = await PATCH(buildPatchRequest(member.id, { role: 'AFFILIATE' }, cookie), {
+      params: Promise.resolve({ id: member.id }),
+    });
+
+    expect(response.status).toBe(200);
+    const profile = await prisma.affiliateProfile.findUnique({ where: { userId: member.id } });
+    expect(profile).not.toBeNull();
+    expect(profile?.code).toBeTruthy();
+    expect(profile?.isActive).toBe(true);
+  });
+
+  it('reactivates an existing inactive affiliate profile instead of duplicating it', async () => {
+    const cookie = await createAdminCookie();
+    const member = await createTestUser('BUYER');
+    const existingProfile = await prisma.affiliateProfile.create({
+      data: {
+        userId: member.id,
+        code: `AFF-${randomUUID()}`,
+        payoutBankName: 'Bank',
+        payoutBankAccount: '123',
+        payoutBankHolder: 'Test User',
+        isActive: false,
+      },
+    });
+
+    const response = await PATCH(buildPatchRequest(member.id, { role: 'AFFILIATE' }, cookie), {
+      params: Promise.resolve({ id: member.id }),
+    });
+
+    expect(response.status).toBe(200);
+    const profile = await prisma.affiliateProfile.findUnique({ where: { userId: member.id } });
+    expect(profile?.id).toBe(existingProfile.id);
+    expect(profile?.code).toBe(existingProfile.code);
+    expect(profile?.isActive).toBe(true);
+  });
+
   it('rejects invalid role values', async () => {
     const cookie = await createAdminCookie();
     const member = await createTestUser('BUYER');
