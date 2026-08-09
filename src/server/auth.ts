@@ -56,6 +56,11 @@ export async function getSessionUser(): Promise<SessionUser | null> {
   return loadSession(cookieStore.get(SESSION_COOKIE_NAME)?.value);
 }
 
+export async function getAdminSessionUser(): Promise<SessionUser | null> {
+  const cookieStore = await cookies();
+  return loadSession(cookieStore.get(ADMIN_SESSION_COOKIE_NAME)?.value);
+}
+
 export class UnauthorizedError extends Error {}
 
 export class ForbiddenError extends Error {}

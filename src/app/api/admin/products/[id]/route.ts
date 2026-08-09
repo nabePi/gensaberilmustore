@@ -9,6 +9,32 @@ import { generateUniqueSlug } from '@/server/products/slug';
 
 type RouteContext = { params: Promise<{ id: string }> };
 
+export const GET = withAuth<RouteContext>(
+  async (_request: NextRequest, { params }) => {
+    const { id } = await params;
+
+    const product = await prisma.product.findUnique({
+      where: { id },
+      include: {
+        images: true,
+        categories: { select: { category: { select: { id: true, name: true, slug: true } } } },
+        tags: { select: { tag: { select: { id: true, name: true, slug: true } } } },
+      },
+    });
+
+    if (!product) {
+      return NextResponse.json({ error: 'Produk tidak ditemukan' }, { status: 404 });
+    }
+
+    return NextResponse.json({
+      ...product,
+      categories: product.categories.map(({ category }) => category),
+      tags: product.tags.map(({ tag }) => tag),
+    });
+  },
+  { role: 'ADMIN' },
+);
+
 export const PUT = withAuth<RouteContext>(
   async (request: NextRequest, { params }) => {
     const { id } = await params;

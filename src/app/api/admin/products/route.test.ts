@@ -3,7 +3,7 @@ import { randomUUID } from 'node:crypto';
 import { NextRequest } from 'next/server';
 import { afterAll, describe, expect, it } from 'vitest';
 
-import { POST } from '@/app/api/admin/products/route';
+import { GET, POST } from '@/app/api/admin/products/route';
 import { prisma } from '@/lib/db';
 import { hashPassword } from '@/server/auth/password';
 import { ADMIN_SESSION_COOKIE_NAME, createSession } from '@/server/auth/session';
@@ -34,7 +34,7 @@ function validPayload(overrides: Record<string, unknown> = {}) {
     stock: 10,
     weightGram: 100,
     pageCount: 100,
-    coverType: 'SOFTCOVER',
+    coverType: 'SOFTCOVER' as const,
     publishYear: 2024,
     ...overrides,
   };
@@ -129,5 +129,81 @@ describe('POST /api/admin/products', () => {
     expect(response.status).toBe(201);
     expect(json.categories.map((c: { id: string }) => c.id)).toContain(category.id);
     expect(json.tags.map((t: { id: string }) => t.id)).toContain(tag.id);
+  });
+});
+
+function buildGetRequest(cookie?: string, query = '') {
+  return new NextRequest(`http://localhost/api/admin/products${query}`, {
+    method: 'GET',
+    headers: cookie ? { cookie } : undefined,
+  });
+}
+
+describe('GET /api/admin/products', () => {
+  afterAll(async () => {
+    await prisma.product.deleteMany({ where: { id: { in: createdProductIds } } });
+  });
+
+  it('returns 401 without an admin session', async () => {
+    const response = await GET(buildGetRequest());
+    expect(response.status).toBe(401);
+  });
+
+  it('lists products including inactive ones', async () => {
+    const cookie = await createAdminCookie();
+    const marker = randomUUID();
+    const active = await prisma.product.create({
+      data: {
+        ...validPayload({ title: `Active-${marker}` }),
+        subtitle: '',
+        slug: `slug-${randomUUID()}`,
+        finalPrice: 100000,
+      },
+    });
+    const inactive = await prisma.product.create({
+      data: {
+        ...validPayload({ title: `Inactive-${marker}` }),
+        subtitle: '',
+        slug: `slug-${randomUUID()}`,
+        finalPrice: 100000,
+        isActive: false,
+      },
+    });
+    createdProductIds.push(active.id, inactive.id);
+
+    const response = await GET(buildGetRequest(cookie, `?q=${marker}`));
+    const json = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(json.items).toHaveLength(2);
+  });
+
+  it('filters by stock', async () => {
+    const cookie = await createAdminCookie();
+    const marker = randomUUID();
+    const stocked = await prisma.product.create({
+      data: {
+        ...validPayload({ title: `Stocked-${marker}`, stock: 5 }),
+        subtitle: '',
+        slug: `slug-${randomUUID()}`,
+        finalPrice: 100000,
+      },
+    });
+    const empty = await prisma.product.create({
+      data: {
+        ...validPayload({ title: `Empty-${marker}`, stock: 0 }),
+        subtitle: '',
+        slug: `slug-${randomUUID()}`,
+        finalPrice: 100000,
+      },
+    });
+    createdProductIds.push(stocked.id, empty.id);
+
+    const response = await GET(buildGetRequest(cookie, `?q=${marker}&stock=outofstock`));
+    const json = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(json.items).toHaveLength(1);
+    expect(json.items[0].stock).toBe(0);
   });
 });
