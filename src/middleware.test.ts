@@ -52,7 +52,9 @@ describe('middleware', () => {
   it('redirects to /login for a member page without a session', async () => {
     const response = await middleware(requestFor('/member/profile'));
     expect(response.status).toBe(307);
-    expect(response.headers.get('location')).toBe('http://localhost/login');
+    expect(response.headers.get('location')).toBe(
+      'http://localhost/login?next=%2Fmember%2Fprofile',
+    );
   });
 
   it('passes through an admin API route for a valid admin session', async () => {

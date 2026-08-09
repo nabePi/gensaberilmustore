@@ -32,7 +32,7 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
   if (MEMBER_PREFIXES.some((prefix) => pathname.startsWith(prefix))) {
     const user = await getSession(request);
     if (!user) {
-      return unauthorized(request, '/login');
+      return unauthorized(request, `/login?next=${encodeURIComponent(pathname)}`);
     }
     return NextResponse.next();
   }
