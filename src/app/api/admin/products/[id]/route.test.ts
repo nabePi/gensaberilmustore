@@ -3,7 +3,7 @@ import { randomUUID } from 'node:crypto';
 import { NextRequest } from 'next/server';
 import { afterAll, describe, expect, it } from 'vitest';
 
-import { DELETE, PUT } from '@/app/api/admin/products/[id]/route';
+import { DELETE, GET, PUT } from '@/app/api/admin/products/[id]/route';
 import { prisma } from '@/lib/db';
 import { hashPassword } from '@/server/auth/password';
 import { ADMIN_SESSION_COOKIE_NAME, createSession } from '@/server/auth/session';
@@ -65,6 +65,35 @@ afterAll(async () => {
   await prisma.product.deleteMany({ where: { id: { in: createdProductIds } } });
   await prisma.category.deleteMany({ where: { id: { in: createdCategoryIds } } });
   await prisma.user.deleteMany({ where: { email: { in: createdEmails } } });
+});
+
+describe('GET /api/admin/products/[id]', () => {
+  it('rejects unauthenticated requests', async () => {
+    const response = await GET(buildRequest('GET', undefined, ''), context(randomUUID()));
+    expect(response.status).toBe(401);
+  });
+
+  it('returns 404 for a non-existent product', async () => {
+    const cookie = await createAdminCookie();
+    const response = await GET(buildRequest('GET', undefined, cookie), context(randomUUID()));
+    expect(response.status).toBe(404);
+  });
+
+  it('returns product detail with categories', async () => {
+    const cookie = await createAdminCookie();
+    const category = await prisma.category.create({
+      data: { name: `Cat ${randomUUID()}`, slug: `cat-${randomUUID()}` },
+    });
+    createdCategoryIds.push(category.id);
+    const product = await createProduct({ categories: { create: { categoryId: category.id } } });
+
+    const response = await GET(buildRequest('GET', undefined, cookie), context(product.id));
+    const json = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(json.id).toBe(product.id);
+    expect(json.categories.map((c: { id: string }) => c.id)).toContain(category.id);
+  });
 });
 
 describe('PUT /api/admin/products/[id]', () => {
