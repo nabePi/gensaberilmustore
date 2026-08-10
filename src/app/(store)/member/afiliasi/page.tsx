@@ -268,9 +268,7 @@ export default function MemberAfiliasiPage() {
               <div key={product.productId} className={`p-4 ${cardBase}`}>
                 <p className="text-sm font-semibold text-foreground">{product.title}</p>
                 <div className="mt-2">
-                  <CopyLinkInput
-                    link={`${origin}/products/${product.slug}?ref=${stats.profile.code}`}
-                  />
+                  <CopyLinkInput link={`${origin}/r/${stats.profile.code}?p=${product.slug}`} />
                 </div>
               </div>
             ))}

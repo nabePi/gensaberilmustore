@@ -524,20 +524,21 @@ model AffiliatePayout {
 }
 
 model StoreSetting {
-  id                   Int      @id @default(1)
-  name                 String
-  email                String
-  phone                String
-  address              String
-  defaultShippingCost  Int
-  freeShippingMinTotal Int
-  bank1Name            String
-  bank1Number          String
-  bank1Holder          String
-  bank2Name            String
-  bank2Number          String
-  bank2Holder          String
-  updatedAt            DateTime @updatedAt
+  id                       Int      @id @default(1)
+  name                     String
+  email                    String
+  phone                    String
+  address                  String
+  defaultShippingCost      Int
+  freeShippingMinTotal     Int
+  bank1Name                String
+  bank1Number              String
+  bank1Holder              String
+  bank2Name                String
+  bank2Number              String
+  bank2Holder              String
+  defaultCommissionPercent Decimal  @default(5) @db.Decimal(5, 2)
+  updatedAt                DateTime @updatedAt
 }
 
 model HomepageConfig {

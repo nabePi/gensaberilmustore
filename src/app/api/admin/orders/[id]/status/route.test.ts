@@ -170,7 +170,39 @@ describe('PATCH /api/admin/orders/[id]/status', () => {
     expect(updatedProduct?.stock).toBe(product.stock + 3);
   });
 
-  it('approves the affiliate conversion when an order is completed', async () => {
+  it('creates a pending affiliate conversion when an eligible order is paid', async () => {
+    const cookie = await createAdminCookie();
+    const affiliateUser = await createTestUser('AFFILIATE');
+    const affiliateProfile = await prisma.affiliateProfile.create({
+      data: {
+        userId: affiliateUser.id,
+        code: `AFF-${randomUUID()}`,
+        payoutBankName: 'Bank',
+        payoutBankAccount: '123',
+        payoutBankHolder: 'Holder',
+      },
+    });
+    createdAffiliateProfileIds.push(affiliateProfile.id);
+
+    const { order, product } = await createOrder({
+      affiliateUserId: affiliateUser.id,
+      affiliateCode: affiliateProfile.code,
+    });
+    await prisma.affiliateProductSelection.create({
+      data: { affiliateProfileId: affiliateProfile.id, productId: product.id },
+    });
+
+    const response = await PATCH(buildRequest({ toStatus: 'PAID' }, cookie), context(order.id));
+    expect(response.status).toBe(200);
+
+    const conversion = await prisma.affiliateConversion.findUnique({
+      where: { orderId: order.id },
+    });
+    expect(conversion?.status).toBe('PENDING');
+    expect(conversion?.commissionAmount).toBeGreaterThanOrEqual(0);
+  });
+
+  it('does not create a conversion when the order has no affiliate-selected product', async () => {
     const cookie = await createAdminCookie();
     const affiliateUser = await createTestUser('AFFILIATE');
     const affiliateProfile = await prisma.affiliateProfile.create({
@@ -185,21 +217,91 @@ describe('PATCH /api/admin/orders/[id]/status', () => {
     createdAffiliateProfileIds.push(affiliateProfile.id);
 
     const { order } = await createOrder({
-      status: 'SHIPPED',
       affiliateUserId: affiliateUser.id,
       affiliateCode: affiliateProfile.code,
     });
 
-    const response = await PATCH(
-      buildRequest({ toStatus: 'COMPLETED' }, cookie),
-      context(order.id),
-    );
+    const response = await PATCH(buildRequest({ toStatus: 'PAID' }, cookie), context(order.id));
     expect(response.status).toBe(200);
+
+    const conversion = await prisma.affiliateConversion.findUnique({
+      where: { orderId: order.id },
+    });
+    expect(conversion).toBeNull();
+  });
+
+  it('approves the affiliate conversion when an eligible order is completed', async () => {
+    const cookie = await createAdminCookie();
+    const affiliateUser = await createTestUser('AFFILIATE');
+    const affiliateProfile = await prisma.affiliateProfile.create({
+      data: {
+        userId: affiliateUser.id,
+        code: `AFF-${randomUUID()}`,
+        payoutBankName: 'Bank',
+        payoutBankAccount: '123',
+        payoutBankHolder: 'Holder',
+      },
+    });
+    createdAffiliateProfileIds.push(affiliateProfile.id);
+
+    const { order, product } = await createOrder({
+      affiliateUserId: affiliateUser.id,
+      affiliateCode: affiliateProfile.code,
+    });
+    await prisma.affiliateProductSelection.create({
+      data: { affiliateProfileId: affiliateProfile.id, productId: product.id },
+    });
+    await prisma.affiliateCommissionRate.create({
+      data: { productId: product.id, percent: 10 },
+    });
+
+    for (const toStatus of ['PAID', 'PACKED', 'SHIPPED', 'COMPLETED'] as const) {
+      const stepResponse = await PATCH(buildRequest({ toStatus }, cookie), context(order.id));
+      expect(stepResponse.status).toBe(200);
+    }
 
     const conversion = await prisma.affiliateConversion.findUnique({
       where: { orderId: order.id },
     });
     expect(conversion?.status).toBe('APPROVED');
     expect(conversion?.approvedAt).not.toBeNull();
+    expect(conversion?.commissionAmount).toBeGreaterThan(0);
+  });
+
+  it('rejects the pending affiliate conversion when an eligible order is cancelled', async () => {
+    const cookie = await createAdminCookie();
+    const affiliateUser = await createTestUser('AFFILIATE');
+    const affiliateProfile = await prisma.affiliateProfile.create({
+      data: {
+        userId: affiliateUser.id,
+        code: `AFF-${randomUUID()}`,
+        payoutBankName: 'Bank',
+        payoutBankAccount: '123',
+        payoutBankHolder: 'Holder',
+      },
+    });
+    createdAffiliateProfileIds.push(affiliateProfile.id);
+
+    const { order, product } = await createOrder({
+      affiliateUserId: affiliateUser.id,
+      affiliateCode: affiliateProfile.code,
+    });
+    await prisma.affiliateProductSelection.create({
+      data: { affiliateProfileId: affiliateProfile.id, productId: product.id },
+    });
+
+    const paidResponse = await PATCH(buildRequest({ toStatus: 'PAID' }, cookie), context(order.id));
+    expect(paidResponse.status).toBe(200);
+
+    const cancelResponse = await PATCH(
+      buildRequest({ toStatus: 'CANCELLED' }, cookie),
+      context(order.id),
+    );
+    expect(cancelResponse.status).toBe(200);
+
+    const conversion = await prisma.affiliateConversion.findUnique({
+      where: { orderId: order.id },
+    });
+    expect(conversion?.status).toBe('REJECTED');
   });
 });

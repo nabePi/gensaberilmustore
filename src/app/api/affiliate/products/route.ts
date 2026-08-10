@@ -98,3 +98,5 @@ export const PUT = withAuth(async (request: NextRequest, { user }) => {
 
   return NextResponse.json({ success: true });
 });
+
+export const POST = PUT;

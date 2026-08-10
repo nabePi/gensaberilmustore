@@ -28,6 +28,13 @@ declare global {
 }
 
 const SNAP_SCRIPT_URL = 'https://app.sandbox.midtrans.com/snap/snap.js';
+const AFFILIATE_COOKIE_NAME = 'gsb_aff';
+
+function readAffiliateCookie(): string | undefined {
+  if (typeof document === 'undefined') return undefined;
+  const match = document.cookie.match(new RegExp(`(?:^|; )${AFFILIATE_COOKIE_NAME}=([^;]*)`));
+  return match ? decodeURIComponent(match[1]!) : undefined;
+}
 
 const PAYMENT_METHODS = [
   { value: 'BANK_TRANSFER', label: 'Transfer Bank' },
@@ -236,6 +243,8 @@ export default function CheckoutPage() {
     setSubmitError(null);
     setSubmitting(true);
 
+    const affiliateCode = readAffiliateCookie();
+
     const payload =
       values.mode === 'receiver'
         ? {
@@ -243,6 +252,7 @@ export default function CheckoutPage() {
             note: values.note,
             paymentMethod: values.paymentMethod,
             voucherCode: voucherResult && voucherResult.valid ? voucherResult.code : undefined,
+            affiliateCode,
           }
         : {
             receiverName: values.receiverName,
@@ -253,6 +263,7 @@ export default function CheckoutPage() {
             note: values.note,
             paymentMethod: values.paymentMethod,
             voucherCode: voucherResult && voucherResult.valid ? voucherResult.code : undefined,
+            affiliateCode,
           };
 
     try {
