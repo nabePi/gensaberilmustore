@@ -33,21 +33,37 @@ const envSchema = z.object({
   NOTIFY_FROM_EMAIL: z.string().email().optional(),
   CRON_SECRET: z.string().optional(),
 
-  // Storage placeholders
-  STORAGE_PROVIDER: z.enum(['s3', 'local']).optional(),
-  S3_ENDPOINT: z.string().optional(),
-  S3_BUCKET: z.string().optional(),
-  S3_KEY: z.string().optional(),
-  S3_SECRET: z.string().optional(),
+  // File storage: local disk (dev default) or Cloudflare R2 (S3-compatible)
+  STORAGE_PROVIDER: z.enum(['r2', 'local']).default('local'),
+  R2_ACCOUNT_ID: z.string().optional(),
+  R2_ACCESS_KEY_ID: z.string().optional(),
+  R2_SECRET_ACCESS_KEY: z.string().optional(),
+  R2_BUCKET: z.string().optional(),
+  R2_PUBLIC_URL: z.string().optional(),
 
   // Monitoring placeholders
   SENTRY_DSN: z.string().optional(),
 });
 
-const validatedEnvSchema = envSchema.refine((data) => data.AUTH_SECRET ?? data.NEXTAUTH_SECRET, {
-  message: 'Either NEXTAUTH_SECRET or AUTH_SECRET is required (min 32 characters)',
-  path: ['NEXTAUTH_SECRET'],
-});
+const validatedEnvSchema = envSchema
+  .refine((data) => data.AUTH_SECRET ?? data.NEXTAUTH_SECRET, {
+    message: 'Either NEXTAUTH_SECRET or AUTH_SECRET is required (min 32 characters)',
+    path: ['NEXTAUTH_SECRET'],
+  })
+  .refine(
+    (data) =>
+      data.STORAGE_PROVIDER !== 'r2' ||
+      (data.R2_ACCOUNT_ID &&
+        data.R2_ACCESS_KEY_ID &&
+        data.R2_SECRET_ACCESS_KEY &&
+        data.R2_BUCKET &&
+        data.R2_PUBLIC_URL),
+    {
+      message:
+        'R2_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_BUCKET, and R2_PUBLIC_URL are required when STORAGE_PROVIDER=r2',
+      path: ['STORAGE_PROVIDER'],
+    },
+  );
 
 const formatFieldErrors = (errors: Record<string, string[] | undefined>) =>
   Object.entries(errors)
@@ -88,10 +104,11 @@ export const env = {
   cronSecret: rawEnv.CRON_SECRET,
 
   storageProvider: rawEnv.STORAGE_PROVIDER,
-  s3Endpoint: rawEnv.S3_ENDPOINT,
-  s3Bucket: rawEnv.S3_BUCKET,
-  s3Key: rawEnv.S3_KEY,
-  s3Secret: rawEnv.S3_SECRET,
+  r2AccountId: rawEnv.R2_ACCOUNT_ID,
+  r2AccessKeyId: rawEnv.R2_ACCESS_KEY_ID,
+  r2SecretAccessKey: rawEnv.R2_SECRET_ACCESS_KEY,
+  r2Bucket: rawEnv.R2_BUCKET,
+  r2PublicUrl: rawEnv.R2_PUBLIC_URL,
 
   sentryDsn: rawEnv.SENTRY_DSN,
 };

@@ -54,7 +54,7 @@ The following variables are declared in the validator but are optional until the
 - `MIDTRANS_SERVER_KEY`, `MIDTRANS_CLIENT_KEY`, `MIDTRANS_ENV` (`sandbox` or `production`)
 - `FONNTE_TOKEN`
 - `RESEND_API_KEY`
-- `STORAGE_PROVIDER` (`s3` or `local`), `S3_ENDPOINT`, `S3_BUCKET`, `S3_KEY`, `S3_SECRET`
+- `STORAGE_PROVIDER` (`r2` or `local`, default `local`); when `r2`, also set `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET`, `R2_PUBLIC_URL` (Cloudflare R2, S3-compatible)
 - `SENTRY_DSN`
 
 To validate your environment without starting the dev server, run:
