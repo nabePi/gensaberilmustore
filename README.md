@@ -11,30 +11,66 @@ Next.js 15 App Router + TypeScript project for Gensa Berilmu Store.
 
 ## Local Development
 
-1. Copy the environment file and adjust it if your local Postgres uses different credentials:
+Follow these steps to get the app running on your machine from a fresh clone.
+
+1. **Install dependencies:**
+
+   ```bash
+   pnpm install
+   ```
+
+2. **Start a PostgreSQL database.** You need a running Postgres instance reachable from your machine. If you don't already have one, the quickest way is Docker:
+
+   ```bash
+   docker run --name genstore-db -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=genstore -p 5432:5432 -d postgres:16
+   ```
+
+   (Or use a native Postgres install / an existing remote dev database — any `postgresql://` connection string works.)
+
+3. **Copy the environment file and fill in the required values:**
 
    ```bash
    cp .env.example .env
    ```
 
-2. Install dependencies and start the dev server:
+   - `DATABASE_URL` — defaults to `postgresql://postgres:postgres@localhost:5432/genstore`, matching the Docker command above. Change it if your database uses different credentials/host/port.
+   - `NEXTAUTH_SECRET` and `JWT_SECRET` — must each be at least 32 characters. Generate random values with:
+     ```bash
+     openssl rand -base64 32
+     ```
+   - Everything else in `.env.example` (Midtrans, Fonnte, Resend, R2, Sentry, etc.) is optional for local development — leave those commented out unless you're testing that specific integration. Image uploads fall back to local disk storage (`public/uploads/`) when `STORAGE_PROVIDER` is unset.
+
+4. **Verify your environment is valid** (optional but recommended):
 
    ```bash
-   pnpm install
+   pnpm env:check
+   ```
+
+5. **Apply database migrations and generate the Prisma Client:**
+
+   ```bash
+   pnpm db:migrate:dev
+   ```
+
+6. **Seed the database** with an admin account, categories, sample products, cities, and vouchers:
+
+   ```bash
+   pnpm db:seed
+   ```
+
+   This creates an admin login you can use at `/admin/login`: **`admin@gensaberilmu.co.id`** / **`admin123`**.
+
+7. **Start the dev server:**
+
+   ```bash
    pnpm dev
    ```
 
-   The default `.env.example` points to a local PostgreSQL database: `genstore` on `localhost:5432` with user `postgres` / password `postgres`.
-
-Open [http://localhost:3000](http://localhost:3000) in your browser.
+Open [http://localhost:3000](http://localhost:3000) in your browser (admin panel at [http://localhost:3000/admin](http://localhost:3000/admin)).
 
 ## Environment Variables
 
-All runtime secrets and configuration are validated via `src/env.ts` (using Zod) before the app boots. Copy `.env.example` to `.env` and fill in the required values:
-
-```bash
-cp .env.example .env
-```
+All runtime secrets and configuration are validated via `src/env.ts` (using Zod) before the app boots.
 
 ### Required variables
 
@@ -111,7 +147,7 @@ Make sure `DATABASE_URL` is set in `.env` before running migrations or Studio.
 Seed the database with an admin account, initial categories, 20 sample products, cities, and vouchers:
 
 ```bash
-pnpm prisma db seed
+pnpm db:seed
 ```
 
 The seed script (`prisma/seed.ts`) is idempotent, so it can be run multiple times without creating duplicate data.
