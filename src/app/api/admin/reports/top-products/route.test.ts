@@ -3,7 +3,7 @@ import { randomUUID } from 'node:crypto';
 import { NextRequest } from 'next/server';
 import { afterAll, describe, expect, it } from 'vitest';
 
-import { GET } from '@/app/api/admin/reports/summary/route';
+import { GET } from '@/app/api/admin/reports/top-products/route';
 import { prisma } from '@/lib/db';
 import { hashPassword } from '@/server/auth/password';
 import { ADMIN_SESSION_COOKIE_NAME, createSession } from '@/server/auth/session';
@@ -12,15 +12,13 @@ const createdEmails: string[] = [];
 const createdProductIds: string[] = [];
 const createdOrderIds: string[] = [];
 
-async function createTestUser(role: 'BUYER' | 'ADMIN' = 'BUYER') {
+async function createAdminCookie() {
   const email = `test-${randomUUID()}@example.com`;
   createdEmails.push(email);
   const passwordHash = await hashPassword('Password123');
-  return prisma.user.create({ data: { email, passwordHash, name: 'Test User', role } });
-}
-
-async function createAdminCookie() {
-  const admin = await createTestUser('ADMIN');
+  const admin = await prisma.user.create({
+    data: { email, passwordHash, name: 'Admin', role: 'ADMIN' },
+  });
   const { token } = await createSession({ userId: admin.id });
   return `${ADMIN_SESSION_COOKIE_NAME}=${token}`;
 }
@@ -50,34 +48,33 @@ async function createProduct() {
 
 async function createOrder(
   status: 'AWAITING_PAYMENT' | 'PAID' | 'COMPLETED',
-  total: number,
-  userId?: string,
+  productId: string,
+  quantity: number,
+  lineTotal: number,
 ) {
-  const product = await createProduct();
   const order = await prisma.order.create({
     data: {
       orderNumber: `ORD-TEST-${randomUUID()}`,
-      userId,
       receiverName: 'Budi Santoso',
       receiverPhone: '08123456789',
       receiverEmail: 'budi@example.com',
       receiverAddress: 'Addr',
       receiverCity: 'City',
-      subtotal: total,
+      subtotal: lineTotal,
       shippingCost: 0,
       discount: 0,
-      total,
+      total: lineTotal,
       paymentMethod: 'BANK_TRANSFER',
       source: 'ONLINE',
       status,
       items: {
         create: {
-          productId: product.id,
-          titleSnapshot: product.title,
-          priceSnapshot: product.finalPrice,
+          productId,
+          titleSnapshot: 'Snapshot',
+          priceSnapshot: lineTotal,
           discountPercentSnapshot: 0,
-          quantity: 1,
-          lineTotal: product.finalPrice,
+          quantity,
+          lineTotal,
         },
       },
     },
@@ -86,16 +83,18 @@ async function createOrder(
   return order;
 }
 
-function buildRequest(cookie?: string, period?: string) {
-  const url = new URL('http://localhost/api/admin/reports/summary');
-  if (period) url.searchParams.set('period', period);
+function buildRequest(cookie?: string, params?: Record<string, string>) {
+  const url = new URL('http://localhost/api/admin/reports/top-products');
+  for (const [key, value] of Object.entries(params ?? {})) {
+    url.searchParams.set(key, value);
+  }
   return new NextRequest(url, {
     method: 'GET',
     headers: cookie ? { cookie } : undefined,
   });
 }
 
-describe('GET /api/admin/reports/summary', () => {
+describe('GET /api/admin/reports/top-products', () => {
   afterAll(async () => {
     await prisma.orderStatusHistory.deleteMany({ where: { orderId: { in: createdOrderIds } } });
     await prisma.orderItem.deleteMany({ where: { orderId: { in: createdOrderIds } } });
@@ -109,27 +108,35 @@ describe('GET /api/admin/reports/summary', () => {
     expect(response.status).toBe(401);
   });
 
-  it('returns aggregate stats counting only realized revenue', async () => {
+  it('returns top products sorted by revenue, excluding non-realized orders', async () => {
     const cookie = await createAdminCookie();
-    const buyer = await createTestUser('BUYER');
-    await createOrder('AWAITING_PAYMENT', 10000);
-    await createOrder('PAID', 20000, buyer.id);
-    await createOrder('COMPLETED', 30000, buyer.id);
+    const productA = await createProduct();
+    const productB = await createProduct();
 
-    const response = await GET(buildRequest(cookie, 'all_time'));
+    await createOrder('PAID', productA.id, 2, 40000);
+    await createOrder('COMPLETED', productA.id, 1, 20000);
+    await createOrder('AWAITING_PAYMENT', productB.id, 5, 999999);
+    await createOrder('PAID', productB.id, 1, 5000);
+
+    const response = await GET(buildRequest(cookie, { period: 'all_time', limit: '100' }));
     const json = await response.json();
 
     expect(response.status).toBe(200);
-    expect(json.totalOrders).toBeGreaterThanOrEqual(3);
-    expect(json.totalPending).toBeGreaterThanOrEqual(1);
-    expect(json.revenue).toBeGreaterThanOrEqual(50000);
-    expect(json.totalCustomers).toBeGreaterThanOrEqual(1);
-    expect(typeof json.totalProducts).toBe('number');
+    const entryA = json.items.find((item: { productId: string }) => item.productId === productA.id);
+    const entryB = json.items.find((item: { productId: string }) => item.productId === productB.id);
+    expect(entryA.quantity).toBe(3);
+    expect(entryA.revenue).toBe(60000);
+    expect(entryB.revenue).toBe(5000);
+    expect(json.totalRevenue).toBeGreaterThanOrEqual(65000);
+    const sorted = [...json.items].sort(
+      (a: { revenue: number }, b: { revenue: number }) => b.revenue - a.revenue,
+    );
+    expect(json.items).toEqual(sorted);
   });
 
-  it('rejects an invalid period', async () => {
+  it('rejects an invalid limit', async () => {
     const cookie = await createAdminCookie();
-    const response = await GET(buildRequest(cookie, 'bogus'));
+    const response = await GET(buildRequest(cookie, { limit: '0' }));
     expect(response.status).toBe(400);
   });
 });
