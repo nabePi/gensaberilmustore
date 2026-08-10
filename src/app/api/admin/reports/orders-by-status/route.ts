@@ -2,11 +2,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 
 import { withAuth } from '@/server/auth';
+import { getOrdersByStatus } from '@/server/reports/orders-by-status';
 import { reportPeriodSchema } from '@/server/reports/period';
-import { getReportsSummary } from '@/server/reports/summary';
 
 const querySchema = z.object({
   period: reportPeriodSchema.default('30d'),
+  source: z.enum(['ONLINE', 'POS', 'ALL']).default('ALL'),
 });
 
 export const GET = withAuth(
@@ -20,8 +21,8 @@ export const GET = withAuth(
       );
     }
 
-    const summary = await getReportsSummary(parsed.data.period);
-    return NextResponse.json(summary);
+    const data = await getOrdersByStatus(parsed.data.period, parsed.data.source);
+    return NextResponse.json(data);
   },
   { role: 'ADMIN' },
 );

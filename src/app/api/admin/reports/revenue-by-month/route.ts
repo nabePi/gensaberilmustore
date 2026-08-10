@@ -2,11 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 
 import { withAuth } from '@/server/auth';
-import { reportPeriodSchema } from '@/server/reports/period';
-import { getReportsSummary } from '@/server/reports/summary';
+import { getRevenueByMonth } from '@/server/reports/revenue-by-month';
 
 const querySchema = z.object({
-  period: reportPeriodSchema.default('30d'),
+  year: z.coerce.number().int().min(2000).max(2100).default(new Date().getFullYear()),
+  source: z.enum(['ONLINE', 'POS']).optional(),
 });
 
 export const GET = withAuth(
@@ -20,8 +20,8 @@ export const GET = withAuth(
       );
     }
 
-    const summary = await getReportsSummary(parsed.data.period);
-    return NextResponse.json(summary);
+    const data = await getRevenueByMonth(parsed.data.year, parsed.data.source);
+    return NextResponse.json({ items: data });
   },
   { role: 'ADMIN' },
 );

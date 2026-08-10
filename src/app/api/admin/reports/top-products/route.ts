@@ -3,10 +3,11 @@ import { z } from 'zod';
 
 import { withAuth } from '@/server/auth';
 import { reportPeriodSchema } from '@/server/reports/period';
-import { getReportsSummary } from '@/server/reports/summary';
+import { getTopProducts } from '@/server/reports/top-products';
 
 const querySchema = z.object({
   period: reportPeriodSchema.default('30d'),
+  limit: z.coerce.number().int().min(1).max(100).default(10),
 });
 
 export const GET = withAuth(
@@ -20,8 +21,8 @@ export const GET = withAuth(
       );
     }
 
-    const summary = await getReportsSummary(parsed.data.period);
-    return NextResponse.json(summary);
+    const data = await getTopProducts(parsed.data.period, parsed.data.limit);
+    return NextResponse.json(data);
   },
   { role: 'ADMIN' },
 );
