@@ -4,6 +4,7 @@ import path from 'node:path';
 
 const UPLOADS_ROOT = path.join(process.cwd(), 'public', 'uploads', 'products');
 const AVATAR_UPLOADS_ROOT = path.join(process.cwd(), 'public', 'uploads', 'avatars');
+const MISC_UPLOADS_ROOT = path.join(process.cwd(), 'public', 'uploads', 'misc');
 
 export async function saveProductImage(
   productId: string,
@@ -51,4 +52,14 @@ export async function deleteAvatarImageFile(publicUrl: string): Promise<void> {
   } catch {
     // ignore
   }
+}
+
+/** Generic image upload used by config screens (homepage/kids banners, promo images, etc). */
+export async function saveGenericImage(bytes: Uint8Array, extension: string): Promise<string> {
+  await mkdir(MISC_UPLOADS_ROOT, { recursive: true });
+
+  const filename = `${randomUUID()}.${extension}`;
+  await writeFile(path.join(MISC_UPLOADS_ROOT, filename), bytes);
+
+  return `/uploads/misc/${filename}`;
 }
