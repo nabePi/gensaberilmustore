@@ -66,16 +66,18 @@ async function runOrderStatusSideEffects(
   switch (toStatus) {
     case 'PAID':
       await queueOrderNotification(tx, order, 'PAYMENT_RECEIVED');
+      await createPendingAffiliateConversion(tx, order);
       break;
     case 'SHIPPED':
       await queueOrderNotification(tx, order, 'ORDER_SHIPPED');
       break;
     case 'COMPLETED':
       await queueOrderNotification(tx, order, 'ORDER_COMPLETED');
-      await finalizeAffiliateConversion(tx, order);
+      await approveAffiliateConversion(tx, order);
       break;
     case 'CANCELLED':
       await restoreOrderStock(tx, order);
+      await rejectAffiliateConversion(tx, order);
       break;
     default:
       break;
@@ -121,7 +123,29 @@ async function restoreOrderStock(tx: Db, order: OrderForStatusTransition): Promi
   }
 }
 
+async function isOrderEligibleForCommission(
+  tx: Db,
+  affiliateProfileId: string,
+  items: OrderItem[],
+): Promise<boolean> {
+  const productIds = items
+    .map((item) => item.productId)
+    .filter((productId): productId is string => productId !== null);
+
+  if (productIds.length === 0) return false;
+
+  const selection = await tx.affiliateProductSelection.findFirst({
+    where: { affiliateProfileId, productId: { in: productIds } },
+    select: { id: true },
+  });
+
+  return selection !== null;
+}
+
 async function computeCommissionAmount(tx: Db, items: OrderItem[]): Promise<number> {
+  const storeSetting = await tx.storeSetting.findUnique({ where: { id: 1 } });
+  const defaultPercent = storeSetting ? Number(storeSetting.defaultCommissionPercent) : 0;
+
   let total = 0;
 
   for (const item of items) {
@@ -131,19 +155,27 @@ async function computeCommissionAmount(tx: Db, items: OrderItem[]): Promise<numb
       where: { productId: item.productId },
     });
 
-    if (!rate || !rate.isActive) continue;
+    if (rate) {
+      if (!rate.isActive) continue;
+      total +=
+        rate.fixedAmount !== null
+          ? rate.fixedAmount * item.quantity
+          : Math.floor((item.lineTotal * Number(rate.percent)) / 100);
+      continue;
+    }
 
-    if (rate.fixedAmount !== null) {
-      total += rate.fixedAmount * item.quantity;
-    } else {
-      total += Math.floor((item.lineTotal * Number(rate.percent)) / 100);
+    if (defaultPercent > 0) {
+      total += Math.floor((item.lineTotal * defaultPercent) / 100);
     }
   }
 
   return total;
 }
 
-async function finalizeAffiliateConversion(tx: Db, order: OrderForStatusTransition): Promise<void> {
+async function createPendingAffiliateConversion(
+  tx: Db,
+  order: OrderForStatusTransition,
+): Promise<void> {
   if (!order.affiliateUserId) return;
 
   const affiliateProfile = await tx.affiliateProfile.findUnique({
@@ -151,17 +183,8 @@ async function finalizeAffiliateConversion(tx: Db, order: OrderForStatusTransiti
   });
   if (!affiliateProfile) return;
 
-  const existing = await tx.affiliateConversion.findUnique({ where: { orderId: order.id } });
-
-  if (existing) {
-    if (existing.status === 'PENDING') {
-      await tx.affiliateConversion.update({
-        where: { id: existing.id },
-        data: { status: 'APPROVED', approvedAt: new Date() },
-      });
-    }
-    return;
-  }
+  const eligible = await isOrderEligibleForCommission(tx, affiliateProfile.id, order.items);
+  if (!eligible) return;
 
   const commissionAmount = await computeCommissionAmount(tx, order.items);
 
@@ -170,8 +193,27 @@ async function finalizeAffiliateConversion(tx: Db, order: OrderForStatusTransiti
       affiliateProfileId: affiliateProfile.id,
       orderId: order.id,
       commissionAmount,
-      status: 'APPROVED',
-      approvedAt: new Date(),
+      status: 'PENDING',
     },
+  });
+}
+
+async function approveAffiliateConversion(tx: Db, order: OrderForStatusTransition): Promise<void> {
+  const conversion = await tx.affiliateConversion.findUnique({ where: { orderId: order.id } });
+  if (!conversion || conversion.status !== 'PENDING') return;
+
+  await tx.affiliateConversion.update({
+    where: { id: conversion.id },
+    data: { status: 'APPROVED', approvedAt: new Date() },
+  });
+}
+
+async function rejectAffiliateConversion(tx: Db, order: OrderForStatusTransition): Promise<void> {
+  const conversion = await tx.affiliateConversion.findUnique({ where: { orderId: order.id } });
+  if (!conversion || conversion.status !== 'PENDING') return;
+
+  await tx.affiliateConversion.update({
+    where: { id: conversion.id },
+    data: { status: 'REJECTED' },
   });
 }

@@ -21,3 +21,21 @@ export const commissionRateUpsertSchema = z.object({
   fixedAmount: z.number().int().min(0).nullable().optional(),
   isActive: z.boolean().default(true),
 });
+
+export const listAdminPayoutsQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(60).default(20),
+  status: z.enum(['PENDING', 'PAID', 'CANCELLED']).optional(),
+  affiliateProfileId: z.string().uuid().optional(),
+});
+
+export const createPayoutBatchSchema = z
+  .object({
+    affiliateProfileId: z.string().uuid('affiliateProfileId tidak valid'),
+    periodStart: z.coerce.date({ invalid_type_error: 'periodStart tidak valid' }),
+    periodEnd: z.coerce.date({ invalid_type_error: 'periodEnd tidak valid' }),
+  })
+  .refine((value) => value.periodStart <= value.periodEnd, {
+    message: 'periodStart harus sebelum atau sama dengan periodEnd',
+    path: ['periodStart'],
+  });
