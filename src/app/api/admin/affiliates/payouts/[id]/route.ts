@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 
 import { prisma } from '@/lib/db';
 import { withAuth } from '@/server/auth';
+import { dispatchNotification } from '@/server/notify/dispatch';
 
 type RouteContext = { params: Promise<{ id: string }> };
 
@@ -23,32 +24,28 @@ export const PATCH = withAuth<RouteContext>(
     }
 
     const { user } = payout.affiliateProfile;
-    const payloadJson = { payoutId: payout.id, totalAmount: payout.totalAmount };
+    const payloadJson = { name: user.name ?? user.email, totalAmount: payout.totalAmount };
 
-    const updated = await prisma.$transaction(async (tx) => {
+    const { updated, notificationId } = await prisma.$transaction(async (tx) => {
       const result = await tx.affiliatePayout.update({
         where: { id: payout.id },
         data: { status: 'PAID', paidAt: new Date() },
       });
 
-      const notifications: { channel: 'EMAIL' | 'WHATSAPP'; recipient: string }[] = [
-        { channel: 'EMAIL', recipient: user.email },
-      ];
-      if (user.phone) {
-        notifications.push({ channel: 'WHATSAPP', recipient: user.phone });
-      }
-
-      await tx.notification.createMany({
-        data: notifications.map((notification) => ({
-          ...notification,
+      const notification = await tx.notification.create({
+        data: {
+          channel: 'EMAIL',
+          recipient: user.email,
           template: 'AFFILIATE_PAYOUT',
           relatedUserId: user.id,
           payloadJson,
-        })),
+        },
       });
 
-      return result;
+      return { updated: result, notificationId: notification.id };
     });
+
+    await dispatchNotification(notificationId);
 
     return NextResponse.json(updated);
   },

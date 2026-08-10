@@ -152,8 +152,9 @@ describe('PATCH /api/admin/orders/[id]/status', () => {
     const notifications = await prisma.notification.findMany({
       where: { relatedOrderId: order.id },
     });
-    expect(notifications).toHaveLength(2);
-    expect(notifications.every((n) => n.template === 'PAYMENT_RECEIVED')).toBe(true);
+    expect(notifications).toHaveLength(1);
+    expect(notifications[0]?.channel).toBe('EMAIL');
+    expect(notifications[0]?.template).toBe('PAYMENT_RECEIVED');
   });
 
   it('restores product stock when an order is cancelled', async () => {

@@ -9,12 +9,15 @@ import { hashPassword } from '@/server/auth/password';
 import { ADMIN_SESSION_COOKIE_NAME, createSession } from '@/server/auth/session';
 
 const createdEmails: string[] = [];
+const createdUserIds: string[] = [];
 
 async function createTestUser(role: 'BUYER' | 'ADMIN' = 'BUYER') {
   const email = `test-${randomUUID()}@example.com`;
   createdEmails.push(email);
   const passwordHash = await hashPassword('Password123');
-  return prisma.user.create({ data: { email, passwordHash, name: 'Test User', role } });
+  const user = await prisma.user.create({ data: { email, passwordHash, name: 'Test User', role } });
+  createdUserIds.push(user.id);
+  return user;
 }
 
 async function createAdminCookie() {
@@ -32,6 +35,7 @@ function buildRequest(id: string, cookie?: string) {
 
 describe('POST /api/admin/members/[id]/reset-password', () => {
   afterAll(async () => {
+    await prisma.notification.deleteMany({ where: { relatedUserId: { in: createdUserIds } } });
     await prisma.user.deleteMany({ where: { email: { in: createdEmails } } });
   });
 
@@ -54,6 +58,11 @@ describe('POST /api/admin/members/[id]/reset-password', () => {
     expect(response.status).toBe(200);
     const token = await prisma.passwordResetToken.findFirst({ where: { userId: member.id } });
     expect(token).not.toBeNull();
+
+    const notification = await prisma.notification.findFirst({
+      where: { relatedUserId: member.id, template: 'PASSWORD_RESET' },
+    });
+    expect(notification).not.toBeNull();
   });
 
   it('returns 404 for unknown member', async () => {

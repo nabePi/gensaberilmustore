@@ -116,6 +116,7 @@ async function post(body: unknown, cookie?: string) {
 
 describe('POST /api/orders', () => {
   afterAll(async () => {
+    await prisma.notification.deleteMany({ where: { relatedOrderId: { in: createdOrderIds } } });
     await prisma.voucherRedemption.deleteMany({ where: { orderId: { in: createdOrderIds } } });
     await prisma.orderStatusHistory.deleteMany({ where: { orderId: { in: createdOrderIds } } });
     await prisma.orderItem.deleteMany({ where: { orderId: { in: createdOrderIds } } });
@@ -167,6 +168,11 @@ describe('POST /api/orders', () => {
 
     const setCookieHeader = response.headers.get('set-cookie');
     expect(setCookieHeader).toContain(`${GUEST_CART_COOKIE_NAME}=;`);
+
+    const notification = await prisma.notification.findFirst({
+      where: { relatedOrderId: json.orderId, template: 'ORDER_CONFIRMED' },
+    });
+    expect(notification?.recipient).toBe('budi@example.com');
   });
 
   it('rejects when stock is insufficient', async () => {

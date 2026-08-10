@@ -619,6 +619,8 @@ model Notification {
   providerId       String?
   providerResponse String?
   error            String?
+  attempts         Int                  @default(0)
+  nextRetryAt      DateTime?
   sentAt           DateTime?
   createdAt        DateTime             @default(now())
 
@@ -626,6 +628,7 @@ model Notification {
   relatedUser  User?  @relation(fields: [relatedUserId], references: [id], onDelete: SetNull)
 
   @@index([status, createdAt])
+  @@index([status, nextRetryAt])
 }
 
 model Voucher {

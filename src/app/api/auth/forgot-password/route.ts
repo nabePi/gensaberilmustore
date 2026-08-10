@@ -5,6 +5,7 @@ import { z } from 'zod';
 
 import { prisma } from '@/lib/db';
 import { checkForgotPasswordRateLimit } from '@/server/auth/rate-limit';
+import { dispatchNotification } from '@/server/notify/dispatch';
 
 const GENERIC_MESSAGE = 'Jika email terdaftar, tautan reset dikirim';
 const TOKEN_TTL_MS = 60 * 60 * 1000; // 1 hour
@@ -42,11 +43,22 @@ export async function POST(request: NextRequest) {
         },
       });
 
-      // Email delivery is deferred to the notifications stage (GEN-82); logging for now.
-      // eslint-disable-next-line no-console
-      console.log(
-        `[auth] Password reset link for ${user.email}: /reset-password?token=${rawToken}`,
-      );
+      const resetUrl = new URL(
+        `/reset-password?token=${rawToken}`,
+        request.nextUrl.origin,
+      ).toString();
+
+      const notification = await prisma.notification.create({
+        data: {
+          channel: 'EMAIL',
+          recipient: user.email,
+          template: 'PASSWORD_RESET',
+          relatedUserId: user.id,
+          payloadJson: { resetUrl },
+        },
+      });
+
+      await dispatchNotification(notification.id);
     }
   }
 

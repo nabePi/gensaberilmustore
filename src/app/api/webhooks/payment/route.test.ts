@@ -99,6 +99,7 @@ describe('POST /api/webhooks/payment', () => {
     await prisma.webhookLog.deleteMany({
       where: { providerEventId: { in: createdProviderEventIds } },
     });
+    await prisma.notification.deleteMany({ where: { relatedOrderId: { in: createdOrderIds } } });
     await prisma.orderStatusHistory.deleteMany({ where: { orderId: { in: createdOrderIds } } });
     await prisma.orderItem.deleteMany({ where: { orderId: { in: createdOrderIds } } });
     await prisma.order.deleteMany({ where: { id: { in: createdOrderIds } } });
@@ -147,6 +148,11 @@ describe('POST /api/webhooks/payment', () => {
 
     const paidOrder = await prisma.order.findUnique({ where: { id: order.id } });
     expect(paidOrder?.status).toBe('PAID');
+
+    const emailNotification = await prisma.notification.findFirst({
+      where: { relatedOrderId: order.id, template: 'PAYMENT_RECEIVED' },
+    });
+    expect(emailNotification).not.toBeNull();
 
     const historyCountAfterFirst = await prisma.orderStatusHistory.count({
       where: { orderId: order.id },

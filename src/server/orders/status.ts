@@ -89,27 +89,21 @@ async function queueOrderNotification(
   order: OrderForStatusTransition,
   template: NotificationTemplate,
 ): Promise<void> {
-  const payloadJson = { orderId: order.id, orderNumber: order.orderNumber };
+  const payloadJson = {
+    orderNumber: order.orderNumber,
+    receiverName: order.receiverName,
+    total: order.total,
+  };
 
-  await tx.notification.createMany({
-    data: [
-      {
-        channel: 'EMAIL',
-        recipient: order.receiverEmail,
-        template,
-        relatedOrderId: order.id,
-        relatedUserId: order.userId,
-        payloadJson,
-      },
-      {
-        channel: 'WHATSAPP',
-        recipient: order.receiverPhone,
-        template,
-        relatedOrderId: order.id,
-        relatedUserId: order.userId,
-        payloadJson,
-      },
-    ],
+  await tx.notification.create({
+    data: {
+      channel: 'EMAIL',
+      recipient: order.receiverEmail,
+      template,
+      relatedOrderId: order.id,
+      relatedUserId: order.userId,
+      payloadJson,
+    },
   });
 }
 

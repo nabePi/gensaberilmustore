@@ -4,13 +4,14 @@ import { NextResponse } from 'next/server';
 
 import { prisma } from '@/lib/db';
 import { withAuth } from '@/server/auth';
+import { dispatchNotification } from '@/server/notify/dispatch';
 
 const TOKEN_TTL_MS = 60 * 60 * 1000; // 1 hour
 
 type RouteContext = { params: Promise<{ id: string }> };
 
 export const POST = withAuth<RouteContext>(
-  async (_request, { params }) => {
+  async (request, { params }) => {
     const { id } = await params;
 
     const member = await prisma.user.findUnique({
@@ -33,11 +34,22 @@ export const POST = withAuth<RouteContext>(
       },
     });
 
-    // Email/WhatsApp delivery is deferred to the notifications stage; logging for now.
-    // eslint-disable-next-line no-console
-    console.log(
-      `[admin] Password reset link for ${member.email}: /reset-password?token=${rawToken}`,
-    );
+    const resetUrl = new URL(
+      `/reset-password?token=${rawToken}`,
+      request.nextUrl.origin,
+    ).toString();
+
+    const notification = await prisma.notification.create({
+      data: {
+        channel: 'EMAIL',
+        recipient: member.email,
+        template: 'PASSWORD_RESET',
+        relatedUserId: member.id,
+        payloadJson: { resetUrl },
+      },
+    });
+
+    await dispatchNotification(notification.id);
 
     return NextResponse.json({ message: 'Tautan reset password telah dibuat' });
   },

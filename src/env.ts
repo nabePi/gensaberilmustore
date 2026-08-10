@@ -30,6 +30,8 @@ const envSchema = z.object({
   // Notification placeholders
   FONNTE_TOKEN: z.string().optional(),
   RESEND_API_KEY: z.string().optional(),
+  NOTIFY_FROM_EMAIL: z.string().email().optional(),
+  CRON_SECRET: z.string().optional(),
 
   // Storage placeholders
   STORAGE_PROVIDER: z.enum(['s3', 'local']).optional(),
@@ -82,6 +84,8 @@ export const env = {
 
   fonnteToken: rawEnv.FONNTE_TOKEN,
   resendApiKey: rawEnv.RESEND_API_KEY,
+  notifyFromEmail: rawEnv.NOTIFY_FROM_EMAIL ?? 'no-reply@gensaberilmustore.com',
+  cronSecret: rawEnv.CRON_SECRET,
 
   storageProvider: rawEnv.STORAGE_PROVIDER,
   s3Endpoint: rawEnv.S3_ENDPOINT,
