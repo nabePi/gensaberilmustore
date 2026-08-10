@@ -18,10 +18,14 @@ const envSchema = z.object({
     .string({ required_error: 'JWT_SECRET is required (min 32 characters)' })
     .min(MIN_SECRET_LENGTH, 'JWT_SECRET is required (min 32 characters)'),
 
-  // Payment gateway placeholders
+  // Payment gateway (Midtrans)
   MIDTRANS_SERVER_KEY: z.string().optional(),
   MIDTRANS_CLIENT_KEY: z.string().optional(),
-  MIDTRANS_ENV: z.enum(['sandbox', 'production']).optional(),
+  NEXT_PUBLIC_MIDTRANS_CLIENT_KEY: z.string().optional(),
+  MIDTRANS_IS_PRODUCTION: z
+    .enum(['true', 'false'])
+    .optional()
+    .transform((value) => value === 'true'),
 
   // Notification placeholders
   FONNTE_TOKEN: z.string().optional(),
@@ -74,7 +78,7 @@ export const env = {
 
   midtransServerKey: rawEnv.MIDTRANS_SERVER_KEY,
   midtransClientKey: rawEnv.MIDTRANS_CLIENT_KEY,
-  midtransEnv: rawEnv.MIDTRANS_ENV,
+  midtransIsProduction: rawEnv.MIDTRANS_IS_PRODUCTION ?? false,
 
   fonnteToken: rawEnv.FONNTE_TOKEN,
   resendApiKey: rawEnv.RESEND_API_KEY,

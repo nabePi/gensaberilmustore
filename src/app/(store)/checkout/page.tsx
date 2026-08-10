@@ -3,12 +3,31 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import Script from 'next/script';
+import { useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
 import { formatCurrency } from '@/lib/format';
 import { btnOutline, btnSolid, inputBase } from '@/lib/styles';
+
+declare global {
+  interface Window {
+    snap?: {
+      pay: (
+        snapToken: string,
+        callbacks: {
+          onSuccess: () => void;
+          onPending: () => void;
+          onError: () => void;
+          onClose: () => void;
+        },
+      ) => void;
+    };
+  }
+}
+
+const SNAP_SCRIPT_URL = 'https://app.sandbox.midtrans.com/snap/snap.js';
 
 const PAYMENT_METHODS = [
   { value: 'BANK_TRANSFER', label: 'Transfer Bank' },
@@ -118,6 +137,7 @@ export default function CheckoutPage() {
   const [voucherLoading, setVoucherLoading] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const snapFailedRef = useRef(false);
 
   const {
     register,
@@ -236,20 +256,47 @@ export default function CheckoutPage() {
           };
 
     try {
-      const response = await fetch('/api/orders', {
+      const orderResponse = await fetch('/api/orders', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
-      const data = await response.json();
+      const orderData = await orderResponse.json();
 
-      if (!response.ok) {
-        setSubmitError(data.error ?? 'Gagal membuat pesanan. Silakan coba lagi.');
+      if (!orderResponse.ok) {
+        setSubmitError(orderData.error ?? 'Gagal membuat pesanan. Silakan coba lagi.');
         setSubmitting(false);
         return;
       }
 
-      router.push(`/payment/success?orderId=${data.orderId}`);
+      const { orderId } = orderData;
+      const redirectToSuccess = () => router.push(`/payment/success?orderId=${orderId}`);
+
+      const paymentResponse = await fetch('/api/payment/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orderId }),
+      });
+
+      if (!paymentResponse.ok) {
+        redirectToSuccess();
+        return;
+      }
+
+      const { snapToken, redirectUrl } = await paymentResponse.json();
+
+      if (snapFailedRef.current || !window.snap) {
+        window.location.href = redirectUrl;
+        return;
+      }
+
+      window.snap.pay(snapToken, {
+        onSuccess: redirectToSuccess,
+        onPending: redirectToSuccess,
+        onError: redirectToSuccess,
+        onClose: redirectToSuccess,
+      });
+      setSubmitting(false);
     } catch {
       setSubmitError('Gagal membuat pesanan. Silakan coba lagi.');
       setSubmitting(false);
@@ -266,6 +313,14 @@ export default function CheckoutPage() {
 
   return (
     <div className="container-prototype py-8">
+      <Script
+        src={SNAP_SCRIPT_URL}
+        data-client-key={process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY}
+        strategy="afterInteractive"
+        onError={() => {
+          snapFailedRef.current = true;
+        }}
+      />
       <h1 className="mb-6 text-2xl font-bold text-foreground">Checkout</h1>
 
       <form onSubmit={handleSubmit(onSubmit)} className="grid gap-8 lg:grid-cols-[1fr_320px]">
