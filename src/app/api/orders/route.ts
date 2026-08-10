@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { getSession, withAuth } from '@/server/auth';
 import { GUEST_CART_COOKIE_NAME, guestCartCookieOptions, resolveCart } from '@/server/cart/cart';
+import { dispatchPendingNotificationsForOrder } from '@/server/notify/dispatch';
 import { generateUniqueOrderNumber } from '@/server/orders/order-number';
 import { createOrderSchema, listMemberOrdersQuerySchema } from '@/server/orders/schema';
 import { orderListInclude, serializeOrderListItem } from '@/server/orders/serialize';
@@ -212,8 +213,25 @@ export async function POST(request: NextRequest) {
 
       await tx.cart.delete({ where: { id: cart.id } });
 
+      await tx.notification.create({
+        data: {
+          channel: 'EMAIL',
+          recipient: createdOrder.receiverEmail,
+          template: 'ORDER_CONFIRMED',
+          relatedOrderId: createdOrder.id,
+          relatedUserId: createdOrder.userId,
+          payloadJson: {
+            orderNumber: createdOrder.orderNumber,
+            receiverName: createdOrder.receiverName,
+            total: createdOrder.total,
+          },
+        },
+      });
+
       return createdOrder;
     });
+
+    await dispatchPendingNotificationsForOrder(order.id);
 
     const response = NextResponse.json(
       { orderId: order.id, orderNumber: order.orderNumber },

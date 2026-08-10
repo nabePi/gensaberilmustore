@@ -4,6 +4,7 @@ import { prisma } from '@/lib/db';
 import { generateUniqueAffiliateCode } from '@/server/affiliate/code';
 import { affiliateJoinSchema } from '@/server/affiliate/schema';
 import { withAuth } from '@/server/auth';
+import { dispatchNotification } from '@/server/notify/dispatch';
 
 export const POST = withAuth(async (request: NextRequest, { user }) => {
   const existing = await prisma.affiliateProfile.findUnique({ where: { userId: user.id } });
@@ -30,7 +31,7 @@ export const POST = withAuth(async (request: NextRequest, { user }) => {
     ),
   );
 
-  const profile = await prisma.$transaction(async (tx) => {
+  const result = await prisma.$transaction(async (tx) => {
     const created = await tx.affiliateProfile.create({
       data: {
         userId: user.id,
@@ -45,8 +46,20 @@ export const POST = withAuth(async (request: NextRequest, { user }) => {
       await tx.user.update({ where: { id: user.id }, data: { role: 'AFFILIATE' } });
     }
 
-    return created;
+    const notification = await tx.notification.create({
+      data: {
+        channel: 'EMAIL',
+        recipient: user.email,
+        template: 'AFFILIATE_JOIN',
+        relatedUserId: user.id,
+        payloadJson: { name: user.name ?? user.email, code: created.code },
+      },
+    });
+
+    return { profile: created, notificationId: notification.id };
   });
 
-  return NextResponse.json(profile, { status: 201 });
+  await dispatchNotification(result.notificationId);
+
+  return NextResponse.json(result.profile, { status: 201 });
 });

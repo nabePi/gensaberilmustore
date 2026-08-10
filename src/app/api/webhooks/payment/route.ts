@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 import { prisma } from '@/lib/db';
+import { dispatchPendingNotificationsForOrder } from '@/server/notify/dispatch';
 import { applyMidtransTransactionStatus } from '@/server/payment/apply-status';
 import { verifyWebhookSignature } from '@/server/payment/midtrans';
 import { midtransWebhookSchema } from '@/server/payment/schema';
@@ -57,6 +58,8 @@ export async function POST(request: NextRequest) {
       vaNumber: data.va_numbers?.[0]?.va_number ?? null,
     });
   });
+
+  await dispatchPendingNotificationsForOrder(order.id);
 
   await prisma.webhookLog.update({
     where: { providerEventId },

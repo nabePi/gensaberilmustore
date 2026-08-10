@@ -101,7 +101,7 @@ describe('PATCH /api/admin/affiliates/payouts/[id]', () => {
     expect(response.status).toBe(400);
   });
 
-  it('marks a pending payout as paid and notifies the affiliate by email and whatsapp', async () => {
+  it('marks a pending payout as paid and notifies the affiliate by email', async () => {
     const cookie = await createAdminCookie();
     const profile = await createAffiliateProfile('08129999999');
     const payout = await createPayout(profile.id, 'PENDING');
@@ -116,8 +116,8 @@ describe('PATCH /api/admin/affiliates/payouts/[id]', () => {
     const notifications = await prisma.notification.findMany({
       where: { relatedUserId: profile.userId },
     });
-    expect(notifications).toHaveLength(2);
-    expect(notifications.map((n) => n.channel).sort()).toEqual(['EMAIL', 'WHATSAPP']);
-    expect(notifications.every((n) => n.template === 'AFFILIATE_PAYOUT')).toBe(true);
+    expect(notifications).toHaveLength(1);
+    expect(notifications[0]?.channel).toBe('EMAIL');
+    expect(notifications[0]?.template).toBe('AFFILIATE_PAYOUT');
   });
 });

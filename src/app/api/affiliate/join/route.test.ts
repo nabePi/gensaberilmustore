@@ -1,21 +1,33 @@
 import { randomUUID } from 'node:crypto';
 
 import { NextRequest } from 'next/server';
-import { afterAll, describe, expect, it } from 'vitest';
+import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { POST } from '@/app/api/affiliate/join/route';
 import { prisma } from '@/lib/db';
 import { hashPassword } from '@/server/auth/password';
 import { createSession } from '@/server/auth/session';
 
+const sendEmail = vi.fn();
+
+vi.mock('@/server/notify/transport', () => ({
+  sendEmail: (...args: unknown[]) => sendEmail(...args),
+}));
+
+const { POST } = await import('@/app/api/affiliate/join/route');
+
 const createdEmails: string[] = [];
 const createdAffiliateProfileIds: string[] = [];
+const createdUserIds: string[] = [];
 
 async function createTestUser() {
   const email = `test-${randomUUID()}@example.com`;
   createdEmails.push(email);
   const passwordHash = await hashPassword('Password123');
-  return prisma.user.create({ data: { email, passwordHash, name: 'Test User', role: 'BUYER' } });
+  const user = await prisma.user.create({
+    data: { email, passwordHash, name: 'Test User', role: 'BUYER' },
+  });
+  createdUserIds.push(user.id);
+  return user;
 }
 
 async function createSessionCookie(userId: string) {
@@ -38,7 +50,13 @@ const validPayload = {
 };
 
 describe('POST /api/affiliate/join', () => {
+  beforeEach(() => {
+    sendEmail.mockReset();
+    sendEmail.mockResolvedValue({ success: true, providerId: 'provider-default' });
+  });
+
   afterAll(async () => {
+    await prisma.notification.deleteMany({ where: { relatedUserId: { in: createdUserIds } } });
     await prisma.affiliateProfile.deleteMany({ where: { id: { in: createdAffiliateProfileIds } } });
     await prisma.user.deleteMany({ where: { email: { in: createdEmails } } });
   });
@@ -56,7 +74,8 @@ describe('POST /api/affiliate/join', () => {
     expect(response.status).toBe(400);
   });
 
-  it('creates an affiliate profile and upgrades the user role', async () => {
+  it('creates an affiliate profile, upgrades the user role, and sends a welcome email', async () => {
+    sendEmail.mockResolvedValue({ success: true, providerId: 'provider-1' });
     const user = await createTestUser();
     const cookie = await createSessionCookie(user.id);
 
@@ -69,6 +88,11 @@ describe('POST /api/affiliate/join', () => {
 
     const updatedUser = await prisma.user.findUnique({ where: { id: user.id } });
     expect(updatedUser?.role).toBe('AFFILIATE');
+
+    const notification = await prisma.notification.findFirst({
+      where: { relatedUserId: user.id, template: 'AFFILIATE_JOIN' },
+    });
+    expect(notification?.status).toBe('SENT');
   });
 
   it('rejects joining twice', async () => {

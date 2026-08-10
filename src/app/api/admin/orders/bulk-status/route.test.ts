@@ -129,6 +129,11 @@ describe('POST /api/admin/orders/bulk-status', () => {
 
     const updatedOrderA = await prisma.order.findUnique({ where: { id: orderA.id } });
     expect(updatedOrderA?.status).toBe('PAID');
+
+    const notification = await prisma.notification.findFirst({
+      where: { relatedOrderId: orderA.id, template: 'PAYMENT_RECEIVED' },
+    });
+    expect(notification).not.toBeNull();
   });
 
   it('reports failure for order ids that do not exist', async () => {

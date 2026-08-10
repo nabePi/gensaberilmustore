@@ -3,6 +3,7 @@ import type { NextRequest } from 'next/server';
 
 import { prisma } from '@/lib/db';
 import { withAuth } from '@/server/auth';
+import { dispatchPendingNotificationsForOrder } from '@/server/notify/dispatch';
 import { orderStatusUpdateSchema } from '@/server/orders/schema';
 import { orderDetailInclude, serializeOrderDetail } from '@/server/orders/serialize';
 import { applyOrderStatusTransition, OrderStatusTransitionError } from '@/server/orders/status';
@@ -41,6 +42,8 @@ export const PATCH = withAuth<RouteContext>(
       }
       throw error;
     }
+
+    await dispatchPendingNotificationsForOrder(order.id);
 
     const updated = await prisma.order.findUnique({ where: { id }, include: orderDetailInclude });
     return NextResponse.json(serializeOrderDetail(updated!));
