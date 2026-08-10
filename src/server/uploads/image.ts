@@ -41,3 +41,11 @@ export function sniffImageMime(bytes: Uint8Array): string | null {
 export function extensionForMime(mime: string): string | null {
   return IMAGE_EXTENSION_BY_MIME[mime] ?? null;
 }
+
+const MIME_BY_IMAGE_EXTENSION: Record<string, string> = Object.fromEntries(
+  Object.entries(IMAGE_EXTENSION_BY_MIME).map(([mime, extension]) => [extension, mime]),
+);
+
+export function mimeForExtension(extension: string): string {
+  return MIME_BY_IMAGE_EXTENSION[extension] ?? 'application/octet-stream';
+}
