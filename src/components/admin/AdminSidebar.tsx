@@ -16,6 +16,7 @@ const NAV_ITEMS = [
   { href: '/admin/member', label: 'Member' },
   { href: '/admin/pos', label: 'POS' },
   { href: '/admin/afiliasi', label: 'Afiliasi' },
+  { href: '/admin/voucher', label: 'Voucher' },
   { href: '/admin/laporan', label: 'Laporan' },
   { href: '/admin/laporan-lengkap', label: 'Laporan Lengkap' },
   { href: '/admin/konfigurasi', label: 'Konfigurasi' },
