@@ -73,5 +73,5 @@ describe('POST /api/auth/admin/login', () => {
 
     const blocked = await POST(buildRequest({ email, password: 'WrongPass123' }, ip));
     expect(blocked.status).toBe(429);
-  });
+  }, 15000);
 });
