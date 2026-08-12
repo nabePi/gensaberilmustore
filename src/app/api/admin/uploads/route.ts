@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import { withAuth } from '@/server/auth';
 import { extensionForMime, MAX_IMAGE_SIZE_BYTES, sniffImageMime } from '@/server/uploads/image';
+import { isR2Enabled } from '@/server/uploads/r2';
 import { saveGenericImage } from '@/server/uploads/storage';
 
 export const POST = withAuth(
@@ -34,9 +35,16 @@ export const POST = withAuth(
       );
     }
 
-    const url = await saveGenericImage(bytes, extension);
-
-    return NextResponse.json({ url }, { status: 201 });
+    try {
+      const url = await saveGenericImage(bytes, extension);
+      return NextResponse.json({ url }, { status: 201 });
+    } catch (error) {
+      console.error('Image upload failed', error);
+      const hint = isR2Enabled()
+        ? 'Gagal mengunggah ke R2. Periksa kredensial R2_ACCESS_KEY_ID/R2_SECRET_ACCESS_KEY dan izin bucket.'
+        : 'Gagal menyimpan gambar ke storage lokal.';
+      return NextResponse.json({ error: hint }, { status: 502 });
+    }
   },
   { role: 'ADMIN' },
 );
