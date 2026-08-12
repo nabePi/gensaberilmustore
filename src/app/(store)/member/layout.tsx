@@ -39,7 +39,7 @@ export default async function MemberLayout({ children }: { children: ReactNode }
             </div>
           </aside>
 
-          <div>{children}</div>
+          <div className="min-w-0">{children}</div>
         </div>
       </div>
     </MemberSessionProvider>
