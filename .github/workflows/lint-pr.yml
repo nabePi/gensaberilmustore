@@ -1,0 +1,121 @@
+name: lint-pr
+
+on:
+  pull_request_target:
+    types:
+      - opened
+      - edited
+      - reopened
+      - synchronize
+
+permissions:
+  pull-requests: write
+  statuses: write
+
+jobs:
+  lint-pr-title:
+    name: lint-pr-title
+    runs-on: ubuntu-latest
+    steps:
+      - uses: amannn/action-semantic-pull-request@v6
+        id: lint_pr_title
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          types: |
+            feat
+            fix
+            refactor
+            perf
+            chore
+            docs
+            ci
+            style
+            test
+            build
+          requireScope: false
+          subjectPattern: ^(?![A-Z]).+$
+          subjectPatternError: |
+            Subject "{subject}" must start with a lowercase letter.
+            Example: "feat(action): add vote button" not "feat(action): Add vote button"
+
+      - uses: marocchino/sticky-pull-request-comment@v2
+        if: always() && (steps.lint_pr_title.outputs.error_message != null)
+        with:
+          header: pr-title-lint-error
+          message: |
+            ## ⚠️ PR title tidak sesuai Conventional Commits
+
+            Title: `${{ github.event.pull_request.title }}`
+
+            **Error:**
+            ```
+            ${{ steps.lint_pr_title.outputs.error_message }}
+            ```
+
+            **Format yang benar:**
+            ```
+            <type>(<scope>): <subject>
+            ```
+
+            **Allowed types:** `feat`, `fix`, `refactor`, `perf`, `chore`, `docs`, `ci`, `style`, `test`, `build`
+
+            **Contoh:**
+            - `feat(action): add vote button on action cards`
+            - `fix(admin): remove gap between sticky bar and navbar`
+            - `docs: add PR template`
+            - `chore: update dependencies`
+
+            > Commit type menentukan version bump di release-please:
+            > `feat` → minor, `fix` → patch, `feat!:` → major
+
+      - if: ${{ steps.lint_pr_title.outputs.error_message == null }}
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: pr-title-lint-error
+          delete: true
+
+  lint-branch-name:
+    name: lint-branch-name
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate branch name
+        env:
+          BRANCH: ${{ github.head_ref }}
+        run: |
+          echo "Branch: $BRANCH"
+
+          # Skip for release-please bot branches
+          if [[ "$BRANCH" =~ ^release-please-- ]]; then
+            echo "✅ Release-please branch — skipped"
+            exit 0
+          fi
+
+          # Skip for dependabot branches
+          if [[ "$BRANCH" =~ ^dependabot/ ]]; then
+            echo "✅ Dependabot branch — skipped"
+            exit 0
+          fi
+
+          # Required format: <type>/<kebab-case-description>
+          if [[ "$BRANCH" =~ ^(feat|fix|refactor|perf|chore|docs|ci|style|test|build)/[a-z0-9]+(-[a-z0-9]+)*$ ]]; then
+            echo "✅ Branch name is valid"
+            exit 0
+          fi
+
+          echo "❌ Branch name '$BRANCH' is invalid."
+          echo ""
+          echo "Required format: <type>/<kebab-case-description>"
+          echo ""
+          echo "Allowed types: feat fix refactor perf chore docs ci style test build"
+          echo ""
+          echo "Examples (✅):"
+          echo "  feat/add-voting-form"
+          echo "  fix/avatar-upload-bug"
+          echo "  chore/update-dependencies"
+          echo ""
+          echo "Bad examples (❌):"
+          echo "  feature/add-voting — wrong type"
+          echo "  Fix-avatar — uppercase, no slash"
+          echo "  feat/add_voting — underscore instead of hyphen"
+          exit 1
