@@ -1,7 +1,7 @@
 'use client';
 
 import type { HomepageSectionKey, KidsSectionKey } from '@prisma/client';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { BannerImageManager, type BannerImageItem } from '@/components/admin/BannerImageManager';
 import { btnSolid, inputBase } from '@/lib/styles';
@@ -141,6 +141,8 @@ export default function AdminKonfigurasiPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
+  const [dirty, setDirty] = useState(false);
+  const skipDirtyTracking = useRef(true);
 
   useEffect(() => {
     async function load() {
@@ -199,6 +201,15 @@ export default function AdminKonfigurasiPage() {
     load();
   }, []);
 
+  useEffect(() => {
+    if (loading) return;
+    if (skipDirtyTracking.current) {
+      skipDirtyTracking.current = false;
+      return;
+    }
+    setDirty(true);
+  }, [homepageForm, banners, homepageSections, kidsForm, kidsSections, loading]);
+
   function toggleHomepageProduct(key: HomepageSectionKey, productId: string) {
     setHomepageSections((prev) => {
       const current = prev[key];
@@ -219,30 +230,59 @@ export default function AdminKonfigurasiPage() {
     });
   }
 
+  function formatSaveError(data: unknown): string {
+    if (data && typeof data === 'object' && 'issues' in data) {
+      const issues = (data as { issues?: Record<string, string[] | string> }).issues;
+      if (issues) {
+        return Object.entries(issues)
+          .map(
+            ([field, messages]) =>
+              `${field}: ${Array.isArray(messages) ? messages.join(', ') : messages}`,
+          )
+          .join(' · ');
+      }
+    }
+    if (data && typeof data === 'object' && 'error' in data) {
+      return String((data as { error?: unknown }).error ?? 'Gagal menyimpan');
+    }
+    return 'Gagal menyimpan konfigurasi. Periksa kembali data yang diisi.';
+  }
+
   async function handleSave() {
     setSaving(true);
     setSaveMessage(null);
 
-    const [homepageRes, kidsRes] = await Promise.all([
-      fetch('/api/admin/config/homepage', {
+    if (tab === 'home') {
+      const response = await fetch('/api/admin/config/homepage', {
         method: 'PUT',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ ...homepageForm, banners, sections: homepageSections }),
-      }),
-      fetch('/api/admin/config/kids', {
+      });
+
+      if (response.ok) {
+        setSaveMessage('Konfigurasi Beranda berhasil disimpan!');
+        setDirty(false);
+      } else {
+        const data = await response.json().catch(() => null);
+        setSaveMessage(formatSaveError(data));
+      }
+    } else {
+      const response = await fetch('/api/admin/config/kids', {
         method: 'PUT',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ ...kidsForm, sections: kidsSections }),
-      }),
-    ]);
+      });
+
+      if (response.ok) {
+        setSaveMessage('Konfigurasi Buku Anak berhasil disimpan!');
+        setDirty(false);
+      } else {
+        const data = await response.json().catch(() => null);
+        setSaveMessage(formatSaveError(data));
+      }
+    }
 
     setSaving(false);
-
-    if (homepageRes.ok && kidsRes.ok) {
-      setSaveMessage('Konfigurasi berhasil disimpan!');
-    } else {
-      setSaveMessage('Gagal menyimpan konfigurasi. Periksa kembali data yang diisi.');
-    }
   }
 
   if (loading) {
@@ -506,12 +546,28 @@ export default function AdminKonfigurasiPage() {
         </div>
       )}
 
-      <div className="flex items-center justify-end gap-3 border-t border-neutral-200 pt-4">
-        {saveMessage ? <p className="text-sm text-neutral-600">{saveMessage}</p> : null}
-        <button type="button" disabled={saving} onClick={handleSave} className={btnSolid}>
-          {saving ? 'Menyimpan...' : 'Simpan Konfigurasi'}
-        </button>
-      </div>
+      {saveMessage ? (
+        <p className={`text-sm ${saveMessage.includes('berhasil') ? 'text-green' : 'text-red'}`}>
+          {saveMessage}
+        </p>
+      ) : null}
+
+      {dirty ? (
+        <div className="sticky bottom-4 z-20 flex items-center justify-between gap-3 rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 shadow-md">
+          <p className="text-sm font-medium text-amber-800">
+            Ada perubahan belum disimpan. Klik Simpan agar tampil di halaman toko.
+          </p>
+          <button type="button" disabled={saving} onClick={handleSave} className={btnSolid}>
+            {saving ? 'Menyimpan...' : 'Simpan Konfigurasi'}
+          </button>
+        </div>
+      ) : (
+        <div className="flex items-center justify-end border-t border-neutral-200 pt-4">
+          <button type="button" disabled={saving} onClick={handleSave} className={btnSolid}>
+            {saving ? 'Menyimpan...' : 'Simpan Konfigurasi'}
+          </button>
+        </div>
+      )}
     </div>
   );
 }
