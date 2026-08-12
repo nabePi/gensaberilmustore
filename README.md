@@ -4,6 +4,10 @@
 
 Next.js 15 App Router + TypeScript project for Gensa Berilmu Store.
 
+## Documentation
+
+Complete project documentation lives in [`docs/`](./docs/). Start with [`docs/README.md`](./docs/README.md) for an overview, architecture, role/permission matrix, page catalog, business flows, database reference, and API reference.
+
 ## Requirements
 
 - Node.js >= 20.x
