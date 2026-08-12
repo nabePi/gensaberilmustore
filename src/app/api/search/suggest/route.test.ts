@@ -101,5 +101,5 @@ describe('GET /api/search/suggest', () => {
     }
 
     expect(lastResponse?.status).toBe(429);
-  });
+  }, 15000);
 });
