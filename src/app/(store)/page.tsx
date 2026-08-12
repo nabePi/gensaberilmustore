@@ -1,6 +1,7 @@
 import Link from 'next/link';
 
 import { ProductCard } from '@/components/product/ProductCard';
+import { BannerCarousel } from '@/components/ui/BannerCarousel';
 import { Carousel } from '@/components/ui/Carousel';
 import { SectionHead } from '@/components/ui/SectionHead';
 import { getHomepageData } from '@/server/homepage/data';
@@ -21,19 +22,14 @@ const BLOG_POSTS = [
 ];
 
 export default async function HomePage() {
-  const { config, sections } = await getHomepageData();
+  const { banners, sections } = await getHomepageData();
 
   return (
     <div className="container-prototype py-8 space-y-14">
       <section className="grid gap-4 lg:grid-cols-3">
-        <div className="relative h-[220px] overflow-hidden rounded-lg bg-neutral-100 lg:col-span-2 lg:h-[360px]">
-          {config?.heroMainImageUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={config.heroMainImageUrl}
-              alt="Promo utama"
-              className="h-full w-full object-cover"
-            />
+        <div className="relative h-[220px] lg:col-span-2 lg:h-[360px]">
+          {banners.HERO_MAIN.length > 0 ? (
+            <BannerCarousel slides={banners.HERO_MAIN} className="h-full" />
           ) : (
             <div className="flex h-full items-center justify-center bg-gradient-to-br from-brand to-brand-700 text-center text-white">
               <div>
@@ -44,28 +40,18 @@ export default async function HomePage() {
           )}
         </div>
         <div className="grid gap-4">
-          <div className="relative h-[100px] overflow-hidden rounded-lg bg-neutral-100 lg:h-[170px]">
-            {config?.heroSideImage1Url ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={config.heroSideImage1Url}
-                alt="Promo samping 1"
-                className="h-full w-full object-cover"
-              />
+          <div className="relative h-[100px] lg:h-[170px]">
+            {banners.HERO_SIDE_1.length > 0 ? (
+              <BannerCarousel slides={banners.HERO_SIDE_1} className="h-full" />
             ) : (
               <div className="flex h-full items-center justify-center bg-brand-50 text-sm font-semibold text-brand">
                 Promo Spesial
               </div>
             )}
           </div>
-          <div className="relative h-[100px] overflow-hidden rounded-lg bg-neutral-100 lg:h-[170px]">
-            {config?.heroSideImage2Url ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={config.heroSideImage2Url}
-                alt="Promo samping 2"
-                className="h-full w-full object-cover"
-              />
+          <div className="relative h-[100px] lg:h-[170px]">
+            {banners.HERO_SIDE_2.length > 0 ? (
+              <BannerCarousel slides={banners.HERO_SIDE_2} className="h-full" />
             ) : (
               <div className="flex h-full items-center justify-center bg-neutral-50 text-sm font-semibold text-neutral-500">
                 Koleksi Baru

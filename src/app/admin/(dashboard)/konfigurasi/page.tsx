@@ -3,14 +3,12 @@
 import type { HomepageSectionKey, KidsSectionKey } from '@prisma/client';
 import { useEffect, useState } from 'react';
 
+import { BannerImageManager, type BannerImageItem } from '@/components/admin/BannerImageManager';
 import { btnSolid, inputBase } from '@/lib/styles';
 
 type ProductOption = { id: string; title: string; sku: string };
 
 type HomepageForm = {
-  heroMainImageUrl: string;
-  heroSideImage1Url: string;
-  heroSideImage2Url: string;
   sectionNewestPromoImageUrl: string;
   sectionBestsellerPromoImageUrl: string;
   sectionInternationalPromoImageUrl: string;
@@ -44,9 +42,6 @@ const KIDS_SECTIONS: { key: KidsSectionKey; label: string }[] = [
 ];
 
 const EMPTY_HOMEPAGE_FORM: HomepageForm = {
-  heroMainImageUrl: '',
-  heroSideImage1Url: '',
-  heroSideImage2Url: '',
   sectionNewestPromoImageUrl: '',
   sectionBestsellerPromoImageUrl: '',
   sectionInternationalPromoImageUrl: '',
@@ -129,6 +124,14 @@ export default function AdminKonfigurasiPage() {
     OTHERS: [],
   });
 
+  const [banners, setBanners] = useState<
+    Record<'HERO_MAIN' | 'HERO_SIDE_1' | 'HERO_SIDE_2', BannerImageItem[]>
+  >({
+    HERO_MAIN: [],
+    HERO_SIDE_1: [],
+    HERO_SIDE_2: [],
+  });
+
   const [kidsForm, setKidsForm] = useState<KidsForm>(EMPTY_KIDS_FORM);
   const [kidsSections, setKidsSections] = useState<Record<KidsSectionKey, string[]>>({
     POPULAR: [],
@@ -157,9 +160,6 @@ export default function AdminKonfigurasiPage() {
         const data = await homepageRes.json();
         if (data.config) {
           setHomepageForm({
-            heroMainImageUrl: data.config.heroMainImageUrl,
-            heroSideImage1Url: data.config.heroSideImage1Url,
-            heroSideImage2Url: data.config.heroSideImage2Url,
             sectionNewestPromoImageUrl: data.config.sectionNewestPromoImageUrl,
             sectionBestsellerPromoImageUrl: data.config.sectionBestsellerPromoImageUrl,
             sectionInternationalPromoImageUrl: data.config.sectionInternationalPromoImageUrl,
@@ -168,6 +168,13 @@ export default function AdminKonfigurasiPage() {
           });
         }
         setHomepageSections(data.sections);
+        if (data.banners) {
+          setBanners({
+            HERO_MAIN: data.banners.HERO_MAIN ?? [],
+            HERO_SIDE_1: data.banners.HERO_SIDE_1 ?? [],
+            HERO_SIDE_2: data.banners.HERO_SIDE_2 ?? [],
+          });
+        }
       }
 
       if (kidsRes.ok) {
@@ -220,7 +227,7 @@ export default function AdminKonfigurasiPage() {
       fetch('/api/admin/config/homepage', {
         method: 'PUT',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ ...homepageForm, sections: homepageSections }),
+        body: JSON.stringify({ ...homepageForm, banners, sections: homepageSections }),
       }),
       fetch('/api/admin/config/kids', {
         method: 'PUT',
@@ -280,52 +287,27 @@ export default function AdminKonfigurasiPage() {
         <div className="flex flex-col gap-6">
           <div className="flex flex-col gap-3 rounded-lg border border-neutral-200 p-4">
             <h3 className="font-semibold text-foreground">Banner Hero Beranda</h3>
-            <div className="flex flex-col gap-1">
-              <label htmlFor="heroMainImageUrl" className="text-xs font-medium text-neutral-600">
-                Gambar Banner Utama (URL)
-              </label>
-              <input
-                id="heroMainImageUrl"
-                type="text"
-                value={homepageForm.heroMainImageUrl}
-                onChange={(e) =>
-                  setHomepageForm((prev) => ({ ...prev, heroMainImageUrl: e.target.value }))
-                }
-                placeholder="https://..."
-                className={inputBase}
+            <BannerImageManager
+              label="Gambar Banner Utama"
+              images={banners.HERO_MAIN}
+              onChange={(images) => setBanners((prev) => ({ ...prev, HERO_MAIN: images }))}
+            />
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="flex flex-col gap-3 rounded-lg border border-neutral-200 p-4">
+              <BannerImageManager
+                label="Gambar Banner Samping 1"
+                images={banners.HERO_SIDE_1}
+                onChange={(images) => setBanners((prev) => ({ ...prev, HERO_SIDE_1: images }))}
               />
             </div>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <div className="flex flex-col gap-1">
-                <label htmlFor="heroSideImage1Url" className="text-xs font-medium text-neutral-600">
-                  Gambar Banner Samping 1 (URL)
-                </label>
-                <input
-                  id="heroSideImage1Url"
-                  type="text"
-                  value={homepageForm.heroSideImage1Url}
-                  onChange={(e) =>
-                    setHomepageForm((prev) => ({ ...prev, heroSideImage1Url: e.target.value }))
-                  }
-                  placeholder="https://..."
-                  className={inputBase}
-                />
-              </div>
-              <div className="flex flex-col gap-1">
-                <label htmlFor="heroSideImage2Url" className="text-xs font-medium text-neutral-600">
-                  Gambar Banner Samping 2 (URL)
-                </label>
-                <input
-                  id="heroSideImage2Url"
-                  type="text"
-                  value={homepageForm.heroSideImage2Url}
-                  onChange={(e) =>
-                    setHomepageForm((prev) => ({ ...prev, heroSideImage2Url: e.target.value }))
-                  }
-                  placeholder="https://..."
-                  className={inputBase}
-                />
-              </div>
+            <div className="flex flex-col gap-3 rounded-lg border border-neutral-200 p-4">
+              <BannerImageManager
+                label="Gambar Banner Samping 2"
+                images={banners.HERO_SIDE_2}
+                onChange={(images) => setBanners((prev) => ({ ...prev, HERO_SIDE_2: images }))}
+              />
             </div>
           </div>
 
