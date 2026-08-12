@@ -3,8 +3,11 @@
 import {
   DndContext,
   DragOverlay,
+  PointerSensor,
   useDraggable,
   useDroppable,
+  useSensor,
+  useSensors,
   type DragEndEvent,
   type DragStartEvent,
 } from '@dnd-kit/core';
@@ -187,6 +190,12 @@ export default function AdminBoardPage() {
 
   const activeOrder = orders.find((o) => o.id === activeId) ?? null;
 
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: { distance: 8 },
+    }),
+  );
+
   function handleDragStart(event: DragStartEvent) {
     setActiveId(String(event.active.id));
   }
@@ -265,7 +274,7 @@ export default function AdminBoardPage() {
       {loading ? (
         <p className="text-sm text-neutral-500">Memuat papan...</p>
       ) : (
-        <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+        <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
           <div className="flex gap-4 overflow-x-auto pb-4">
             {BOARD_COLUMNS.map((status) => (
               <BoardColumn
