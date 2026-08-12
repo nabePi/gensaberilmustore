@@ -10,6 +10,7 @@ export const config = {
 
 const ADMIN_PREFIXES = ['/admin', '/api/admin'];
 const MEMBER_PREFIXES = ['/member', '/api/member'];
+const ADMIN_LOGIN_PATH = '/admin/login';
 
 function unauthorized(request: NextRequest, loginPath: string): NextResponse {
   if (request.nextUrl.pathname.startsWith('/api/')) {
@@ -22,9 +23,13 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
   const { pathname } = request.nextUrl;
 
   if (ADMIN_PREFIXES.some((prefix) => pathname.startsWith(prefix))) {
+    if (pathname === ADMIN_LOGIN_PATH) {
+      return NextResponse.next();
+    }
+
     const user = await getAdminSession(request);
     if (!user || user.role !== 'ADMIN') {
-      return unauthorized(request, '/admin/login');
+      return unauthorized(request, ADMIN_LOGIN_PATH);
     }
     return NextResponse.next();
   }

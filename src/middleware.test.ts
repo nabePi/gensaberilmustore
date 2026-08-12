@@ -44,6 +44,11 @@ describe('middleware', () => {
     expect(response.headers.get('location')).toBe('http://localhost/admin/login');
   });
 
+  it('passes through /admin/login for guests so the login page can render', async () => {
+    const response = await middleware(requestFor('/admin/login'));
+    expect(response.headers.get('x-middleware-next')).toBe('1');
+  });
+
   it('returns 401 for a protected member API route without a session', async () => {
     const response = await middleware(requestFor('/api/member/profile'));
     expect(response.status).toBe(401);
