@@ -14,14 +14,30 @@ const SECTION_KEYS: HomepageSectionKey[] = [
   'OTHERS',
 ];
 
+const BANNER_SLOTS = ['HERO_MAIN', 'HERO_SIDE_1', 'HERO_SIDE_2'] as const;
+
+function serializeBanners(
+  rows: { id: string; slot: string; imageUrl: string; linkUrl: string | null; position: number }[],
+) {
+  return Object.fromEntries(
+    BANNER_SLOTS.map((slot) => [
+      slot,
+      rows
+        .filter((row) => row.slot === slot)
+        .map((row) => ({ id: row.id, imageUrl: row.imageUrl, linkUrl: row.linkUrl ?? '' })),
+    ]),
+  );
+}
+
 export const GET = withAuth(
   async () => {
-    const [config, sectionProducts] = await Promise.all([
+    const [config, sectionProducts, bannerRows] = await Promise.all([
       prisma.homepageConfig.findUnique({ where: { id: 1 } }),
       prisma.homepageSectionProduct.findMany({
         orderBy: { position: 'asc' },
         select: { sectionKey: true, productId: true },
       }),
+      prisma.homepageBanner.findMany({ orderBy: [{ slot: 'asc' }, { position: 'asc' }] }),
     ]);
 
     const sections = Object.fromEntries(
@@ -31,7 +47,7 @@ export const GET = withAuth(
       ]),
     );
 
-    return NextResponse.json({ config, sections });
+    return NextResponse.json({ config, sections, banners: serializeBanners(bannerRows) });
   },
   { role: 'ADMIN' },
 );
@@ -48,7 +64,7 @@ export const PUT = withAuth(
       );
     }
 
-    const { sections, ...configData } = parsed.data;
+    const { sections, banners, ...configData } = parsed.data;
 
     const allProductIds = SECTION_KEYS.flatMap((key) => sections[key]);
     if (allProductIds.length > 0) {
@@ -81,10 +97,29 @@ export const PUT = withAuth(
           })),
         });
       }
+
+      await tx.homepageBanner.deleteMany();
+
+      for (const slot of BANNER_SLOTS) {
+        const bannerList = banners[slot];
+        if (bannerList.length === 0) continue;
+        await tx.homepageBanner.createMany({
+          data: bannerList.map((banner, position) => ({
+            slot,
+            imageUrl: banner.imageUrl,
+            linkUrl: banner.linkUrl || null,
+            position,
+          })),
+        });
+      }
     });
 
-    const config = await prisma.homepageConfig.findUnique({ where: { id: 1 } });
-    return NextResponse.json({ config, sections });
+    const [config, bannerRows] = await Promise.all([
+      prisma.homepageConfig.findUnique({ where: { id: 1 } }),
+      prisma.homepageBanner.findMany({ orderBy: [{ slot: 'asc' }, { position: 'asc' }] }),
+    ]);
+
+    return NextResponse.json({ config, sections, banners: serializeBanners(bannerRows) });
   },
   { role: 'ADMIN' },
 );

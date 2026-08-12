@@ -1,16 +1,14 @@
 'use client';
 
 import type { HomepageSectionKey, KidsSectionKey } from '@prisma/client';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
+import { BannerImageManager, type BannerImageItem } from '@/components/admin/BannerImageManager';
 import { btnSolid, inputBase } from '@/lib/styles';
 
 type ProductOption = { id: string; title: string; sku: string };
 
 type HomepageForm = {
-  heroMainImageUrl: string;
-  heroSideImage1Url: string;
-  heroSideImage2Url: string;
   sectionNewestPromoImageUrl: string;
   sectionBestsellerPromoImageUrl: string;
   sectionInternationalPromoImageUrl: string;
@@ -44,9 +42,6 @@ const KIDS_SECTIONS: { key: KidsSectionKey; label: string }[] = [
 ];
 
 const EMPTY_HOMEPAGE_FORM: HomepageForm = {
-  heroMainImageUrl: '',
-  heroSideImage1Url: '',
-  heroSideImage2Url: '',
   sectionNewestPromoImageUrl: '',
   sectionBestsellerPromoImageUrl: '',
   sectionInternationalPromoImageUrl: '',
@@ -129,6 +124,14 @@ export default function AdminKonfigurasiPage() {
     OTHERS: [],
   });
 
+  const [banners, setBanners] = useState<
+    Record<'HERO_MAIN' | 'HERO_SIDE_1' | 'HERO_SIDE_2', BannerImageItem[]>
+  >({
+    HERO_MAIN: [],
+    HERO_SIDE_1: [],
+    HERO_SIDE_2: [],
+  });
+
   const [kidsForm, setKidsForm] = useState<KidsForm>(EMPTY_KIDS_FORM);
   const [kidsSections, setKidsSections] = useState<Record<KidsSectionKey, string[]>>({
     POPULAR: [],
@@ -138,6 +141,8 @@ export default function AdminKonfigurasiPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
+  const [dirty, setDirty] = useState(false);
+  const skipDirtyTracking = useRef(true);
 
   useEffect(() => {
     async function load() {
@@ -157,9 +162,6 @@ export default function AdminKonfigurasiPage() {
         const data = await homepageRes.json();
         if (data.config) {
           setHomepageForm({
-            heroMainImageUrl: data.config.heroMainImageUrl,
-            heroSideImage1Url: data.config.heroSideImage1Url,
-            heroSideImage2Url: data.config.heroSideImage2Url,
             sectionNewestPromoImageUrl: data.config.sectionNewestPromoImageUrl,
             sectionBestsellerPromoImageUrl: data.config.sectionBestsellerPromoImageUrl,
             sectionInternationalPromoImageUrl: data.config.sectionInternationalPromoImageUrl,
@@ -168,6 +170,13 @@ export default function AdminKonfigurasiPage() {
           });
         }
         setHomepageSections(data.sections);
+        if (data.banners) {
+          setBanners({
+            HERO_MAIN: data.banners.HERO_MAIN ?? [],
+            HERO_SIDE_1: data.banners.HERO_SIDE_1 ?? [],
+            HERO_SIDE_2: data.banners.HERO_SIDE_2 ?? [],
+          });
+        }
       }
 
       if (kidsRes.ok) {
@@ -192,6 +201,15 @@ export default function AdminKonfigurasiPage() {
     load();
   }, []);
 
+  useEffect(() => {
+    if (loading) return;
+    if (skipDirtyTracking.current) {
+      skipDirtyTracking.current = false;
+      return;
+    }
+    setDirty(true);
+  }, [homepageForm, banners, homepageSections, kidsForm, kidsSections, loading]);
+
   function toggleHomepageProduct(key: HomepageSectionKey, productId: string) {
     setHomepageSections((prev) => {
       const current = prev[key];
@@ -212,30 +230,59 @@ export default function AdminKonfigurasiPage() {
     });
   }
 
+  function formatSaveError(data: unknown): string {
+    if (data && typeof data === 'object' && 'issues' in data) {
+      const issues = (data as { issues?: Record<string, string[] | string> }).issues;
+      if (issues) {
+        return Object.entries(issues)
+          .map(
+            ([field, messages]) =>
+              `${field}: ${Array.isArray(messages) ? messages.join(', ') : messages}`,
+          )
+          .join(' · ');
+      }
+    }
+    if (data && typeof data === 'object' && 'error' in data) {
+      return String((data as { error?: unknown }).error ?? 'Gagal menyimpan');
+    }
+    return 'Gagal menyimpan konfigurasi. Periksa kembali data yang diisi.';
+  }
+
   async function handleSave() {
     setSaving(true);
     setSaveMessage(null);
 
-    const [homepageRes, kidsRes] = await Promise.all([
-      fetch('/api/admin/config/homepage', {
+    if (tab === 'home') {
+      const response = await fetch('/api/admin/config/homepage', {
         method: 'PUT',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ ...homepageForm, sections: homepageSections }),
-      }),
-      fetch('/api/admin/config/kids', {
+        body: JSON.stringify({ ...homepageForm, banners, sections: homepageSections }),
+      });
+
+      if (response.ok) {
+        setSaveMessage('Konfigurasi Beranda berhasil disimpan!');
+        setDirty(false);
+      } else {
+        const data = await response.json().catch(() => null);
+        setSaveMessage(formatSaveError(data));
+      }
+    } else {
+      const response = await fetch('/api/admin/config/kids', {
         method: 'PUT',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ ...kidsForm, sections: kidsSections }),
-      }),
-    ]);
+      });
+
+      if (response.ok) {
+        setSaveMessage('Konfigurasi Buku Anak berhasil disimpan!');
+        setDirty(false);
+      } else {
+        const data = await response.json().catch(() => null);
+        setSaveMessage(formatSaveError(data));
+      }
+    }
 
     setSaving(false);
-
-    if (homepageRes.ok && kidsRes.ok) {
-      setSaveMessage('Konfigurasi berhasil disimpan!');
-    } else {
-      setSaveMessage('Gagal menyimpan konfigurasi. Periksa kembali data yang diisi.');
-    }
   }
 
   if (loading) {
@@ -280,52 +327,27 @@ export default function AdminKonfigurasiPage() {
         <div className="flex flex-col gap-6">
           <div className="flex flex-col gap-3 rounded-lg border border-neutral-200 p-4">
             <h3 className="font-semibold text-foreground">Banner Hero Beranda</h3>
-            <div className="flex flex-col gap-1">
-              <label htmlFor="heroMainImageUrl" className="text-xs font-medium text-neutral-600">
-                Gambar Banner Utama (URL)
-              </label>
-              <input
-                id="heroMainImageUrl"
-                type="text"
-                value={homepageForm.heroMainImageUrl}
-                onChange={(e) =>
-                  setHomepageForm((prev) => ({ ...prev, heroMainImageUrl: e.target.value }))
-                }
-                placeholder="https://..."
-                className={inputBase}
+            <BannerImageManager
+              label="Gambar Banner Utama"
+              images={banners.HERO_MAIN}
+              onChange={(images) => setBanners((prev) => ({ ...prev, HERO_MAIN: images }))}
+            />
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="flex flex-col gap-3 rounded-lg border border-neutral-200 p-4">
+              <BannerImageManager
+                label="Gambar Banner Samping 1"
+                images={banners.HERO_SIDE_1}
+                onChange={(images) => setBanners((prev) => ({ ...prev, HERO_SIDE_1: images }))}
               />
             </div>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <div className="flex flex-col gap-1">
-                <label htmlFor="heroSideImage1Url" className="text-xs font-medium text-neutral-600">
-                  Gambar Banner Samping 1 (URL)
-                </label>
-                <input
-                  id="heroSideImage1Url"
-                  type="text"
-                  value={homepageForm.heroSideImage1Url}
-                  onChange={(e) =>
-                    setHomepageForm((prev) => ({ ...prev, heroSideImage1Url: e.target.value }))
-                  }
-                  placeholder="https://..."
-                  className={inputBase}
-                />
-              </div>
-              <div className="flex flex-col gap-1">
-                <label htmlFor="heroSideImage2Url" className="text-xs font-medium text-neutral-600">
-                  Gambar Banner Samping 2 (URL)
-                </label>
-                <input
-                  id="heroSideImage2Url"
-                  type="text"
-                  value={homepageForm.heroSideImage2Url}
-                  onChange={(e) =>
-                    setHomepageForm((prev) => ({ ...prev, heroSideImage2Url: e.target.value }))
-                  }
-                  placeholder="https://..."
-                  className={inputBase}
-                />
-              </div>
+            <div className="flex flex-col gap-3 rounded-lg border border-neutral-200 p-4">
+              <BannerImageManager
+                label="Gambar Banner Samping 2"
+                images={banners.HERO_SIDE_2}
+                onChange={(images) => setBanners((prev) => ({ ...prev, HERO_SIDE_2: images }))}
+              />
             </div>
           </div>
 
@@ -524,12 +546,28 @@ export default function AdminKonfigurasiPage() {
         </div>
       )}
 
-      <div className="flex items-center justify-end gap-3 border-t border-neutral-200 pt-4">
-        {saveMessage ? <p className="text-sm text-neutral-600">{saveMessage}</p> : null}
-        <button type="button" disabled={saving} onClick={handleSave} className={btnSolid}>
-          {saving ? 'Menyimpan...' : 'Simpan Konfigurasi'}
-        </button>
-      </div>
+      {saveMessage ? (
+        <p className={`text-sm ${saveMessage.includes('berhasil') ? 'text-green' : 'text-red'}`}>
+          {saveMessage}
+        </p>
+      ) : null}
+
+      {dirty ? (
+        <div className="sticky bottom-4 z-20 flex items-center justify-between gap-3 rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 shadow-md">
+          <p className="text-sm font-medium text-amber-800">
+            Ada perubahan belum disimpan. Klik Simpan agar tampil di halaman toko.
+          </p>
+          <button type="button" disabled={saving} onClick={handleSave} className={btnSolid}>
+            {saving ? 'Menyimpan...' : 'Simpan Konfigurasi'}
+          </button>
+        </div>
+      ) : (
+        <div className="flex items-center justify-end border-t border-neutral-200 pt-4">
+          <button type="button" disabled={saving} onClick={handleSave} className={btnSolid}>
+            {saving ? 'Menyimpan...' : 'Simpan Konfigurasi'}
+          </button>
+        </div>
+      )}
     </div>
   );
 }

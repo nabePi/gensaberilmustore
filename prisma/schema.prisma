@@ -541,11 +541,26 @@ model StoreSetting {
   updatedAt                DateTime @updatedAt
 }
 
+enum HomepageBannerSlot {
+  HERO_MAIN
+  HERO_SIDE_1
+  HERO_SIDE_2
+}
+
+model HomepageBanner {
+  id        String            @id @default(uuid())
+  slot      HomepageBannerSlot
+  imageUrl  String
+  linkUrl   String?
+  position  Int               @default(0)
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+
+  @@index([slot, position])
+}
+
 model HomepageConfig {
   id                                Int      @id @default(1)
-  heroMainImageUrl                  String
-  heroSideImage1Url                 String
-  heroSideImage2Url                 String
   sectionNewestPromoImageUrl        String
   sectionBestsellerPromoImageUrl    String
   sectionInternationalPromoImageUrl String

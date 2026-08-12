@@ -97,6 +97,17 @@ async function getSectionProducts(key: HomepageSectionKey): Promise<ProductCardD
   return getFallbackProducts();
 }
 
+export type BannerImage = {
+  imageUrl: string;
+  linkUrl: string | null;
+};
+
+export type HomepageBanners = {
+  HERO_MAIN: BannerImage[];
+  HERO_SIDE_1: BannerImage[];
+  HERO_SIDE_2: BannerImage[];
+};
+
 export type HomepageSectionData = {
   key: HomepageSectionKey;
   title: string;
@@ -105,6 +116,19 @@ export type HomepageSectionData = {
   products: ProductCardData[];
 };
 
+async function getHomepageBanners(): Promise<HomepageBanners> {
+  const rows = await prisma.homepageBanner.findMany({
+    orderBy: [{ slot: 'asc' }, { position: 'asc' }],
+    select: { slot: true, imageUrl: true, linkUrl: true },
+  });
+
+  return {
+    HERO_MAIN: rows.filter((r) => r.slot === 'HERO_MAIN'),
+    HERO_SIDE_1: rows.filter((r) => r.slot === 'HERO_SIDE_1'),
+    HERO_SIDE_2: rows.filter((r) => r.slot === 'HERO_SIDE_2'),
+  };
+}
+
 function getPromoImageUrl(config: HomepageConfig | null, key: HomepageSectionKey): string | null {
   const field = PROMO_IMAGE_FIELD[key];
   if (!config || !field) return null;
@@ -112,7 +136,7 @@ function getPromoImageUrl(config: HomepageConfig | null, key: HomepageSectionKey
 }
 
 export async function getHomepageData() {
-  const config = await getHomepageConfig();
+  const [config, banners] = await Promise.all([getHomepageConfig(), getHomepageBanners()]);
 
   const sections = await Promise.all(
     HOMEPAGE_SECTIONS.map(async (section) => ({
@@ -122,5 +146,5 @@ export async function getHomepageData() {
     })),
   );
 
-  return { config, sections };
+  return { config, banners, sections };
 }

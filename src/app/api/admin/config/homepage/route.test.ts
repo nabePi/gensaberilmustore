@@ -55,9 +55,14 @@ function buildRequest(method: string, body: unknown, cookie: string) {
 
 function validPayload(productId: string) {
   return {
-    heroMainImageUrl: '/img/hero.jpg',
-    heroSideImage1Url: '/img/side1.jpg',
-    heroSideImage2Url: '/img/side2.jpg',
+    banners: {
+      HERO_MAIN: [
+        { imageUrl: '/img/hero.jpg', linkUrl: 'https://example.com' },
+        { imageUrl: '/img/hero-2.jpg', linkUrl: '' },
+      ],
+      HERO_SIDE_1: [{ imageUrl: '/img/side1.jpg', linkUrl: '' }],
+      HERO_SIDE_2: [{ imageUrl: '/img/side2.jpg', linkUrl: '' }],
+    },
     sectionNewestPromoImageUrl: '/img/promo1.jpg',
     sectionBestsellerPromoImageUrl: '/img/promo2.jpg',
     sectionInternationalPromoImageUrl: '/img/promo3.jpg',
@@ -111,7 +116,7 @@ describe('PUT /api/admin/config/homepage', () => {
     expect(response.status).toBe(400);
   });
 
-  it('saves the config and section products', async () => {
+  it('saves the config, banners, and section products', async () => {
     const cookie = await createAdminCookie();
     const product = await createProduct();
 
@@ -119,7 +124,9 @@ describe('PUT /api/admin/config/homepage', () => {
     const json = await response.json();
 
     expect(response.status).toBe(200);
-    expect(json.config.heroMainImageUrl).toBe('/img/hero.jpg');
+    expect(json.banners.HERO_MAIN).toHaveLength(2);
+    expect(json.banners.HERO_MAIN[0].imageUrl).toBe('/img/hero.jpg');
+    expect(json.banners.HERO_MAIN[0].linkUrl).toBe('https://example.com');
     expect(json.sections.NEWEST).toEqual([product.id]);
   });
 });

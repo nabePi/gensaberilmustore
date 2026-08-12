@@ -1,9 +1,18 @@
 import { z } from 'zod';
 
+export const bannerImageSchema = z.object({
+  id: z.string().uuid().optional(),
+  imageUrl: z.string().trim().min(1),
+  linkUrl: z.string().trim().url().optional().or(z.literal('')),
+  position: z.number().int().min(0).default(0),
+});
+
 export const homepageConfigUpdateSchema = z.object({
-  heroMainImageUrl: z.string().trim().min(1),
-  heroSideImage1Url: z.string().trim().min(1),
-  heroSideImage2Url: z.string().trim().min(1),
+  banners: z.object({
+    HERO_MAIN: z.array(bannerImageSchema),
+    HERO_SIDE_1: z.array(bannerImageSchema),
+    HERO_SIDE_2: z.array(bannerImageSchema),
+  }),
   sectionNewestPromoImageUrl: z.string().trim().min(1),
   sectionBestsellerPromoImageUrl: z.string().trim().min(1),
   sectionInternationalPromoImageUrl: z.string().trim().min(1),
