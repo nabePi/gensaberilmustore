@@ -1,6 +1,14 @@
 # Gensa Berilmu Store App
 
 [![CI](https://github.com/nabePi/gensaberilmustore/actions/workflows/ci.yml/badge.svg)](https://github.com/nabePi/gensaberilmustore/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/nabePi/gensaberilmustore)](https://github.com/nabePi/gensaberilmustore/releases)
+[![Node.js](https://img.shields.io/badge/node-%3E%3D20.x-339933?logo=node.js&logoColor=white)](https://nodejs.org/)
+[![pnpm](https://img.shields.io/badge/pnpm-11.x-F69220?logo=pnpm&logoColor=white)](https://pnpm.io/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Next.js](https://img.shields.io/badge/Next.js-16.x-000000?logo=next.js&logoColor=white)](https://nextjs.org/)
+[![React](https://img.shields.io/badge/React-19.x-61DAFB?logo=react&logoColor=black)](https://react.dev/)
+[![Prisma](https://img.shields.io/badge/Prisma-6.x-2D3748?logo=prisma&logoColor=white)](https://www.prisma.io/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind%20CSS-4.x-06B6D4?logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
 
 Next.js 15 App Router + TypeScript project for Gensa Berilmu Store.
 
