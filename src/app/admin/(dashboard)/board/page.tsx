@@ -132,16 +132,20 @@ export default function AdminBoardPage() {
   useEffect(() => {
     async function loadOrders() {
       setLoading(true);
+      setError(null);
       const dateFrom = new Date();
       dateFrom.setDate(dateFrom.getDate() - 14);
       const params = new URLSearchParams({
-        limit: '200',
+        limit: '100',
         dateFrom: dateFrom.toISOString(),
       });
       const response = await fetch(`/api/admin/orders?${params.toString()}`);
       if (response.ok) {
         const data: { items: BoardOrder[] } = await response.json();
         setOrders(data.items);
+      } else {
+        const body = await response.json().catch(() => ({}));
+        setError(body.error ?? 'Gagal memuat pesanan');
       }
       setLoading(false);
     }
