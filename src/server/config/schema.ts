@@ -3,7 +3,7 @@ import { z } from 'zod';
 export const bannerImageSchema = z.object({
   id: z.string().uuid().optional(),
   imageUrl: z.string().trim().min(1),
-  linkUrl: z.string().trim().url().optional().or(z.literal('')),
+  linkUrl: z.string().trim().url().optional().or(z.literal('')).nullable(),
   position: z.number().int().min(0).default(0),
 });
 

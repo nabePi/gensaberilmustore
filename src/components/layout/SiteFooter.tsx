@@ -1,14 +1,14 @@
 const LOGO_URL =
   'https://d33tu7komhhdsg.cloudfront.net/fL0bTwfYBTXRta-Ne8XDN_vScOqHAKlW4IHMcivnhbI/auto/0/250/no/1/bG9jYWw6Ly8vYnVzaW5lc3MvMjAyMS0xMi9neTZlZThjZWUwOTI0MGUyNmFhYWNlL2FsYnVtcy9wcm9maWxlL3BkZnRvanBnbWUtMS1jdXRvdXQucG5n.webp';
 
-const SOCIAL_ICONS: { label: string; path: string }[] = [
+const SOCIAL_ICONS: { label: string; path: string | null }[] = [
   {
     label: 'X',
     path: 'M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z',
   },
   {
     label: 'Instagram',
-    path: 'M12 2.16c3.2 0 3.58.01 4.85.07 1.17.05 1.8.24 2.22.41.56.21.96.47 1.38.89.42.42.68.82.89 1.38.17.42.36 1.05.41 2.22.06 1.27.07 1.65.07 4.85s-.01 3.58-.07 4.85c-.05 1.17-.24 1.8-.41 2.22-.21.56-.47.96-.89 1.38-.42.42-.82.68-1.38.89-.42.17-1.05.36-2.22.41-1.27.06-1.65.07-4.85.07s-3.58-.01-4.85-.07c-1.17-.05-1.8-.24-2.22-.41a3.72 3.72 0 01-1.38-.89 3.72 3.72 0 01-.89-1.38c-.17-.42-.36-1.05-.41-2.22-.06-1.27-.07-1.65-.07-4.85s.01-3.58.07-4.85c.05-1.17.24-1.8.41-2.22.21-.56.47-.96.89-1.38.42-.42.82-.68 1.38-.89.42-.17 1.05-.36 2.22-.41 1.27-.06 1.65-.07 4.85-.07zM12 0C8.74 0 8.33.01 7.05.07c-1.28.06-2.15.26-2.91.56a5.9 5.9 0 00-2.14 1.39A5.9 5.9 0 00.61 4.15c-.3.76-.5 1.63-.56 2.91C0 8.33 0 8.74 0 12s.01 3.67.07 4.95c.06 1.28.26 2.15.56 2.91.3.79.7 1.46 1.39 2.14.68.68 1.35 1.09 2.14 1.39.76.3 1.63.5 2.91.56C8.33 24 8.74 24 12 24s3.67-.01 4.95-.07c1.28-.06 2.15-.26 2.91-.56a5.9 5.9 0 002.14-1.39 5.9 5.9 0 001.39-2.14c.3-.76.5-1.63.56-2.91.06-1.28.07-1.69.07-4.95s-.01-3.67-.07-4.95c-.06-1.28-.26-2.15-.56-2.91a5.9 5.9 0 00-1.39-2.14A5.9 5.9 0 0019.86.63c-.76-.3-1.63-.5-2.91-.56C15.67.01 15.26 0 12 0z',
+    path: null,
   },
   {
     label: 'Facebook',
@@ -20,13 +20,21 @@ const SOCIAL_ICONS: { label: string; path: string }[] = [
   },
 ];
 
+const SOCIAL_HOVER: Record<string, string> = {
+  X: 'hover:border-black hover:bg-black hover:text-white',
+  Instagram:
+    'hover:border-[#dc2743] hover:bg-gradient-to-br hover:from-[#f09433] hover:via-[#dc2743] hover:to-[#bc1888] hover:text-white',
+  Facebook: 'hover:border-[#1877f2] hover:bg-[#1877f2] hover:text-white',
+  YouTube: 'hover:border-[#ff0000] hover:bg-[#ff0000] hover:text-white',
+};
+
 export function SiteFooter() {
   return (
-    <footer className="border-t border-neutral-200 bg-white">
-      <div className="container-prototype grid gap-8 py-10 sm:grid-cols-2 lg:grid-cols-4">
-        <div className="space-y-3 lg:col-span-1">
-          <img src={LOGO_URL} alt="GenSa Berilmu" className="h-[42px] w-auto object-contain" />
-          <p className="text-sm text-neutral-500">
+    <footer className="mt-16 bg-[#f4f5f7]">
+      <div className="container-prototype grid grid-cols-1 gap-8 pt-12 pb-8 sm:grid-cols-2 lg:grid-cols-[1.8fr_1fr_1.2fr_0.9fr]">
+        <div>
+          <img src={LOGO_URL} alt="GenSa Berilmu" className="mb-4 h-[50px] w-auto object-contain" />
+          <p className="max-w-[420px] text-sm leading-[1.7] text-neutral-500">
             <strong className="text-foreground">GenSa Berilmu</strong> adalah toko online resmi dari
             PT. Generasi Shalahuddin Berilmu. Kami berkomitmen menyediakan berbagai produk edukasi,
             buku anak, dan kebutuhan keluarga berkualitas untuk mendukung tumbuh kembang generasi
@@ -34,9 +42,9 @@ export function SiteFooter() {
           </p>
         </div>
 
-        <div className="space-y-2">
-          <h4 className="text-sm font-bold text-foreground">MENU</h4>
-          <ul className="space-y-1.5 text-sm text-neutral-500">
+        <div>
+          <h4 className="mb-4 text-[13px] font-bold tracking-[0.04em] text-foreground">MENU</h4>
+          <ul className="flex flex-col gap-3 text-sm text-neutral-500">
             <li>
               <a href="#" className="hover:text-brand">
                 Terms &amp; Conditions
@@ -65,42 +73,102 @@ export function SiteFooter() {
           </ul>
         </div>
 
-        <div className="space-y-2">
-          <h4 className="text-sm font-bold text-foreground">KONTAK KAMI</h4>
-          <ul className="space-y-2 text-sm text-neutral-500">
-            <li>
+        <div>
+          <h4 className="mb-4 text-[13px] font-bold tracking-[0.04em] text-foreground">
+            KONTAK KAMI
+          </h4>
+          <ul className="flex flex-col gap-3 text-sm text-neutral-500">
+            <li className="flex items-center gap-2.5">
+              <span className="flex h-[18px] w-[18px] shrink-0 items-center justify-center text-brand">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z" />
+                </svg>
+              </span>
               <a href="https://wa.me/6281234567890" className="hover:text-brand">
                 0812-3456-7890
               </a>
             </li>
-            <li>
+            <li className="flex items-center gap-2.5">
+              <span className="flex h-[18px] w-[18px] shrink-0 items-center justify-center text-brand">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                  <polyline points="22,6 12,13 2,6" />
+                </svg>
+              </span>
               <a href="mailto:info@gensaberilmu.co.id" className="hover:text-brand">
                 info@gensaberilmu.co.id
               </a>
             </li>
-            <li>Jl. Raya Bogor KM. 29, Cibinong, Bogor 16912, Indonesia</li>
+            <li className="flex items-start gap-2.5">
+              <span className="mt-px flex h-[18px] w-[18px] shrink-0 items-center justify-center text-brand">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
+                  <circle cx="12" cy="10" r="3" />
+                </svg>
+              </span>
+              <span>Jl. Raya Bogor KM. 29, Cibinong, Bogor 16912, Indonesia</span>
+            </li>
           </ul>
         </div>
 
-        <div className="space-y-2">
-          <h4 className="text-sm font-bold text-foreground">SOSIAL MEDIA</h4>
-          <div className="flex gap-3">
+        <div>
+          <h4 className="mb-4 text-[13px] font-bold tracking-[0.04em] text-foreground">
+            SOSIAL MEDIA
+          </h4>
+          <div className="flex flex-wrap gap-2.5">
             {SOCIAL_ICONS.map((icon) => (
               <a
                 key={icon.label}
                 href="#"
                 aria-label={icon.label}
-                className="flex h-9 w-9 items-center justify-center rounded-full border border-neutral-200 text-neutral-500 hover:border-brand hover:text-brand"
+                className={`flex h-9 w-9 items-center justify-center rounded-full border border-neutral-200 bg-white text-neutral-500 transition-all ${SOCIAL_HOVER[icon.label]}`}
               >
-                <svg viewBox="0 0 24 24" className="h-4 w-4" fill="currentColor">
-                  <path d={icon.path} />
-                </svg>
+                {icon.path ? (
+                  <svg viewBox="0 0 24 24" className="h-[18px] w-[18px]" fill="currentColor">
+                    <path d={icon.path} />
+                  </svg>
+                ) : (
+                  <svg
+                    viewBox="0 0 24 24"
+                    className="h-[18px] w-[18px]"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
+                    <path d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37z" />
+                    <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
+                  </svg>
+                )}
               </a>
             ))}
           </div>
         </div>
       </div>
-      <div className="border-t border-neutral-200 py-4 text-center text-xs text-neutral-500">
+      <div className="border-t border-neutral-200 py-5 text-center text-[13px] text-neutral-500">
         © 2025 PT. Generasi Shalahuddin Berilmu
       </div>
     </footer>

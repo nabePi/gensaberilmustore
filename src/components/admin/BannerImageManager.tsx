@@ -121,7 +121,7 @@ export function BannerImageManager({
             <div className="flex-1">
               <input
                 type="text"
-                value={image.linkUrl}
+                value={image.linkUrl ?? ''}
                 onChange={(e) => updateLinkUrl(index, e.target.value)}
                 placeholder="URL tujuan klik (opsional)"
                 className="w-full rounded-sm border border-neutral-200 px-3 py-2 text-sm focus:border-brand focus:outline-none"

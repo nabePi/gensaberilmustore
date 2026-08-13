@@ -20,7 +20,7 @@ export function SectionHead({
           href={viewAllHref}
           className="flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border border-neutral-200 px-4 py-2 text-sm font-semibold text-foreground hover:bg-neutral-50"
         >
-          Lihat Semua
+          Lihat Semua <span>&rarr;</span>
         </Link>
       ) : null}
     </div>
