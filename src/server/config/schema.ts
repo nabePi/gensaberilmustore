@@ -7,25 +7,29 @@ export const bannerImageSchema = z.object({
   position: z.number().int().min(0).default(0),
 });
 
+export const homepageSectionSchema = z.object({
+  id: z.string().uuid().optional(),
+  key: z
+    .string()
+    .trim()
+    .min(1)
+    .regex(/^[a-z0-9]+(-[a-z0-9]+)*$/, {
+      message: 'Key hanya boleh huruf kecil, angka, dan tanda hubung',
+    }),
+  title: z.string().trim().min(1),
+  subtitle: z.string().trim().min(1),
+  promoImageUrl: z.string().trim().url().optional().or(z.literal('')),
+  position: z.number().int().min(0).default(0),
+  productIds: z.array(z.string().uuid()),
+});
+
 export const homepageConfigUpdateSchema = z.object({
   banners: z.object({
     HERO_MAIN: z.array(bannerImageSchema),
     HERO_SIDE_1: z.array(bannerImageSchema),
     HERO_SIDE_2: z.array(bannerImageSchema),
   }),
-  sectionNewestPromoImageUrl: z.string().trim().min(1),
-  sectionBestsellerPromoImageUrl: z.string().trim().min(1),
-  sectionInternationalPromoImageUrl: z.string().trim().min(1),
-  sectionKiwariPromoImageUrl: z.string().trim().min(1),
-  sectionKlasikPromoImageUrl: z.string().trim().min(1),
-  sections: z.object({
-    NEWEST: z.array(z.string().uuid()),
-    BESTSELLER: z.array(z.string().uuid()),
-    INTERNATIONAL: z.array(z.string().uuid()),
-    KIWARI: z.array(z.string().uuid()),
-    KLASIK: z.array(z.string().uuid()),
-    OTHERS: z.array(z.string().uuid()),
-  }),
+  sections: z.array(homepageSectionSchema),
 });
 
 export const kidsConfigUpdateSchema = z.object({

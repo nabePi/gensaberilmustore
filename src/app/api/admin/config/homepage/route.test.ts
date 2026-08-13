@@ -63,23 +63,26 @@ function validPayload(productId: string) {
       HERO_SIDE_1: [{ imageUrl: '/img/side1.jpg', linkUrl: '' }],
       HERO_SIDE_2: [{ imageUrl: '/img/side2.jpg', linkUrl: '' }],
     },
-    sectionNewestPromoImageUrl: '/img/promo1.jpg',
-    sectionBestsellerPromoImageUrl: '/img/promo2.jpg',
-    sectionInternationalPromoImageUrl: '/img/promo3.jpg',
-    sectionKiwariPromoImageUrl: '/img/promo4.jpg',
-    sectionKlasikPromoImageUrl: '/img/promo5.jpg',
-    sections: {
-      NEWEST: [productId],
-      BESTSELLER: [],
-      INTERNATIONAL: [],
-      KIWARI: [],
-      KLASIK: [],
-      OTHERS: [],
-    },
+    sections: [
+      {
+        key: 'newest',
+        title: 'Buku Terbaru',
+        subtitle: 'Rilisan terbaru',
+        promoImageUrl: 'https://example.com/img/promo1.jpg',
+        position: 0,
+        productIds: [productId],
+      },
+    ],
   };
 }
 
+async function cleanupTestSections() {
+  await prisma.homepageSectionProduct.deleteMany({});
+  await prisma.homepageSection.deleteMany({});
+}
+
 afterAll(async () => {
+  await cleanupTestSections();
   await prisma.homepageSectionProduct.deleteMany({
     where: { productId: { in: createdProductIds } },
   });
@@ -93,14 +96,25 @@ describe('GET /api/admin/config/homepage', () => {
     expect(response.status).toBe(401);
   });
 
-  it('returns config and section product ids', async () => {
+  it('returns config and dynamic sections array', async () => {
     const cookie = await createAdminCookie();
+    await cleanupTestSections();
+    await prisma.homepageSection.create({
+      data: {
+        key: 'test-newest',
+        title: 'Buku Terbaru',
+        subtitle: 'Rilisan terbaru',
+        promoImageUrl: '',
+        position: 0,
+      },
+    });
+
     const response = await GET(buildRequest('GET', undefined, cookie));
     const json = await response.json();
 
     expect(response.status).toBe(200);
-    expect(json.sections).toHaveProperty('NEWEST');
-    expect(json.sections).toHaveProperty('OTHERS');
+    expect(Array.isArray(json.sections)).toBe(true);
+    expect(json.sections[0].key).toBe('test-newest');
   });
 });
 
@@ -116,9 +130,10 @@ describe('PUT /api/admin/config/homepage', () => {
     expect(response.status).toBe(400);
   });
 
-  it('saves the config, banners, and section products', async () => {
+  it('saves the config, banners, and dynamic sections', async () => {
     const cookie = await createAdminCookie();
     const product = await createProduct();
+    await cleanupTestSections();
 
     const response = await PUT(buildRequest('PUT', validPayload(product.id), cookie));
     const json = await response.json();
@@ -127,6 +142,8 @@ describe('PUT /api/admin/config/homepage', () => {
     expect(json.banners.HERO_MAIN).toHaveLength(2);
     expect(json.banners.HERO_MAIN[0].imageUrl).toBe('/img/hero.jpg');
     expect(json.banners.HERO_MAIN[0].linkUrl).toBe('https://example.com');
-    expect(json.sections.NEWEST).toEqual([product.id]);
+    expect(json.sections).toHaveLength(1);
+    expect(json.sections[0].key).toBe('newest');
+    expect(json.sections[0].productIds).toEqual([product.id]);
   });
 });

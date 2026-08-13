@@ -1,33 +1,28 @@
-import type { HomepageConfig, HomepageSectionKey, Prisma } from '@prisma/client';
+import type { Prisma } from '@prisma/client';
 
 import type { ProductCardData } from '@/components/product/ProductCard';
 import { prisma } from '@/lib/db';
 
 const FALLBACK_SECTION_TAKE = 8;
 
-export const HOMEPAGE_SECTIONS: {
-  key: HomepageSectionKey;
+export type BannerImage = {
+  imageUrl: string;
+  linkUrl: string | null;
+};
+
+export type HomepageBanners = {
+  HERO_MAIN: BannerImage[];
+  HERO_SIDE_1: BannerImage[];
+  HERO_SIDE_2: BannerImage[];
+};
+
+export type HomepageSectionData = {
+  id: string;
+  key: string;
   title: string;
   subtitle: string;
-}[] = [
-  { key: 'NEWEST', title: 'Buku Terbaru', subtitle: 'Rilisan terbaru dari GenSa Berilmu' },
-  { key: 'BESTSELLER', title: 'Bestseller', subtitle: 'Paling banyak dicari pembaca' },
-  {
-    key: 'INTERNATIONAL',
-    title: 'International Bestseller',
-    subtitle: 'Karya penulis dunia pilihan',
-  },
-  { key: 'KIWARI', title: 'Keislaman Kiwari', subtitle: 'Wawasan Islam kontemporer' },
-  { key: 'KLASIK', title: 'Rujukan Islam Klasik', subtitle: 'Karya ulama klasik terpercaya' },
-  { key: 'OTHERS', title: 'Lainnya', subtitle: 'Koleksi pilihan lainnya' },
-];
-
-const PROMO_IMAGE_FIELD: Partial<Record<HomepageSectionKey, keyof HomepageConfig>> = {
-  NEWEST: 'sectionNewestPromoImageUrl',
-  BESTSELLER: 'sectionBestsellerPromoImageUrl',
-  INTERNATIONAL: 'sectionInternationalPromoImageUrl',
-  KIWARI: 'sectionKiwariPromoImageUrl',
-  KLASIK: 'sectionKlasikPromoImageUrl',
+  promoImageUrl: string;
+  products: ProductCardData[];
 };
 
 const cardSelect = {
@@ -71,51 +66,6 @@ export function getHomepageConfig() {
   return prisma.homepageConfig.findUnique({ where: { id: 1 } });
 }
 
-async function getFallbackProducts(): Promise<ProductCardData[]> {
-  const rows = await prisma.product.findMany({
-    where: { isActive: true },
-    orderBy: { createdAt: 'desc' },
-    take: FALLBACK_SECTION_TAKE,
-    select: cardSelect,
-  });
-  return rows.map(toCardData);
-}
-
-async function getSectionProducts(key: HomepageSectionKey): Promise<ProductCardData[]> {
-  const rows = await prisma.homepageSectionProduct.findMany({
-    where: { sectionKey: key },
-    orderBy: { position: 'asc' },
-    select: { product: { select: cardSelect } },
-  });
-
-  const active = rows.map((row) => row.product).filter((product) => product.isActive);
-
-  if (active.length > 0) {
-    return active.map(toCardData);
-  }
-
-  return getFallbackProducts();
-}
-
-export type BannerImage = {
-  imageUrl: string;
-  linkUrl: string | null;
-};
-
-export type HomepageBanners = {
-  HERO_MAIN: BannerImage[];
-  HERO_SIDE_1: BannerImage[];
-  HERO_SIDE_2: BannerImage[];
-};
-
-export type HomepageSectionData = {
-  key: HomepageSectionKey;
-  title: string;
-  subtitle: string;
-  promoImageUrl: string | null;
-  products: ProductCardData[];
-};
-
 async function getHomepageBanners(): Promise<HomepageBanners> {
   const rows = await prisma.homepageBanner.findMany({
     orderBy: [{ slot: 'asc' }, { position: 'asc' }],
@@ -129,22 +79,48 @@ async function getHomepageBanners(): Promise<HomepageBanners> {
   };
 }
 
-function getPromoImageUrl(config: HomepageConfig | null, key: HomepageSectionKey): string | null {
-  const field = PROMO_IMAGE_FIELD[key];
-  if (!config || !field) return null;
-  return config[field] as string;
+async function getFallbackProducts(): Promise<ProductCardData[]> {
+  const rows = await prisma.product.findMany({
+    where: { isActive: true },
+    orderBy: { createdAt: 'desc' },
+    take: FALLBACK_SECTION_TAKE,
+    select: cardSelect,
+  });
+  return rows.map(toCardData);
+}
+
+async function getSectionProducts(sectionId: string): Promise<ProductCardData[]> {
+  const rows = await prisma.homepageSectionProduct.findMany({
+    where: { sectionId },
+    orderBy: { position: 'asc' },
+    select: { product: { select: cardSelect } },
+  });
+
+  const active = rows.map((row) => row.product).filter((product) => product.isActive);
+
+  if (active.length > 0) {
+    return active.map(toCardData);
+  }
+
+  return getFallbackProducts();
 }
 
 export async function getHomepageData() {
-  const [config, banners] = await Promise.all([getHomepageConfig(), getHomepageBanners()]);
+  const [config, banners, sections] = await Promise.all([
+    getHomepageConfig(),
+    getHomepageBanners(),
+    prisma.homepageSection.findMany({
+      orderBy: { position: 'asc' },
+      select: { id: true, key: true, title: true, subtitle: true, promoImageUrl: true },
+    }),
+  ]);
 
-  const sections = await Promise.all(
-    HOMEPAGE_SECTIONS.map(async (section) => ({
+  const sectionsWithProducts = await Promise.all(
+    sections.map(async (section) => ({
       ...section,
-      promoImageUrl: getPromoImageUrl(config, section.key),
-      products: await getSectionProducts(section.key),
+      products: await getSectionProducts(section.id),
     })),
   );
 
-  return { config, banners, sections };
+  return { config, banners, sections: sectionsWithProducts };
 }

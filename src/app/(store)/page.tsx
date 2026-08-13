@@ -62,11 +62,11 @@ export default async function HomePage() {
       </section>
 
       {sections.map((section) => (
-        <section key={section.key}>
+        <section key={section.id}>
           <SectionHead
             title={section.title}
             subtitle={section.subtitle}
-            viewAllHref={`/products?section=${section.key.toLowerCase()}`}
+            viewAllHref={`/products?section=${section.key}`}
           />
           {section.promoImageUrl ? (
             <div className="mb-4 overflow-hidden rounded-lg">
