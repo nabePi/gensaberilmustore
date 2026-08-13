@@ -1,53 +1,53 @@
-import type { HomepageSectionKey } from '@prisma/client';
 import { NextRequest, NextResponse } from 'next/server';
 
 import { prisma } from '@/lib/db';
 import { withAuth } from '@/server/auth';
 import { homepageConfigUpdateSchema } from '@/server/config/schema';
 
-const SECTION_KEYS: HomepageSectionKey[] = [
-  'NEWEST',
-  'BESTSELLER',
-  'INTERNATIONAL',
-  'KIWARI',
-  'KLASIK',
-  'OTHERS',
-];
-
-const BANNER_SLOTS = ['HERO_MAIN', 'HERO_SIDE_1', 'HERO_SIDE_2'] as const;
-
-function serializeBanners(
-  rows: { id: string; slot: string; imageUrl: string; linkUrl: string | null; position: number }[],
+function serializeSections(
+  sections: {
+    id: string;
+    key: string;
+    title: string;
+    subtitle: string;
+    promoImageUrl: string;
+    position: number;
+    products: { productId: string; position: number }[];
+  }[],
 ) {
-  return Object.fromEntries(
-    BANNER_SLOTS.map((slot) => [
-      slot,
-      rows
-        .filter((row) => row.slot === slot)
-        .map((row) => ({ id: row.id, imageUrl: row.imageUrl, linkUrl: row.linkUrl ?? '' })),
-    ]),
-  );
+  return sections
+    .map((section) => ({
+      ...section,
+      productIds: section.products.sort((a, b) => a.position - b.position).map((p) => p.productId),
+    }))
+    .sort((a, b) => a.position - b.position);
 }
 
 export const GET = withAuth(
   async () => {
     const [config, sectionProducts, bannerRows] = await Promise.all([
       prisma.homepageConfig.findUnique({ where: { id: 1 } }),
-      prisma.homepageSectionProduct.findMany({
+      prisma.homepageSection.findMany({
         orderBy: { position: 'asc' },
-        select: { sectionKey: true, productId: true },
+        include: {
+          products: {
+            orderBy: { position: 'asc' },
+            select: { productId: true, position: true },
+          },
+        },
       }),
       prisma.homepageBanner.findMany({ orderBy: [{ slot: 'asc' }, { position: 'asc' }] }),
     ]);
 
-    const sections = Object.fromEntries(
-      SECTION_KEYS.map((key) => [
-        key,
-        sectionProducts.filter((row) => row.sectionKey === key).map((row) => row.productId),
-      ]),
-    );
-
-    return NextResponse.json({ config, sections, banners: serializeBanners(bannerRows) });
+    return NextResponse.json({
+      config,
+      sections: serializeSections(sectionProducts),
+      banners: {
+        HERO_MAIN: bannerRows.filter((row) => row.slot === 'HERO_MAIN'),
+        HERO_SIDE_1: bannerRows.filter((row) => row.slot === 'HERO_SIDE_1'),
+        HERO_SIDE_2: bannerRows.filter((row) => row.slot === 'HERO_SIDE_2'),
+      },
+    });
   },
   { role: 'ADMIN' },
 );
@@ -64,9 +64,9 @@ export const PUT = withAuth(
       );
     }
 
-    const { sections, banners, ...configData } = parsed.data;
+    const { banners, sections } = parsed.data;
 
-    const allProductIds = SECTION_KEYS.flatMap((key) => sections[key]);
+    const allProductIds = sections.flatMap((section) => section.productIds);
     if (allProductIds.length > 0) {
       const foundCount = await prisma.product.count({ where: { id: { in: allProductIds } } });
       if (foundCount !== new Set(allProductIds).size) {
@@ -80,27 +80,13 @@ export const PUT = withAuth(
     await prisma.$transaction(async (tx) => {
       await tx.homepageConfig.upsert({
         where: { id: 1 },
-        create: { id: 1, ...configData },
-        update: configData,
+        create: { id: 1 },
+        update: {},
       });
 
-      await tx.homepageSectionProduct.deleteMany();
-
-      for (const key of SECTION_KEYS) {
-        const productIds = sections[key];
-        if (productIds.length === 0) continue;
-        await tx.homepageSectionProduct.createMany({
-          data: productIds.map((productId, position) => ({
-            sectionKey: key,
-            productId,
-            position,
-          })),
-        });
-      }
-
       await tx.homepageBanner.deleteMany();
-
-      for (const slot of BANNER_SLOTS) {
+      const bannerSlots = ['HERO_MAIN', 'HERO_SIDE_1', 'HERO_SIDE_2'] as const;
+      for (const slot of bannerSlots) {
         const bannerList = banners[slot];
         if (bannerList.length === 0) continue;
         await tx.homepageBanner.createMany({
@@ -112,14 +98,67 @@ export const PUT = withAuth(
           })),
         });
       }
+
+      const existingSections = await tx.homepageSection.findMany({ select: { id: true } });
+      const incomingIds = new Set(sections.map((s) => s.id).filter(Boolean));
+      const idsToDelete = existingSections.map((s) => s.id).filter((id) => !incomingIds.has(id));
+
+      if (idsToDelete.length > 0) {
+        await tx.homepageSection.deleteMany({ where: { id: { in: idsToDelete } } });
+      }
+
+      for (const section of sections) {
+        const { id, productIds, ...rest } = section;
+        const sectionData = {
+          key: rest.key,
+          title: rest.title,
+          subtitle: rest.subtitle,
+          promoImageUrl: rest.promoImageUrl ?? '',
+          position: rest.position,
+        };
+        const upserted = await tx.homepageSection.upsert({
+          where: { id: id ?? '' },
+          create: sectionData,
+          update: sectionData,
+        });
+
+        await tx.homepageSectionProduct.deleteMany({ where: { sectionId: upserted.id } });
+
+        if (productIds.length > 0) {
+          await tx.homepageSectionProduct.createMany({
+            data: productIds.map((productId, position) => ({
+              sectionId: upserted.id,
+              productId,
+              position,
+            })),
+          });
+        }
+      }
     });
 
-    const [config, bannerRows] = await Promise.all([
+    const [config, sectionProducts, bannerRows] = await Promise.all([
       prisma.homepageConfig.findUnique({ where: { id: 1 } }),
+      prisma.homepageSection.findMany({
+        orderBy: { position: 'asc' },
+        include: {
+          products: {
+            orderBy: { position: 'asc' },
+            select: { productId: true, position: true },
+          },
+        },
+      }),
       prisma.homepageBanner.findMany({ orderBy: [{ slot: 'asc' }, { position: 'asc' }] }),
     ]);
 
-    return NextResponse.json({ config, sections, banners: serializeBanners(bannerRows) });
+    return NextResponse.json({
+      config,
+      sections: serializeSections(sectionProducts),
+      banners: {
+        HERO_MAIN: bannerRows.filter((row) => row.slot === 'HERO_MAIN'),
+        HERO_SIDE_1: bannerRows.filter((row) => row.slot === 'HERO_SIDE_1'),
+        HERO_SIDE_2: bannerRows.filter((row) => row.slot === 'HERO_SIDE_2'),
+      },
+    });
   },
   { role: 'ADMIN' },
 );

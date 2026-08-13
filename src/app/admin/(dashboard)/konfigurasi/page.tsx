@@ -1,19 +1,22 @@
 'use client';
 
-import type { HomepageSectionKey, KidsSectionKey } from '@prisma/client';
+import type { KidsSectionKey } from '@prisma/client';
+import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 
 import { BannerImageManager, type BannerImageItem } from '@/components/admin/BannerImageManager';
-import { btnSolid, inputBase } from '@/lib/styles';
+import { btnOutline, btnSolid, inputBase } from '@/lib/styles';
 
 type ProductOption = { id: string; title: string; sku: string };
 
-type HomepageForm = {
-  sectionNewestPromoImageUrl: string;
-  sectionBestsellerPromoImageUrl: string;
-  sectionInternationalPromoImageUrl: string;
-  sectionKiwariPromoImageUrl: string;
-  sectionKlasikPromoImageUrl: string;
+type HomepageSection = {
+  id?: string;
+  key: string;
+  title: string;
+  subtitle: string;
+  promoImageUrl: string;
+  position: number;
+  productIds: string[];
 };
 
 type KidsForm = {
@@ -27,27 +30,10 @@ type KidsForm = {
   promoImageUrl: string;
 };
 
-const HOMEPAGE_SECTIONS: { key: HomepageSectionKey; label: string }[] = [
-  { key: 'NEWEST', label: 'Buku Terbaru' },
-  { key: 'BESTSELLER', label: 'Bestseller' },
-  { key: 'INTERNATIONAL', label: 'International Bestseller' },
-  { key: 'KIWARI', label: 'Keislaman Kiwari' },
-  { key: 'KLASIK', label: 'Rujukan Islam Klasik' },
-  { key: 'OTHERS', label: 'Lainnya' },
-];
-
 const KIDS_SECTIONS: { key: KidsSectionKey; label: string }[] = [
   { key: 'POPULAR', label: 'Buku Populer Anak' },
   { key: 'DISCOUNT', label: 'Buku Diskon' },
 ];
-
-const EMPTY_HOMEPAGE_FORM: HomepageForm = {
-  sectionNewestPromoImageUrl: '',
-  sectionBestsellerPromoImageUrl: '',
-  sectionInternationalPromoImageUrl: '',
-  sectionKiwariPromoImageUrl: '',
-  sectionKlasikPromoImageUrl: '',
-};
 
 const EMPTY_KIDS_FORM: KidsForm = {
   heroBadge: '',
@@ -114,15 +100,7 @@ export default function AdminKonfigurasiPage() {
   const [tab, setTab] = useState<'home' | 'kids'>('home');
   const [products, setProducts] = useState<ProductOption[]>([]);
 
-  const [homepageForm, setHomepageForm] = useState<HomepageForm>(EMPTY_HOMEPAGE_FORM);
-  const [homepageSections, setHomepageSections] = useState<Record<HomepageSectionKey, string[]>>({
-    NEWEST: [],
-    BESTSELLER: [],
-    INTERNATIONAL: [],
-    KIWARI: [],
-    KLASIK: [],
-    OTHERS: [],
-  });
+  const [sections, setSections] = useState<HomepageSection[]>([]);
 
   const [banners, setBanners] = useState<
     Record<'HERO_MAIN' | 'HERO_SIDE_1' | 'HERO_SIDE_2', BannerImageItem[]>
@@ -160,16 +138,9 @@ export default function AdminKonfigurasiPage() {
 
       if (homepageRes.ok) {
         const data = await homepageRes.json();
-        if (data.config) {
-          setHomepageForm({
-            sectionNewestPromoImageUrl: data.config.sectionNewestPromoImageUrl,
-            sectionBestsellerPromoImageUrl: data.config.sectionBestsellerPromoImageUrl,
-            sectionInternationalPromoImageUrl: data.config.sectionInternationalPromoImageUrl,
-            sectionKiwariPromoImageUrl: data.config.sectionKiwariPromoImageUrl,
-            sectionKlasikPromoImageUrl: data.config.sectionKlasikPromoImageUrl,
-          });
+        if (data.sections) {
+          setSections(data.sections);
         }
-        setHomepageSections(data.sections);
         if (data.banners) {
           setBanners({
             HERO_MAIN: data.banners.HERO_MAIN ?? [],
@@ -208,16 +179,20 @@ export default function AdminKonfigurasiPage() {
       return;
     }
     setDirty(true);
-  }, [homepageForm, banners, homepageSections, kidsForm, kidsSections, loading]);
+  }, [sections, banners, kidsForm, kidsSections, loading]);
 
-  function toggleHomepageProduct(key: HomepageSectionKey, productId: string) {
-    setHomepageSections((prev) => {
-      const current = prev[key];
-      const next = current.includes(productId)
-        ? current.filter((id) => id !== productId)
-        : [...current, productId];
-      return { ...prev, [key]: next };
-    });
+  function toggleHomepageProduct(sectionId: string | undefined, productId: string) {
+    if (!sectionId) return;
+    setSections((prev) =>
+      prev.map((section) => {
+        if (section.id !== sectionId) return section;
+        const current = section.productIds;
+        const next = current.includes(productId)
+          ? current.filter((id) => id !== productId)
+          : [...current, productId];
+        return { ...section, productIds: next };
+      }),
+    );
   }
 
   function toggleKidsProduct(key: KidsSectionKey, productId: string) {
@@ -256,7 +231,7 @@ export default function AdminKonfigurasiPage() {
       const response = await fetch('/api/admin/config/homepage', {
         method: 'PUT',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ ...homepageForm, banners, sections: homepageSections }),
+        body: JSON.stringify({ banners, sections }),
       });
 
       if (response.ok) {
@@ -294,7 +269,7 @@ export default function AdminKonfigurasiPage() {
       <div>
         <h1 className="text-2xl font-bold text-foreground">Konfigurasi Tampilan</h1>
         <p className="mt-1 text-sm text-neutral-500">
-          Atur banner hero dan buku yang tampil di halaman Beranda serta Buku Anak
+          Atur banner hero, section, dan buku yang tampil di halaman Beranda serta Buku Anak
         </p>
       </div>
 
@@ -351,53 +326,42 @@ export default function AdminKonfigurasiPage() {
             </div>
           </div>
 
-          <div className="flex flex-col gap-3 rounded-lg border border-neutral-200 p-4">
-            <h3 className="font-semibold text-foreground">Gambar Promo per Section</h3>
-            <div className="grid gap-3 sm:grid-cols-2">
-              {(
-                [
-                  ['sectionNewestPromoImageUrl', 'Buku Terbaru'],
-                  ['sectionBestsellerPromoImageUrl', 'Bestseller'],
-                  ['sectionInternationalPromoImageUrl', 'International Bestseller'],
-                  ['sectionKiwariPromoImageUrl', 'Keislaman Kiwari'],
-                  ['sectionKlasikPromoImageUrl', 'Rujukan Islam Klasik'],
-                ] as [keyof HomepageForm, string][]
-              ).map(([field, label]) => (
-                <div key={field} className="flex flex-col gap-1">
-                  <label htmlFor={field} className="text-xs font-medium text-neutral-600">
-                    {label}
-                  </label>
-                  <input
-                    id={field}
-                    type="text"
-                    value={homepageForm[field]}
-                    onChange={(e) =>
-                      setHomepageForm((prev) => ({ ...prev, [field]: e.target.value }))
-                    }
-                    placeholder="https://..."
-                    className={inputBase}
-                  />
-                </div>
-              ))}
-            </div>
-          </div>
-
           <div className="flex flex-col gap-3">
-            <h3 className="font-semibold text-foreground">Pilih Buku per Section</h3>
-            <p className="text-xs text-neutral-500">
-              Centang produk yang ingin ditampilkan. Urutan mengikuti urutan centang.
-            </p>
-            <div className="grid gap-4 sm:grid-cols-2">
-              {HOMEPAGE_SECTIONS.map((section) => (
-                <ProductPicker
-                  key={section.key}
-                  label={section.label}
-                  products={products}
-                  selected={homepageSections[section.key]}
-                  onToggle={(productId) => toggleHomepageProduct(section.key, productId)}
-                />
-              ))}
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="font-semibold text-foreground">Pilih Buku per Section</h3>
+                <p className="text-xs text-neutral-500">
+                  Centang produk yang ingin ditampilkan di setiap section.
+                </p>
+              </div>
+              <Link href="/admin/konfigurasi/section" className={btnOutline}>
+                Atur Section
+              </Link>
             </div>
+
+            {sections.length === 0 ? (
+              <div className="rounded-lg border border-neutral-200 bg-white p-6 text-center">
+                <p className="text-sm text-neutral-500">Belum ada section.</p>
+                <Link
+                  href="/admin/konfigurasi/section"
+                  className="mt-2 inline-block text-sm text-brand hover:underline"
+                >
+                  Buat section pertama
+                </Link>
+              </div>
+            ) : (
+              <div className="grid gap-4 sm:grid-cols-2">
+                {sections.map((section) => (
+                  <ProductPicker
+                    key={section.id ?? section.key}
+                    label={section.title}
+                    products={products}
+                    selected={section.productIds}
+                    onToggle={(productId) => toggleHomepageProduct(section.id, productId)}
+                  />
+                ))}
+              </div>
+            )}
           </div>
         </div>
       ) : (

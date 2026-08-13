@@ -62,15 +62,6 @@ enum AffiliatePayoutStatus {
   CANCELLED
 }
 
-enum HomepageSectionKey {
-  NEWEST
-  BESTSELLER
-  INTERNATIONAL
-  KIWARI
-  KLASIK
-  OTHERS
-}
-
 enum KidsSectionKey {
   POPULAR
   DISCOUNT
@@ -560,24 +551,35 @@ model HomepageBanner {
 }
 
 model HomepageConfig {
-  id                                Int      @id @default(1)
-  sectionNewestPromoImageUrl        String
-  sectionBestsellerPromoImageUrl    String
-  sectionInternationalPromoImageUrl String
-  sectionKiwariPromoImageUrl        String
-  sectionKlasikPromoImageUrl        String
-  updatedAt                         DateTime @updatedAt
+  id        Int      @id @default(1)
+  updatedAt DateTime @updatedAt
+}
+
+model HomepageSection {
+  id            String   @id @default(uuid())
+  key           String   @unique
+  title         String
+  subtitle      String
+  promoImageUrl String
+  position      Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  products HomepageSectionProduct[]
+
+  @@index([position])
 }
 
 model HomepageSectionProduct {
-  id         String             @id @default(uuid())
-  sectionKey HomepageSectionKey
-  productId  String
-  position   Int                @default(0)
+  id        String @id @default(uuid())
+  sectionId String
+  productId String
+  position  Int    @default(0)
 
-  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  section HomepageSection @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  product Product         @relation(fields: [productId], references: [id], onDelete: Cascade)
 
-  @@index([sectionKey, position])
+  @@index([sectionId, position])
   @@index([productId])
 }
 
