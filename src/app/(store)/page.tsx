@@ -81,9 +81,7 @@ export default async function HomePage() {
           {section.products.length > 0 ? (
             <Carousel>
               {section.products.map((product) => (
-                <div key={product.id} className="w-[180px] shrink-0 sm:w-[210px]">
-                  <ProductCard product={product} />
-                </div>
+                <ProductCard key={product.id} product={product} />
               ))}
             </Carousel>
           ) : (

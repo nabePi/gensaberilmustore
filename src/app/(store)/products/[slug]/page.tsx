@@ -160,9 +160,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
           </div>
           <Carousel>
             {product.relatedProducts.map((related) => (
-              <div key={related.id} className="w-44 shrink-0 sm:w-52">
-                <ProductCard product={related} />
-              </div>
+              <ProductCard key={related.id} product={related} />
             ))}
           </Carousel>
         </section>
