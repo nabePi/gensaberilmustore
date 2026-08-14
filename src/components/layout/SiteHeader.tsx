@@ -8,13 +8,6 @@ import { CART_UPDATED_EVENT } from '@/lib/cart-events';
 import { formatCurrency } from '@/lib/format';
 import { btnOutline, btnSolid } from '@/lib/styles';
 
-export type NavCategory = {
-  id: string;
-  name: string;
-  slug: string;
-  children: NavCategory[];
-};
-
 export type HeaderUser = {
   id: string;
   name: string | null;
@@ -32,13 +25,7 @@ type SearchSuggestion = {
 const LOGO_URL =
   'https://d33tu7komhhdsg.cloudfront.net/fL0bTwfYBTXRta-Ne8XDN_vScOqHAKlW4IHMcivnhbI/auto/0/250/no/1/bG9jYWw6Ly8vYnVzaW5lc3MvMjAyMS0xMi9neTZlZThjZWUwOTI0MGUyNmFhYWNlL2FsYnVtcy9wcm9maWxlL3BkZnRvanBnbWUtMS1jdXRvdXQucG5n.webp';
 
-export function SiteHeader({
-  categories,
-  initialUser,
-}: {
-  categories: NavCategory[];
-  initialUser: HeaderUser | null;
-}) {
+export function SiteHeader({ initialUser }: { initialUser: HeaderUser | null }) {
   const router = useRouter();
   const [user, setUser] = useState<HeaderUser | null>(initialUser);
   const [cartCount, setCartCount] = useState(0);
@@ -123,52 +110,37 @@ export function SiteHeader({
 
   return (
     <header className="sticky top-0 z-40 border-b border-neutral-200 bg-white">
-      <div className="container-prototype flex h-[72px] items-center gap-4">
-        <div className="flex items-center gap-6">
+      <div className="container-prototype flex items-center gap-8 py-3.5">
+        <div className="flex items-center gap-8">
           <Link href="/" className="shrink-0">
-            <img src={LOGO_URL} alt="GenSa Berilmu" className="h-[42px] w-auto object-contain" />
+            <img src={LOGO_URL} alt="GenSa Berilmu" className="h-[50px] w-auto object-contain" />
           </Link>
-          <nav className="hidden items-center gap-5 lg:flex">
-            <Link href="/" className="text-sm font-semibold text-foreground hover:text-brand">
+          <nav className="hidden items-center gap-[22px] lg:flex">
+            <Link
+              href="/"
+              className="px-0.5 py-2 text-[15px] font-medium text-neutral-700 hover:text-brand"
+            >
               Beranda
             </Link>
             <Link
               href="/products"
-              className="text-sm font-semibold text-foreground hover:text-brand"
+              className="px-0.5 py-2 text-[15px] font-medium text-neutral-700 hover:text-brand"
             >
               Produk
             </Link>
-            <Link href="/kids" className="text-sm font-semibold text-foreground hover:text-brand">
+            <Link
+              href="/kids"
+              className="px-0.5 py-2 text-[15px] font-medium text-neutral-700 hover:text-brand"
+            >
               Buku Anak
             </Link>
-            {categories.length > 0 ? (
-              <div className="group relative">
-                <button
-                  type="button"
-                  className="text-sm font-semibold text-foreground hover:text-brand"
-                >
-                  Kategori
-                </button>
-                <div className="invisible absolute left-0 top-full z-20 min-w-[220px] rounded-sm border border-neutral-200 bg-white py-2 shadow-lg opacity-0 transition-opacity group-hover:visible group-hover:opacity-100">
-                  {categories.map((category) => (
-                    <Link
-                      key={category.id}
-                      href={`/products?category=${category.slug}`}
-                      className="block px-4 py-2 text-sm text-foreground hover:bg-brand-50 hover:text-brand"
-                    >
-                      {category.name}
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            ) : null}
           </nav>
         </div>
 
         <div ref={searchBoxRef} className="relative hidden flex-1 md:block">
           <form
             onSubmit={handleSearchSubmit}
-            className="flex items-center rounded-full border border-neutral-200 bg-neutral-50 px-4 py-2"
+            className="flex items-center rounded-md border border-neutral-200 bg-white px-4 py-2.5 shadow-xs"
           >
             <svg
               viewBox="0 0 24 24"
@@ -270,9 +242,31 @@ export function SiteHeader({
           ) : (
             <div className="hidden items-center gap-2 md:flex">
               <Link href="/login" className={btnOutline}>
+                <svg
+                  viewBox="0 0 24 24"
+                  className="h-4 w-4 shrink-0"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4M10 17l5-5-5-5M15 12H3" />
+                </svg>
                 Masuk
               </Link>
               <Link href="/signup" className={btnSolid}>
+                <svg
+                  viewBox="0 0 24 24"
+                  className="h-4 w-4 shrink-0"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2M12 11a4 4 0 100-8 4 4 0 000 8z" />
+                </svg>
                 Daftar
               </Link>
             </div>
@@ -295,7 +289,7 @@ export function SiteHeader({
         <div className="border-t border-neutral-200 bg-white px-4 py-4 lg:hidden">
           <form
             onSubmit={handleSearchSubmit}
-            className="mb-4 flex items-center rounded-full border border-neutral-200 bg-neutral-50 px-4 py-2"
+            className="mb-4 flex items-center rounded-md border border-neutral-200 bg-white px-4 py-2.5 shadow-xs"
           >
             <input
               type="text"
@@ -306,33 +300,27 @@ export function SiteHeader({
             />
           </form>
           <nav className="flex flex-col gap-3">
-            <Link href="/" onClick={() => setMobileOpen(false)} className="text-sm font-semibold">
+            <Link
+              href="/"
+              onClick={() => setMobileOpen(false)}
+              className="text-[15px] font-medium text-neutral-700"
+            >
               Beranda
             </Link>
             <Link
               href="/products"
               onClick={() => setMobileOpen(false)}
-              className="text-sm font-semibold"
+              className="text-[15px] font-medium text-neutral-700"
             >
               Produk
             </Link>
             <Link
               href="/kids"
               onClick={() => setMobileOpen(false)}
-              className="text-sm font-semibold"
+              className="text-[15px] font-medium text-neutral-700"
             >
               Buku Anak
             </Link>
-            {categories.map((category) => (
-              <Link
-                key={category.id}
-                href={`/products?category=${category.slug}`}
-                onClick={() => setMobileOpen(false)}
-                className="pl-2 text-sm text-neutral-500"
-              >
-                {category.name}
-              </Link>
-            ))}
           </nav>
           <div className="mt-4 flex flex-col gap-2">
             {user ? (
