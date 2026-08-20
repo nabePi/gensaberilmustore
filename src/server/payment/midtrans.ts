@@ -26,6 +26,31 @@ export type SnapTransactionResult = {
 export async function createSnapTransaction(
   order: OrderForSnapTransaction,
 ): Promise<SnapTransactionResult> {
+  const itemDetails = order.items.map((item) => ({
+    id: item.productId ?? item.id,
+    price: item.priceSnapshot,
+    quantity: item.quantity,
+    name: item.titleSnapshot.slice(0, 50),
+  }));
+
+  if (order.shippingCost > 0) {
+    itemDetails.push({
+      id: 'SHIPPING',
+      price: order.shippingCost,
+      quantity: 1,
+      name: 'Ongkos Kirim',
+    });
+  }
+
+  if (order.discount > 0) {
+    itemDetails.push({
+      id: 'DISCOUNT',
+      price: -order.discount,
+      quantity: 1,
+      name: 'Diskon Voucher',
+    });
+  }
+
   const response = await snap.createTransaction({
     transaction_details: {
       order_id: order.orderNumber,
@@ -40,12 +65,7 @@ export async function createSnapTransaction(
         city: order.receiverCity,
       },
     },
-    item_details: order.items.map((item) => ({
-      id: item.productId ?? item.id,
-      price: item.priceSnapshot,
-      quantity: item.quantity,
-      name: item.titleSnapshot.slice(0, 50),
-    })),
+    item_details: itemDetails,
     enabled_payments: ENABLED_PAYMENTS,
   });
 

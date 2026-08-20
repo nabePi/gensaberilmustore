@@ -5,11 +5,13 @@ import { prisma } from '@/lib/db';
 import { formatCurrency } from '@/lib/format';
 import { btnOutline, btnSolid } from '@/lib/styles';
 import { getSessionUser } from '@/server/auth';
+import { applyMidtransTransactionStatus } from '@/server/payment/apply-status';
+import { getStatus } from '@/server/payment/midtrans';
 
 async function getVisibleOrder(orderId: string) {
-  const order = await prisma.order.findUnique({
+  let order = await prisma.order.findUnique({
     where: { id: orderId },
-    select: { id: true, orderNumber: true, status: true, total: true, userId: true },
+    include: { items: true },
   });
 
   if (!order) return null;
@@ -17,6 +19,19 @@ async function getVisibleOrder(orderId: string) {
   if (order.userId !== null) {
     const user = await getSessionUser();
     if (!user || user.id !== order.userId) return null;
+  }
+
+  if (order.status === 'AWAITING_PAYMENT') {
+    const midtransStatus = await getStatus(order.orderNumber).catch(() => null);
+    if (midtransStatus) {
+      const pendingOrder = order;
+      await prisma.$transaction(async (tx) => {
+        await applyMidtransTransactionStatus(tx, pendingOrder, midtransStatus);
+      });
+      order =
+        (await prisma.order.findUnique({ where: { id: order.id }, include: { items: true } })) ??
+        order;
+    }
   }
 
   return order;

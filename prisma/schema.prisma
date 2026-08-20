@@ -62,9 +62,12 @@ enum AffiliatePayoutStatus {
   CANCELLED
 }
 
-enum KidsSectionKey {
-  POPULAR
-  DISCOUNT
+enum KidsSectionTheme {
+  CREAM
+  MINT
+  CORAL
+  YELLOW
+  LAVENDER
 }
 
 enum NotificationChannel {
@@ -224,7 +227,7 @@ model Product {
   commissionRate          AffiliateCommissionRate?
   affiliateClicks         AffiliateClick[]
   homepageSectionProducts HomepageSectionProduct[]
-  kidsSectionProducts     KidsSectionProduct[]
+  kidsSectionItems        KidsSectionItem[]
 
   @@index([slug])
   @@index([sku])
@@ -596,15 +599,43 @@ model KidsConfig {
   updatedAt        DateTime @updatedAt
 }
 
-model KidsSectionProduct {
-  id         String         @id @default(uuid())
-  sectionKey KidsSectionKey
-  productId  String
-  position   Int            @default(0)
+model KidsBanner {
+  id        String   @id @default(uuid())
+  imageUrl  String
+  linkUrl   String?
+  position  Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  @@index([position])
+}
 
-  @@index([sectionKey, position])
+model KidsSection {
+  id              String           @id @default(uuid())
+  title           String
+  subtitle        String           @default("")
+  badge           String           @default("")
+  theme           KidsSectionTheme @default(MINT)
+  showDiscountTag Boolean          @default(false)
+  position        Int              @default(0)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  items KidsSectionItem[]
+
+  @@index([position])
+}
+
+model KidsSectionItem {
+  id        String @id @default(uuid())
+  sectionId String
+  productId String
+  position  Int    @default(0)
+
+  section KidsSection @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  product Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([sectionId, position])
   @@index([productId])
 }
 

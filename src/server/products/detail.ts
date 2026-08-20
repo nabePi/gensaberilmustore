@@ -1,3 +1,4 @@
+import type { Prisma } from '@prisma/client';
 import { cache } from 'react';
 
 import { prisma } from '@/lib/db';
@@ -41,7 +42,21 @@ export const getProductDetail = cache(async (slug: string) => {
 
   const categoryIds = product.categories.map(({ category }) => category.id);
 
-  const relatedProducts =
+  const relatedSelect = {
+    id: true,
+    slug: true,
+    title: true,
+    price: true,
+    finalPrice: true,
+    discountPercent: true,
+    images: {
+      orderBy: [{ isPrimary: 'desc' }, { position: 'asc' }],
+      take: 1,
+      select: { url: true },
+    },
+  } satisfies Prisma.ProductSelect;
+
+  let relatedProducts =
     categoryIds.length > 0
       ? await prisma.product.findMany({
           where: {
@@ -51,21 +66,18 @@ export const getProductDetail = cache(async (slug: string) => {
           },
           take: RELATED_PRODUCTS_TAKE,
           orderBy: { createdAt: 'desc' },
-          select: {
-            id: true,
-            slug: true,
-            title: true,
-            price: true,
-            finalPrice: true,
-            discountPercent: true,
-            images: {
-              orderBy: [{ isPrimary: 'desc' }, { position: 'asc' }],
-              take: 1,
-              select: { url: true },
-            },
-          },
+          select: relatedSelect,
         })
       : [];
+
+  if (relatedProducts.length === 0) {
+    relatedProducts = await prisma.product.findMany({
+      where: { isActive: true, id: { not: product.id } },
+      take: RELATED_PRODUCTS_TAKE,
+      orderBy: { createdAt: 'desc' },
+      select: relatedSelect,
+    });
+  }
 
   const { imprint, categories, tags, ...rest } = product;
 

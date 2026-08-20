@@ -38,7 +38,7 @@ export default async function HomePage() {
       <section className="grid gap-4 lg:grid-cols-3">
         <div className="relative h-[220px] lg:col-span-2 lg:h-[360px]">
           {banners.HERO_MAIN.length > 0 ? (
-            <BannerCarousel slides={banners.HERO_MAIN} className="h-full" />
+            <BannerCarousel slides={banners.HERO_MAIN} className="h-full rounded-lg" />
           ) : (
             <div className="flex h-full items-center justify-center bg-gradient-to-br from-brand to-brand-700 text-center text-white">
               <div>
@@ -51,7 +51,7 @@ export default async function HomePage() {
         <div className="grid gap-4">
           <div className="relative h-[100px] lg:h-[170px]">
             {banners.HERO_SIDE_1.length > 0 ? (
-              <BannerCarousel slides={banners.HERO_SIDE_1} className="h-full" />
+              <BannerCarousel slides={banners.HERO_SIDE_1} className="h-full rounded-lg" />
             ) : (
               <div className="flex h-full items-center justify-center bg-brand-50 text-sm font-semibold text-brand">
                 Promo Spesial
@@ -60,7 +60,7 @@ export default async function HomePage() {
           </div>
           <div className="relative h-[100px] lg:h-[170px]">
             {banners.HERO_SIDE_2.length > 0 ? (
-              <BannerCarousel slides={banners.HERO_SIDE_2} className="h-full" />
+              <BannerCarousel slides={banners.HERO_SIDE_2} className="h-full rounded-lg" />
             ) : (
               <div className="flex h-full items-center justify-center bg-neutral-50 text-sm font-semibold text-neutral-500">
                 Koleksi Baru

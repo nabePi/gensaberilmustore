@@ -19,9 +19,7 @@ export const createOrderSchema = z
     cityId: z.string().uuid('Kota tidak valid').optional(),
     note: z.string().trim().max(500).optional(),
     useReceiverId: z.string().uuid('useReceiverId tidak valid').optional(),
-    paymentMethod: z.enum(ONLINE_PAYMENT_METHODS, {
-      required_error: 'Metode pembayaran wajib diisi',
-    }),
+    paymentMethod: z.enum(ONLINE_PAYMENT_METHODS).default('BANK_TRANSFER'),
     affiliateCode: z.string().trim().min(1).optional(),
     voucherCode: z.string().trim().min(1).optional(),
   })

@@ -1,30 +1,17 @@
-import type { KidsSectionKey } from '@prisma/client';
 import { NextRequest, NextResponse } from 'next/server';
 
 import { prisma } from '@/lib/db';
 import { withAuth } from '@/server/auth';
 import { kidsConfigUpdateSchema } from '@/server/config/schema';
 
-const SECTION_KEYS: KidsSectionKey[] = ['POPULAR', 'DISCOUNT'];
-
 export const GET = withAuth(
   async () => {
-    const [config, sectionProducts] = await Promise.all([
+    const [config, banners] = await Promise.all([
       prisma.kidsConfig.findUnique({ where: { id: 1 } }),
-      prisma.kidsSectionProduct.findMany({
-        orderBy: { position: 'asc' },
-        select: { sectionKey: true, productId: true },
-      }),
+      prisma.kidsBanner.findMany({ orderBy: { position: 'asc' } }),
     ]);
 
-    const sections = Object.fromEntries(
-      SECTION_KEYS.map((key) => [
-        key,
-        sectionProducts.filter((row) => row.sectionKey === key).map((row) => row.productId),
-      ]),
-    );
-
-    return NextResponse.json({ config, sections });
+    return NextResponse.json({ config, banners });
   },
   { role: 'ADMIN' },
 );
@@ -41,18 +28,7 @@ export const PUT = withAuth(
       );
     }
 
-    const { sections, ...configData } = parsed.data;
-
-    const allProductIds = SECTION_KEYS.flatMap((key) => sections[key]);
-    if (allProductIds.length > 0) {
-      const foundCount = await prisma.product.count({ where: { id: { in: allProductIds } } });
-      if (foundCount !== new Set(allProductIds).size) {
-        return NextResponse.json(
-          { error: 'Validasi gagal', issues: { sections: ['Beberapa produk tidak ditemukan'] } },
-          { status: 400 },
-        );
-      }
-    }
+    const { banners, ...configData } = parsed.data;
 
     await prisma.$transaction(async (tx) => {
       await tx.kidsConfig.upsert({
@@ -61,23 +37,24 @@ export const PUT = withAuth(
         update: configData,
       });
 
-      await tx.kidsSectionProduct.deleteMany();
-
-      for (const key of SECTION_KEYS) {
-        const productIds = sections[key];
-        if (productIds.length === 0) continue;
-        await tx.kidsSectionProduct.createMany({
-          data: productIds.map((productId, position) => ({
-            sectionKey: key,
-            productId,
+      await tx.kidsBanner.deleteMany();
+      if (banners.length > 0) {
+        await tx.kidsBanner.createMany({
+          data: banners.map((banner, position) => ({
+            imageUrl: banner.imageUrl,
+            linkUrl: banner.linkUrl || null,
             position,
           })),
         });
       }
     });
 
-    const config = await prisma.kidsConfig.findUnique({ where: { id: 1 } });
-    return NextResponse.json({ config, sections });
+    const [config, savedBanners] = await Promise.all([
+      prisma.kidsConfig.findUnique({ where: { id: 1 } }),
+      prisma.kidsBanner.findMany({ orderBy: { position: 'asc' } }),
+    ]);
+
+    return NextResponse.json({ config, banners: savedBanners });
   },
   { role: 'ADMIN' },
 );

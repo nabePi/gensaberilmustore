@@ -45,7 +45,7 @@ export function BannerCarousel({
   );
 
   return (
-    <div className={`relative overflow-hidden rounded-lg bg-neutral-100 ${className ?? ''}`}>
+    <div className={`relative overflow-hidden bg-neutral-100 ${className ?? ''}`}>
       {slide.linkUrl ? (
         <a href={slide.linkUrl} target="_blank" rel="noopener noreferrer" className="block h-full">
           {image}

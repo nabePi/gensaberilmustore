@@ -32,6 +32,19 @@ export const homepageConfigUpdateSchema = z.object({
   sections: z.array(homepageSectionSchema),
 });
 
+export const KIDS_SECTION_THEMES = ['CREAM', 'MINT', 'CORAL', 'YELLOW', 'LAVENDER'] as const;
+
+export const kidsSectionSchema = z.object({
+  id: z.string().uuid().optional(),
+  title: z.string().trim().min(1),
+  subtitle: z.string().trim().default(''),
+  badge: z.string().trim().default(''),
+  theme: z.enum(KIDS_SECTION_THEMES).default('MINT'),
+  showDiscountTag: z.boolean().default(false),
+  position: z.number().int().min(0).default(0),
+  productIds: z.array(z.string().uuid()),
+});
+
 export const kidsConfigUpdateSchema = z.object({
   heroBadge: z.string().trim().min(1),
   heroTitle: z.string().trim().min(1),
@@ -41,8 +54,9 @@ export const kidsConfigUpdateSchema = z.object({
   promoTitle: z.string().trim().min(1),
   promoDescription: z.string().trim().min(1),
   promoImageUrl: z.string().trim().min(1),
-  sections: z.object({
-    POPULAR: z.array(z.string().uuid()),
-    DISCOUNT: z.array(z.string().uuid()),
-  }),
+  banners: z.array(bannerImageSchema),
+});
+
+export const kidsSectionsUpdateSchema = z.object({
+  sections: z.array(kidsSectionSchema),
 });

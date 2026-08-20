@@ -44,7 +44,17 @@ export async function POST(request: NextRequest) {
     });
   }
 
-  const { snapToken, redirectUrl } = await createSnapTransaction(order);
+  const { snapToken, redirectUrl } = await createSnapTransaction(order).catch(() => ({
+    snapToken: null,
+    redirectUrl: null,
+  }));
+
+  if (!snapToken || !redirectUrl) {
+    return NextResponse.json(
+      { error: 'Gagal membuat transaksi pembayaran. Silakan coba lagi.' },
+      { status: 502 },
+    );
+  }
   const expiresAt = new Date(Date.now() + SNAP_TOKEN_VALIDITY_MS);
 
   await prisma.paymentSession.upsert({

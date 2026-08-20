@@ -24,29 +24,35 @@ export function BannerImageManager({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   async function handleFileChange(event: React.ChangeEvent<HTMLInputElement>) {
-    const file = event.target.files?.[0];
-    if (!file) return;
+    const files = Array.from(event.target.files ?? []);
+    if (files.length === 0) return;
 
     setUploading(true);
     setError(null);
 
-    const formData = new FormData();
-    formData.append('image', file);
+    const uploaded: BannerImageItem[] = [];
+    for (const file of files) {
+      const formData = new FormData();
+      formData.append('image', file);
 
-    const response = await fetch('/api/admin/uploads', {
-      method: 'POST',
-      body: formData,
-    });
+      const response = await fetch('/api/admin/uploads', {
+        method: 'POST',
+        body: formData,
+      });
 
-    if (!response.ok) {
-      const data = await response.json().catch(() => ({}));
-      setError(data.error ?? 'Gagal mengunggah gambar');
-      setUploading(false);
-      return;
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        setError(data.error ?? 'Gagal mengunggah gambar');
+        break;
+      }
+
+      const data: { url: string } = await response.json();
+      uploaded.push({ imageUrl: data.url, linkUrl: '' });
     }
 
-    const data: { url: string } = await response.json();
-    onChange([...images, { imageUrl: data.url, linkUrl: '' }]);
+    if (uploaded.length > 0) {
+      onChange([...images, ...uploaded]);
+    }
     setUploading(false);
     event.target.value = '';
   }
@@ -83,6 +89,7 @@ export function BannerImageManager({
           ref={fileInputRef}
           type="file"
           accept="image/jpeg,image/png,image/webp"
+          multiple
           onChange={handleFileChange}
           className="hidden"
         />

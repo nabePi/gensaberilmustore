@@ -12,6 +12,14 @@ import { COVER_TYPES } from '@/server/products/schema';
 
 export type AdminCategoryOption = { id: string; name: string; depth: number };
 
+export type AdminProductImage = {
+  id: string;
+  url: string;
+  altText: string | null;
+  position: number;
+  isPrimary: boolean;
+};
+
 export type AdminProductDetail = {
   id: string;
   sku: string;
@@ -29,6 +37,7 @@ export type AdminProductDetail = {
   publishYear: number;
   isActive: boolean;
   categories: { id: string; name: string }[];
+  images: AdminProductImage[];
 };
 
 const productFormSchema = z.object({
@@ -64,7 +73,13 @@ export function ProductFormModal({
   const [categoryIds, setCategoryIds] = useState<string[]>(
     product?.categories.map((c) => c.id) ?? [],
   );
-  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [existingImages, setExistingImages] = useState<AdminProductImage[]>(
+    [...(product?.images ?? [])].sort(
+      (a, b) => Number(b.isPrimary) - Number(a.isPrimary) || a.position - b.position,
+    ),
+  );
+  const [newFiles, setNewFiles] = useState<{ file: File; preview: string }[]>([]);
+  const [imageBusy, setImageBusy] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
 
@@ -103,6 +118,86 @@ export function ProductFormModal({
     setCategoryIds((prev) => (prev.includes(id) ? prev.filter((c) => c !== id) : [...prev, id]));
   }
 
+  function addFiles(fileList: FileList | null) {
+    if (!fileList) return;
+    const remaining = 8 - existingImages.length - newFiles.length;
+    const additions = Array.from(fileList)
+      .slice(0, Math.max(0, remaining))
+      .map((file) => ({
+        file,
+        preview: URL.createObjectURL(file),
+      }));
+    if (additions.length < fileList.length) {
+      setApiError('Maksimal 8 gambar per produk');
+    }
+    setNewFiles((prev) => [...prev, ...additions]);
+  }
+
+  function removeNewFile(index: number) {
+    setNewFiles((prev) => {
+      const target = prev[index];
+      if (target) URL.revokeObjectURL(target.preview);
+      return prev.filter((_, i) => i !== index);
+    });
+  }
+
+  async function handleDeleteImage(image: AdminProductImage) {
+    if (!product) return;
+    setImageBusy(true);
+    const response = await fetch(`/api/admin/products/${product.id}/images/${image.id}`, {
+      method: 'DELETE',
+    });
+    if (response.ok) {
+      setExistingImages((prev) => {
+        const remaining = prev.filter((img) => img.id !== image.id);
+        if (image.isPrimary && remaining.length > 0) {
+          return remaining.map((img, i) => ({ ...img, isPrimary: i === 0 }));
+        }
+        return remaining;
+      });
+    } else {
+      setApiError('Gagal menghapus gambar');
+    }
+    setImageBusy(false);
+  }
+
+  async function handleSetPrimary(image: AdminProductImage) {
+    if (!product || image.isPrimary) return;
+    setImageBusy(true);
+    const response = await fetch(`/api/admin/products/${product.id}/images/${image.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ isPrimary: true }),
+    });
+    if (response.ok) {
+      setExistingImages((prev) =>
+        [...prev]
+          .map((img) => ({ ...img, isPrimary: img.id === image.id }))
+          .sort((a, b) => Number(b.isPrimary) - Number(a.isPrimary) || a.position - b.position),
+      );
+    } else {
+      setApiError('Gagal mengatur gambar utama');
+    }
+    setImageBusy(false);
+  }
+
+  async function uploadNewImages(productId: string): Promise<boolean> {
+    for (const { file } of newFiles) {
+      const formData = new FormData();
+      formData.append('image', file);
+      const response = await fetch(`/api/admin/products/${productId}/images`, {
+        method: 'POST',
+        body: formData,
+      });
+      if (!response.ok) {
+        const data = await response.json().catch(() => null);
+        setApiError(data?.error ?? 'Produk tersimpan, tetapi sebagian gambar gagal diunggah');
+        return false;
+      }
+    }
+    return true;
+  }
+
   async function onSubmit(values: ProductFormValues) {
     setApiError(null);
     setSubmitting(true);
@@ -124,12 +219,15 @@ export function ProductFormModal({
       return;
     }
 
-    if (imageFile) {
-      const formData = new FormData();
-      formData.append('image', imageFile);
-      await fetch(`/api/admin/products/${data.id}/images`, { method: 'POST', body: formData });
+    if (newFiles.length > 0) {
+      const uploaded = await uploadNewImages(data.id);
+      if (!uploaded) {
+        setSubmitting(false);
+        return;
+      }
     }
 
+    newFiles.forEach(({ preview }) => URL.revokeObjectURL(preview));
     setSubmitting(false);
     onSaved();
   }
@@ -206,13 +304,98 @@ export function ProductFormModal({
           </div>
         </Field>
 
-        <Field label="Gambar Produk">
-          <input
-            type="file"
-            accept="image/png,image/jpeg,image/webp"
-            onChange={(e) => setImageFile(e.target.files?.[0] ?? null)}
-            className="text-sm"
-          />
+        <Field label="Gambar Produk (bisa lebih dari satu)">
+          <div className="flex flex-col gap-3">
+            {existingImages.length > 0 ? (
+              <div className="flex flex-wrap gap-3">
+                {existingImages.map((image) => (
+                  <div
+                    key={image.id}
+                    className={`relative w-24 overflow-hidden rounded-sm border-2 ${
+                      image.isPrimary ? 'border-brand' : 'border-neutral-200'
+                    }`}
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={image.url}
+                      alt={image.altText ?? 'Gambar produk'}
+                      className="aspect-[3/4] w-full object-cover"
+                    />
+                    {image.isPrimary ? (
+                      <span className="absolute left-0 top-0 bg-brand px-1.5 py-0.5 text-[10px] font-semibold text-white">
+                        Utama
+                      </span>
+                    ) : null}
+                    <div className="flex flex-col gap-1 p-1.5">
+                      {!image.isPrimary ? (
+                        <button
+                          type="button"
+                          disabled={imageBusy}
+                          onClick={() => handleSetPrimary(image)}
+                          className="text-[11px] font-medium text-brand hover:underline"
+                        >
+                          Jadikan Utama
+                        </button>
+                      ) : null}
+                      <button
+                        type="button"
+                        disabled={imageBusy}
+                        onClick={() => handleDeleteImage(image)}
+                        className="text-[11px] font-medium text-red hover:underline"
+                      >
+                        Hapus
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : null}
+
+            {newFiles.length > 0 ? (
+              <div className="flex flex-wrap gap-3">
+                {newFiles.map(({ file, preview }, index) => (
+                  <div
+                    key={`${file.name}-${index}`}
+                    className="relative w-24 overflow-hidden rounded-sm border-2 border-dashed border-neutral-300"
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={preview}
+                      alt={file.name}
+                      className="aspect-[3/4] w-full object-cover"
+                    />
+                    <span className="absolute left-0 top-0 bg-neutral-700 px-1.5 py-0.5 text-[10px] font-semibold text-white">
+                      Baru
+                    </span>
+                    <div className="p-1.5">
+                      <button
+                        type="button"
+                        onClick={() => removeNewFile(index)}
+                        className="text-[11px] font-medium text-red hover:underline"
+                      >
+                        Batal
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : null}
+
+            <input
+              type="file"
+              accept="image/png,image/jpeg,image/webp"
+              multiple
+              onChange={(e) => {
+                addFiles(e.target.files);
+                e.target.value = '';
+              }}
+              className="text-sm"
+            />
+            <p className="text-xs text-neutral-500">
+              Gambar pertama (utama) dipakai di semua halaman; seluruh gambar tampil sebagai
+              carousel di halaman detail produk. Maksimal 8 gambar, 5MB per file.
+            </p>
+          </div>
         </Field>
 
         <label className="flex items-center gap-2 text-sm">

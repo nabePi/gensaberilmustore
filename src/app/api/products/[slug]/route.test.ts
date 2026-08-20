@@ -90,11 +90,14 @@ describe('GET /api/products/[slug]', () => {
     expect(relatedIds).not.toContain(unrelated.id);
   });
 
-  it('returns an empty related products list when the product has no categories', async () => {
+  it('falls back to newest products when the product has no categories', async () => {
     const product = await createProduct();
+    const other = await createProduct();
     const response = await GET(buildRequest(product.slug), context(product.slug));
     const json = await response.json();
 
-    expect(json.relatedProducts).toEqual([]);
+    const relatedIds = json.relatedProducts.map((p: { id: string }) => p.id);
+    expect(relatedIds).toContain(other.id);
+    expect(relatedIds).not.toContain(product.id);
   });
 });

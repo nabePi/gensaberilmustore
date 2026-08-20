@@ -109,6 +109,7 @@
 
 @theme inline {
   --font-sans: var(--font-source-sans-3), system-ui, sans-serif;
+  --font-display: var(--font-fredoka), var(--font-source-sans-3), system-ui, sans-serif;
 }
 
 @utility container-prototype {
@@ -118,6 +119,30 @@
   margin-right: auto;
   padding-left: 20px;
   padding-right: 20px;
+}
+
+@keyframes kids-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-14px);
+  }
+}
+
+@utility animate-kids-float {
+  animation: kids-float 6s ease-in-out infinite;
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}
+
+@utility animate-kids-float-slow {
+  animation: kids-float 9s ease-in-out infinite;
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
 }
 
 body {

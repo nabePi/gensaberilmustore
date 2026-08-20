@@ -1,10 +1,17 @@
 import type { Metadata } from 'next';
-import { Source_Sans_3 } from 'next/font/google';
+import { Fredoka, Source_Sans_3 } from 'next/font/google';
 import type { ReactNode } from 'react';
 import './globals.css';
 
 const sourceSans = Source_Sans_3({
   variable: '--font-source-sans-3',
+  subsets: ['latin'],
+  weight: 'variable',
+  display: 'swap',
+});
+
+const fredoka = Fredoka({
+  variable: '--font-fredoka',
   subsets: ['latin'],
   weight: 'variable',
   display: 'swap',
@@ -17,7 +24,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="id" className={`${sourceSans.variable} h-full antialiased`}>
+    <html lang="id" className={`${sourceSans.variable} ${fredoka.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col bg-background text-foreground font-sans text-sm">
         {children}
       </body>

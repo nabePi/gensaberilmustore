@@ -9,7 +9,6 @@ import { hashPassword } from '@/server/auth/password';
 import { ADMIN_SESSION_COOKIE_NAME, createSession } from '@/server/auth/session';
 
 const createdEmails: string[] = [];
-const createdProductIds: string[] = [];
 
 async function createAdminCookie() {
   const email = `test-${randomUUID()}@example.com`;
@@ -22,29 +21,6 @@ async function createAdminCookie() {
   return `${ADMIN_SESSION_COOKIE_NAME}=${token}`;
 }
 
-async function createProduct() {
-  const product = await prisma.product.create({
-    data: {
-      sku: `SKU-${randomUUID()}`,
-      slug: `slug-${randomUUID()}`,
-      title: `Kids Product ${randomUUID()}`,
-      subtitle: '',
-      author: 'Author',
-      description: 'Desc',
-      price: 100000,
-      finalPrice: 100000,
-      stock: 5,
-      weightGram: 100,
-      pageCount: 100,
-      coverType: 'SOFTCOVER',
-      publishYear: 2024,
-      isActive: true,
-    },
-  });
-  createdProductIds.push(product.id);
-  return product;
-}
-
 function buildRequest(method: string, body: unknown, cookie: string) {
   return new NextRequest('http://localhost/api/admin/config/kids', {
     method,
@@ -53,7 +29,7 @@ function buildRequest(method: string, body: unknown, cookie: string) {
   });
 }
 
-function validPayload(productId: string) {
+function validPayload(banners: { imageUrl: string; linkUrl?: string }[] = []) {
   return {
     heroBadge: 'Buku Anak',
     heroTitle: 'Dunia Buku Anak',
@@ -63,13 +39,11 @@ function validPayload(productId: string) {
     promoTitle: 'Diskon Spesial',
     promoDescription: 'Diskon untuk buku anak pilihan',
     promoImageUrl: '/img/kids-promo.jpg',
-    sections: { POPULAR: [productId], DISCOUNT: [] },
+    banners,
   };
 }
 
 afterAll(async () => {
-  await prisma.kidsSectionProduct.deleteMany({ where: { productId: { in: createdProductIds } } });
-  await prisma.product.deleteMany({ where: { id: { in: createdProductIds } } });
   await prisma.user.deleteMany({ where: { email: { in: createdEmails } } });
 });
 
@@ -79,14 +53,15 @@ describe('GET /api/admin/config/kids', () => {
     expect(response.status).toBe(401);
   });
 
-  it('returns config and section product ids', async () => {
+  it('returns config and banners', async () => {
     const cookie = await createAdminCookie();
     const response = await GET(buildRequest('GET', undefined, cookie));
     const json = await response.json();
 
     expect(response.status).toBe(200);
-    expect(json.sections).toHaveProperty('POPULAR');
-    expect(json.sections).toHaveProperty('DISCOUNT');
+    expect(json).toHaveProperty('config');
+    expect(json).toHaveProperty('banners');
+    expect(Array.isArray(json.banners)).toBe(true);
   });
 });
 
@@ -96,21 +71,61 @@ describe('PUT /api/admin/config/kids', () => {
     expect(response.status).toBe(401);
   });
 
-  it('rejects an unknown product id in a section', async () => {
+  it('saves the config without banners', async () => {
     const cookie = await createAdminCookie();
-    const response = await PUT(buildRequest('PUT', validPayload(randomUUID()), cookie));
-    expect(response.status).toBe(400);
-  });
 
-  it('saves the config and section products', async () => {
-    const cookie = await createAdminCookie();
-    const product = await createProduct();
-
-    const response = await PUT(buildRequest('PUT', validPayload(product.id), cookie));
+    const response = await PUT(buildRequest('PUT', validPayload(), cookie));
     const json = await response.json();
 
     expect(response.status).toBe(200);
     expect(json.config.heroTitle).toBe('Dunia Buku Anak');
-    expect(json.sections.POPULAR).toEqual([product.id]);
+    expect(json.banners).toEqual([]);
+  });
+
+  it('saves multiple banners with optional link urls and positions', async () => {
+    const cookie = await createAdminCookie();
+
+    const payload = validPayload([
+      { imageUrl: '/uploads/banner-1.png', linkUrl: 'https://example.com/promo' },
+      { imageUrl: '/uploads/banner-2.png' },
+      { imageUrl: '/uploads/banner-3.png', linkUrl: '' },
+    ]);
+
+    const response = await PUT(buildRequest('PUT', payload, cookie));
+    const json = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(json.banners).toHaveLength(3);
+    expect(json.banners[0].linkUrl).toBe('https://example.com/promo');
+    expect(json.banners[1].linkUrl).toBeNull();
+    expect(json.banners[2].linkUrl).toBeNull();
+    expect(json.banners.map((b: { position: number }) => b.position)).toEqual([0, 1, 2]);
+  });
+
+  it('replaces banners on subsequent saves', async () => {
+    const cookie = await createAdminCookie();
+
+    await PUT(buildRequest('PUT', validPayload([{ imageUrl: '/uploads/old.png' }]), cookie));
+    const response = await PUT(
+      buildRequest('PUT', validPayload([{ imageUrl: '/uploads/new.png' }]), cookie),
+    );
+    const json = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(json.banners).toHaveLength(1);
+    expect(json.banners[0].imageUrl).toBe('/uploads/new.png');
+  });
+
+  it('rejects invalid banner link urls', async () => {
+    const cookie = await createAdminCookie();
+
+    const response = await PUT(
+      buildRequest(
+        'PUT',
+        validPayload([{ imageUrl: '/uploads/x.png', linkUrl: 'not-a-url' }]),
+        cookie,
+      ),
+    );
+    expect(response.status).toBe(400);
   });
 });

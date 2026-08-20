@@ -3,7 +3,7 @@ import { randomUUID } from 'node:crypto';
 import { NextRequest } from 'next/server';
 import { afterAll, describe, expect, it } from 'vitest';
 
-import { DELETE } from '@/app/api/admin/products/[id]/images/[imageId]/route';
+import { DELETE, PATCH } from '@/app/api/admin/products/[id]/images/[imageId]/route';
 import { prisma } from '@/lib/db';
 import { hashPassword } from '@/server/auth/password';
 import { ADMIN_SESSION_COOKIE_NAME, createSession } from '@/server/auth/session';
@@ -67,6 +67,14 @@ function buildRequest(cookie: string) {
   });
 }
 
+function buildPatchRequest(cookie: string, body: unknown) {
+  return new NextRequest('http://localhost/api/admin/products/x/images/y', {
+    method: 'PATCH',
+    headers: { cookie, 'content-type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+}
+
 function context(id: string, imageId: string) {
   return { params: Promise.resolve({ id, imageId }) };
 }
@@ -124,5 +132,62 @@ describe('DELETE /api/admin/products/[id]/images/[imageId]', () => {
 
     const updatedNext = await prisma.productImage.findUnique({ where: { id: next.id } });
     expect(updatedNext?.isPrimary).toBe(true);
+  });
+});
+
+describe('PATCH /api/admin/products/[id]/images/[imageId]', () => {
+  afterAll(async () => {
+    await prisma.productImage.deleteMany({ where: { productId: { in: createdProductIds } } });
+    await prisma.product.deleteMany({ where: { id: { in: createdProductIds } } });
+    await prisma.user.deleteMany({ where: { email: { in: createdEmails } } });
+  });
+
+  it('rejects unauthenticated requests', async () => {
+    const response = await PATCH(
+      buildPatchRequest('', { isPrimary: true }),
+      context(randomUUID(), randomUUID()),
+    );
+    expect(response.status).toBe(401);
+  });
+
+  it('returns 404 when the image does not exist', async () => {
+    const cookie = await createAdminCookie();
+    const product = await createProduct();
+
+    const response = await PATCH(
+      buildPatchRequest(cookie, { isPrimary: true }),
+      context(product.id, randomUUID()),
+    );
+    expect(response.status).toBe(404);
+  });
+
+  it('returns 400 when isPrimary is not true', async () => {
+    const cookie = await createAdminCookie();
+    const product = await createProduct();
+    const image = await createImage(product.id);
+
+    const response = await PATCH(
+      buildPatchRequest(cookie, { isPrimary: false }),
+      context(product.id, image.id),
+    );
+    expect(response.status).toBe(400);
+  });
+
+  it('sets the image as primary and unsets the previous primary', async () => {
+    const cookie = await createAdminCookie();
+    const product = await createProduct();
+    const oldPrimary = await createImage(product.id, { position: 0, isPrimary: true });
+    const target = await createImage(product.id, { position: 1, isPrimary: false });
+
+    const response = await PATCH(
+      buildPatchRequest(cookie, { isPrimary: true }),
+      context(product.id, target.id),
+    );
+    expect(response.status).toBe(200);
+
+    const updatedTarget = await prisma.productImage.findUnique({ where: { id: target.id } });
+    const updatedOld = await prisma.productImage.findUnique({ where: { id: oldPrimary.id } });
+    expect(updatedTarget?.isPrimary).toBe(true);
+    expect(updatedOld?.isPrimary).toBe(false);
   });
 });

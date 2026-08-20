@@ -117,7 +117,7 @@ describe('POST /api/webhooks/payment', () => {
     expect(response.status).toBe(401);
   });
 
-  it('returns 404 when the order cannot be found', async () => {
+  it('acknowledges with 200 when the order cannot be found', async () => {
     const notification = buildNotification();
     const signature_key = signatureFor(
       notification.order_id,
@@ -125,7 +125,9 @@ describe('POST /api/webhooks/payment', () => {
       notification.gross_amount,
     );
     const response = await POST(buildRequest({ ...notification, signature_key }));
-    expect(response.status).toBe(404);
+    expect(response.status).toBe(200);
+    const json = await response.json();
+    expect(json).toEqual({ received: true, ignored: 'order_not_found' });
   });
 
   it('marks the order PAID on settlement and is idempotent on repeated notifications', async () => {

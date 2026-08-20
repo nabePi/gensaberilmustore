@@ -27,7 +27,10 @@ declare global {
   }
 }
 
-const SNAP_SCRIPT_URL = 'https://app.sandbox.midtrans.com/snap/snap.js';
+const SNAP_SCRIPT_URL =
+  process.env.NEXT_PUBLIC_MIDTRANS_IS_PRODUCTION === 'true'
+    ? 'https://app.midtrans.com/snap/snap.js'
+    : 'https://app.sandbox.midtrans.com/snap/snap.js';
 const AFFILIATE_COOKIE_NAME = 'gsb_aff';
 
 function readAffiliateCookie(): string | undefined {
@@ -35,12 +38,6 @@ function readAffiliateCookie(): string | undefined {
   const match = document.cookie.match(new RegExp(`(?:^|; )${AFFILIATE_COOKIE_NAME}=([^;]*)`));
   return match ? decodeURIComponent(match[1]!) : undefined;
 }
-
-const PAYMENT_METHODS = [
-  { value: 'BANK_TRANSFER', label: 'Transfer Bank' },
-  { value: 'EWALLET', label: 'E-Wallet' },
-  { value: 'QRIS', label: 'QRIS' },
-] as const;
 
 const VOUCHER_ERROR_MESSAGES: Record<string, string> = {
   NOT_FOUND: 'Kode voucher tidak ditemukan.',
@@ -79,19 +76,38 @@ type VoucherResult =
   | { valid: true; voucherId: string; code: string; discountAmount: number }
   | { valid: false; reason: string };
 
+const PHONE_COUNTRIES = [
+  { value: 'ID', flag: '🇮🇩', label: 'Indonesia', prefix: '62' },
+  { value: 'MY', flag: '🇲🇾', label: 'Malaysia', prefix: '60' },
+] as const;
+
+type PhoneCountryValue = (typeof PHONE_COUNTRIES)[number]['value'];
+
+function getPhonePrefix(country: PhoneCountryValue): string {
+  return PHONE_COUNTRIES.find((item) => item.value === country)?.prefix ?? '62';
+}
+
+function normalizePhone(localNumber: string, country: PhoneCountryValue): string {
+  const digits = localNumber.replace(/\D/g, '').replace(/^0+/, '');
+  return `${getPhonePrefix(country)}${digits}`;
+}
+
+function formatPhoneDisplay(value: string): string {
+  const digits = value.replace(/\D/g, '').slice(0, 13);
+  return [digits.slice(0, 3), digits.slice(3, 7), digits.slice(7)].filter(Boolean).join(' - ');
+}
+
 const checkoutSchema = z
   .object({
     mode: z.enum(['receiver', 'manual']),
     receiverId: z.string().optional(),
     receiverName: z.string().optional(),
     receiverPhone: z.string().optional(),
+    phoneCountry: z.enum(['ID', 'MY']),
     receiverEmail: z.string().optional(),
     receiverAddress: z.string().optional(),
     cityId: z.string().optional(),
     note: z.string().max(500).optional(),
-    paymentMethod: z.enum(['BANK_TRANSFER', 'EWALLET', 'QRIS'], {
-      required_error: 'Pilih metode pembayaran',
-    }),
   })
   .superRefine((data, ctx) => {
     if (data.mode === 'receiver') {
@@ -108,14 +124,27 @@ const checkoutSchema = z
         message: 'Nama penerima wajib diisi',
       });
     }
+    const phoneDigits = (data.receiverPhone ?? '').replace(/\D/g, '').replace(/^0+/, '');
     if (!data.receiverPhone) {
       ctx.addIssue({
         code: 'custom',
         path: ['receiverPhone'],
         message: 'Nomor telepon wajib diisi',
       });
+    } else if (phoneDigits.length < 8 || phoneDigits.length > 13) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['receiverPhone'],
+        message: 'Nomor telepon tidak valid',
+      });
     }
-    if (!data.receiverEmail || !z.string().email().safeParse(data.receiverEmail).success) {
+    if (!data.receiverEmail) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['receiverEmail'],
+        message: 'Email wajib diisi',
+      });
+    } else if (!z.string().email().safeParse(data.receiverEmail).success) {
       ctx.addIssue({
         code: 'custom',
         path: ['receiverEmail'],
@@ -154,12 +183,14 @@ export default function CheckoutPage() {
     formState: { errors },
   } = useForm<CheckoutFormValues>({
     resolver: zodResolver(checkoutSchema),
-    defaultValues: { mode: 'manual', paymentMethod: 'BANK_TRANSFER' },
+    defaultValues: { mode: 'manual', phoneCountry: 'ID' },
   });
 
   const mode = watch('mode');
   const selectedReceiverId = watch('receiverId');
   const selectedCityId = watch('cityId');
+
+  const receiverPhoneField = register('receiverPhone');
 
   useEffect(() => {
     async function bootstrap() {
@@ -250,18 +281,16 @@ export default function CheckoutPage() {
         ? {
             useReceiverId: values.receiverId,
             note: values.note,
-            paymentMethod: values.paymentMethod,
             voucherCode: voucherResult && voucherResult.valid ? voucherResult.code : undefined,
             affiliateCode,
           }
         : {
             receiverName: values.receiverName,
-            receiverPhone: values.receiverPhone,
+            receiverPhone: normalizePhone(values.receiverPhone ?? '', values.phoneCountry),
             receiverEmail: values.receiverEmail,
             receiverAddress: values.receiverAddress,
             cityId: values.cityId,
             note: values.note,
-            paymentMethod: values.paymentMethod,
             voucherCode: voucherResult && voucherResult.valid ? voucherResult.code : undefined,
             affiliateCode,
           };
@@ -290,7 +319,12 @@ export default function CheckoutPage() {
       });
 
       if (!paymentResponse.ok) {
-        redirectToSuccess();
+        const paymentError: { error?: string } = await paymentResponse.json().catch(() => ({}));
+        setSubmitError(
+          paymentError.error ??
+            'Gagal memulai pembayaran. Pesanan Anda sudah dibuat, silakan lanjutkan dari halaman pesanan.',
+        );
+        setSubmitting(false);
         return;
       }
 
@@ -389,14 +423,40 @@ export default function CheckoutPage() {
                   ) : null}
                 </div>
                 <div className="flex flex-col gap-1">
-                  <label className="text-xs font-medium text-neutral-600">Nomor Telepon</label>
-                  <input {...register('receiverPhone')} className={inputBase} />
+                  <label className="text-xs font-medium text-neutral-600">
+                    Nomor Telepon <span className="text-red">*</span>
+                  </label>
+                  <div className="flex">
+                    <select
+                      {...register('phoneCountry')}
+                      className="rounded-sm rounded-r-none border border-r-0 border-neutral-200 bg-white px-2.5 py-2.5 pr-7 text-sm transition-colors outline-none focus:border-brand"
+                      aria-label="Kode negara"
+                    >
+                      {PHONE_COUNTRIES.map((country) => (
+                        <option key={country.value} value={country.value}>
+                          {country.flag} +{country.prefix}
+                        </option>
+                      ))}
+                    </select>
+                    <input
+                      {...receiverPhoneField}
+                      onChange={(event) => {
+                        event.target.value = formatPhoneDisplay(event.target.value);
+                        receiverPhoneField.onChange(event);
+                      }}
+                      inputMode="numeric"
+                      placeholder="812 - 3456 - 7890"
+                      className={`${inputBase} rounded-l-none`}
+                    />
+                  </div>
                   {errors.receiverPhone ? (
                     <p className="text-xs text-red">{errors.receiverPhone.message}</p>
                   ) : null}
                 </div>
                 <div className="flex flex-col gap-1">
-                  <label className="text-xs font-medium text-neutral-600">Email</label>
+                  <label className="text-xs font-medium text-neutral-600">
+                    Email <span className="text-red">*</span>
+                  </label>
                   <input type="email" {...register('receiverEmail')} className={inputBase} />
                   {errors.receiverEmail ? (
                     <p className="text-xs text-red">{errors.receiverEmail.message}</p>
@@ -431,21 +491,6 @@ export default function CheckoutPage() {
             <div className="mt-4 flex flex-col gap-1">
               <label className="text-xs font-medium text-neutral-600">Catatan (opsional)</label>
               <textarea {...register('note')} rows={2} className={inputBase} />
-            </div>
-          </div>
-
-          <div className="rounded-lg border border-neutral-200 bg-white p-5">
-            <h2 className="mb-4 text-base font-bold text-foreground">Metode Pembayaran</h2>
-            <div className="flex flex-col gap-2">
-              {PAYMENT_METHODS.map((method) => (
-                <label
-                  key={method.value}
-                  className="flex cursor-pointer items-center gap-3 rounded-sm border border-neutral-200 p-3 text-sm"
-                >
-                  <input type="radio" value={method.value} {...register('paymentMethod')} />
-                  {method.label}
-                </label>
-              ))}
             </div>
           </div>
         </div>

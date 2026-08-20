@@ -1,9 +1,17 @@
-import type { KidsSectionKey, Prisma } from '@prisma/client';
+import type { KidsSectionTheme, Prisma } from '@prisma/client';
 
 import type { ProductCardData } from '@/components/product/ProductCard';
 import { prisma } from '@/lib/db';
 
-const FALLBACK_SECTION_TAKE = 8;
+export type KidsSectionWithProducts = {
+  id: string;
+  title: string;
+  subtitle: string;
+  badge: string;
+  theme: KidsSectionTheme;
+  showDiscountTag: boolean;
+  products: ProductCardData[];
+};
 
 const cardSelect = {
   id: true,
@@ -42,42 +50,42 @@ function toCardData(product: CardRow): ProductCardData {
   };
 }
 
-async function getFallbackProducts(): Promise<ProductCardData[]> {
-  const rows = await prisma.product.findMany({
-    where: { isActive: true },
-    orderBy: { createdAt: 'desc' },
-    take: FALLBACK_SECTION_TAKE,
-    select: cardSelect,
-  });
-  return rows.map(toCardData);
-}
-
-async function getSectionProducts(key: KidsSectionKey): Promise<ProductCardData[]> {
-  const rows = await prisma.kidsSectionProduct.findMany({
-    where: { sectionKey: key },
-    orderBy: { position: 'asc' },
-    select: { product: { select: cardSelect } },
-  });
-
-  const active = rows.map((row) => row.product).filter((product) => product.isActive);
-
-  if (active.length > 0) {
-    return active.map(toCardData);
-  }
-
-  return getFallbackProducts();
-}
-
 export function getKidsConfig() {
   return prisma.kidsConfig.findUnique({ where: { id: 1 } });
 }
 
 export async function getKidsData() {
-  const [config, popularProducts, discountProducts] = await Promise.all([
+  const [config, banners, sectionRows] = await Promise.all([
     getKidsConfig(),
-    getSectionProducts('POPULAR'),
-    getSectionProducts('DISCOUNT'),
+    prisma.kidsBanner.findMany({
+      orderBy: { position: 'asc' },
+      select: { id: true, imageUrl: true, linkUrl: true },
+    }),
+    prisma.kidsSection.findMany({
+      orderBy: { position: 'asc' },
+      include: {
+        items: {
+          orderBy: { position: 'asc' },
+          select: { product: { select: cardSelect } },
+        },
+      },
+    }),
   ]);
 
-  return { config, popularProducts, discountProducts };
+  const sections: KidsSectionWithProducts[] = sectionRows
+    .map((section) => ({
+      id: section.id,
+      title: section.title,
+      subtitle: section.subtitle,
+      badge: section.badge,
+      theme: section.theme,
+      showDiscountTag: section.showDiscountTag,
+      products: section.items
+        .map((item) => item.product)
+        .filter((product) => product.isActive)
+        .map(toCardData),
+    }))
+    .filter((section) => section.products.length > 0);
+
+  return { config, banners, sections };
 }

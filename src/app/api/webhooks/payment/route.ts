@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
   });
 
   if (!order) {
-    return NextResponse.json({ error: 'Order tidak ditemukan' }, { status: 404 });
+    return NextResponse.json({ received: true, ignored: 'order_not_found' });
   }
 
   await prisma.$transaction(async (tx) => {
