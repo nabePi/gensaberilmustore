@@ -80,6 +80,7 @@ export function serializeOrderDetail(order: OrderDetail) {
     source: order.source,
     createdAt: order.createdAt,
     updatedAt: order.updatedAt,
+    trackingNumber: order.trackingNumber,
     receiver: {
       name: order.receiverName,
       phone: order.receiverPhone,

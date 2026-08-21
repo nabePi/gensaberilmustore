@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
+import { INDONESIAN_BANKS } from '@/lib/banks';
 import { formatCurrency } from '@/lib/format';
 import { btnOutline, btnSolid, cardBase, inputBase } from '@/lib/styles';
 
@@ -71,12 +72,16 @@ function OnboardingCard({ onJoined }: { onJoined: () => void }) {
       <form onSubmit={handleSubmit(onSubmit)} className="mt-6 flex max-w-md flex-col gap-4">
         <div className="flex flex-col gap-1">
           <label className="text-sm font-medium text-neutral-600">Nama Bank</label>
-          <input
-            type="text"
-            placeholder="Contoh: BCA"
-            {...register('payoutBankName')}
-            className={inputBase}
-          />
+          <select {...register('payoutBankName')} className={inputBase} defaultValue="">
+            <option value="" disabled>
+              Pilih bank
+            </option>
+            {INDONESIAN_BANKS.map((bank) => (
+              <option key={bank} value={bank}>
+                {bank}
+              </option>
+            ))}
+          </select>
           {errors.payoutBankName ? (
             <p className="text-xs text-red">{errors.payoutBankName.message}</p>
           ) : null}

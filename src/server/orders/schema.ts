@@ -26,11 +26,7 @@ export const createOrderSchema = z
   .refine(
     (value) =>
       value.useReceiverId !== undefined ||
-      (value.receiverName &&
-        value.receiverPhone &&
-        value.receiverEmail &&
-        value.receiverAddress &&
-        value.cityId),
+      (value.receiverName && value.receiverPhone && value.receiverAddress && value.cityId),
     {
       message: 'Data penerima wajib diisi, atau gunakan useReceiverId',
       path: ['receiverName'],
@@ -48,6 +44,7 @@ export const listMemberOrdersQuerySchema = z.object({
 export const orderStatusUpdateSchema = z.object({
   toStatus: z.enum(ORDER_STATUSES, { required_error: 'Status tujuan wajib diisi' }),
   note: z.string().trim().max(500).optional(),
+  trackingNumber: z.string().trim().min(1, 'Nomor resi tidak valid').max(100).optional(),
 });
 
 export const bulkOrderStatusUpdateSchema = z.object({

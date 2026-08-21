@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
   try {
     let receiverName: string;
     let receiverPhone: string;
-    let receiverEmail: string;
+    let receiverEmail: string | null;
     let receiverAddress: string;
     let cityId: string;
 
@@ -53,10 +53,7 @@ export async function POST(request: NextRequest) {
       if (!receiver || receiver.userId !== user.id) {
         throw new OrderCreationError('Alamat penerima tidak ditemukan');
       }
-      const email = receiver.email ?? data.receiverEmail;
-      if (!email) {
-        throw new OrderCreationError('Email penerima wajib diisi');
-      }
+      const email = receiver.email ?? data.receiverEmail ?? null;
       receiverName = receiver.name;
       receiverPhone = receiver.phone;
       receiverEmail = email;
@@ -65,7 +62,7 @@ export async function POST(request: NextRequest) {
     } else {
       receiverName = data.receiverName!;
       receiverPhone = data.receiverPhone!;
-      receiverEmail = data.receiverEmail!;
+      receiverEmail = data.receiverEmail ?? null;
       receiverAddress = data.receiverAddress!;
       cityId = data.cityId!;
     }
@@ -213,20 +210,22 @@ export async function POST(request: NextRequest) {
 
       await tx.cart.delete({ where: { id: cart.id } });
 
-      await tx.notification.create({
-        data: {
-          channel: 'EMAIL',
-          recipient: createdOrder.receiverEmail,
-          template: 'ORDER_CONFIRMED',
-          relatedOrderId: createdOrder.id,
-          relatedUserId: createdOrder.userId,
-          payloadJson: {
-            orderNumber: createdOrder.orderNumber,
-            receiverName: createdOrder.receiverName,
-            total: createdOrder.total,
+      if (createdOrder.receiverEmail) {
+        await tx.notification.create({
+          data: {
+            channel: 'EMAIL',
+            recipient: createdOrder.receiverEmail,
+            template: 'ORDER_CONFIRMED',
+            relatedOrderId: createdOrder.id,
+            relatedUserId: createdOrder.userId,
+            payloadJson: {
+              orderNumber: createdOrder.orderNumber,
+              receiverName: createdOrder.receiverName,
+              total: createdOrder.total,
+            },
           },
-        },
-      });
+        });
+      }
 
       return createdOrder;
     });

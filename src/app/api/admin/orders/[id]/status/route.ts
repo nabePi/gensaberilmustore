@@ -34,6 +34,7 @@ export const PATCH = withAuth<RouteContext>(
         applyOrderStatusTransition(tx, order, parsed.data.toStatus, {
           note: parsed.data.note,
           changedByUserId: user.id,
+          trackingNumber: parsed.data.trackingNumber,
         }),
       );
     } catch (error) {

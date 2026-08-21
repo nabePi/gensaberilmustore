@@ -58,7 +58,7 @@ export async function createSnapTransaction(
     },
     customer_details: {
       first_name: order.receiverName,
-      email: order.receiverEmail,
+      ...(order.receiverEmail ? { email: order.receiverEmail } : {}),
       phone: order.receiverPhone,
       shipping_address: {
         address: order.receiverAddress,

@@ -138,13 +138,7 @@ const checkoutSchema = z
         message: 'Nomor telepon tidak valid',
       });
     }
-    if (!data.receiverEmail) {
-      ctx.addIssue({
-        code: 'custom',
-        path: ['receiverEmail'],
-        message: 'Email wajib diisi',
-      });
-    } else if (!z.string().email().safeParse(data.receiverEmail).success) {
+    if (data.receiverEmail && !z.string().email().safeParse(data.receiverEmail).success) {
       ctx.addIssue({
         code: 'custom',
         path: ['receiverEmail'],
@@ -287,7 +281,7 @@ export default function CheckoutPage() {
         : {
             receiverName: values.receiverName,
             receiverPhone: normalizePhone(values.receiverPhone ?? '', values.phoneCountry),
-            receiverEmail: values.receiverEmail,
+            receiverEmail: values.receiverEmail?.trim() ? values.receiverEmail.trim() : undefined,
             receiverAddress: values.receiverAddress,
             cityId: values.cityId,
             note: values.note,
@@ -455,9 +449,14 @@ export default function CheckoutPage() {
                 </div>
                 <div className="flex flex-col gap-1">
                   <label className="text-xs font-medium text-neutral-600">
-                    Email <span className="text-red">*</span>
+                    Email <span className="text-neutral-400">(opsional)</span>
                   </label>
-                  <input type="email" {...register('receiverEmail')} className={inputBase} />
+                  <input
+                    type="email"
+                    {...register('receiverEmail')}
+                    placeholder="Untuk menerima notifikasi pesanan"
+                    className={inputBase}
+                  />
                   {errors.receiverEmail ? (
                     <p className="text-xs text-red">{errors.receiverEmail.message}</p>
                   ) : null}

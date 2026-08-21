@@ -343,10 +343,11 @@ model Order {
   userId               String?
   receiverName         String
   receiverPhone        String
-  receiverEmail        String
+  receiverEmail        String?
   receiverAddress      String
   receiverCity         String
   receiverNote         String?
+  trackingNumber       String?
   subtotal             Int
   shippingCost         Int
   discount             Int

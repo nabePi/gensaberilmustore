@@ -15,6 +15,7 @@ type OrderDetail = {
   orderNumber: string;
   status: OrderStatusValue;
   createdAt: string;
+  trackingNumber: string | null;
   receiver: {
     name: string;
     phone: string;
@@ -213,6 +214,12 @@ export default function MemberTransaksiDetailPage() {
             </p>
             {order.receiver.note ? (
               <p className="mt-1 italic text-neutral-400">Catatan: {order.receiver.note}</p>
+            ) : null}
+            {order.trackingNumber ? (
+              <p className="mt-1">
+                No. Resi:{' '}
+                <span className="font-medium text-foreground">{order.trackingNumber}</span>
+              </p>
             ) : null}
           </div>
         </div>

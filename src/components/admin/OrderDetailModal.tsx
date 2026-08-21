@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import { AdminModal } from '@/components/admin/AdminModal';
 import { formatCurrency } from '@/lib/format';
 import { ORDER_STATUS_BADGE_CLASSES, ORDER_STATUS_LABELS } from '@/lib/order-status';
-import { badgeBase, btnSolidSm } from '@/lib/styles';
+import { badgeBase, btnOutlineSm, btnSolidSm, inputBase } from '@/lib/styles';
 
 export type OrderStatusValue = keyof typeof ORDER_STATUS_LABELS;
 
@@ -15,6 +15,7 @@ export type OrderDetail = {
   status: OrderStatusValue;
   source: 'ONLINE' | 'POS';
   createdAt: string;
+  trackingNumber: string | null;
   receiver: {
     name: string;
     phone: string;
@@ -86,6 +87,8 @@ export function OrderDetailModal({
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [resiInputOpen, setResiInputOpen] = useState(false);
+  const [trackingNumber, setTrackingNumber] = useState('');
 
   useEffect(() => {
     async function loadOrder() {
@@ -100,13 +103,16 @@ export function OrderDetailModal({
     loadOrder();
   }, [orderId]);
 
-  async function handleStatusChange(toStatus: OrderStatusValue) {
+  async function handleStatusChange(toStatus: OrderStatusValue, resi?: string) {
     setError(null);
     setUpdating(true);
     const response = await fetch(`/api/admin/orders/${orderId}/status`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ toStatus }),
+      body: JSON.stringify({
+        toStatus,
+        ...(resi?.trim() ? { trackingNumber: resi.trim() } : {}),
+      }),
     });
     const data = await response.json();
     if (!response.ok) {
@@ -116,7 +122,18 @@ export function OrderDetailModal({
     }
     setOrder(data);
     setUpdating(false);
+    setResiInputOpen(false);
+    setTrackingNumber('');
     onStatusChanged?.(data);
+  }
+
+  function handleNextStatusClick(next: OrderStatusValue) {
+    if (next === 'SHIPPED') {
+      setError(null);
+      setResiInputOpen(true);
+      return;
+    }
+    handleStatusChange(next);
   }
 
   return (
@@ -145,6 +162,12 @@ export function OrderDetailModal({
               <p className="text-sm text-neutral-600">{order.receiver.address}</p>
               {order.receiver.city ? (
                 <p className="text-sm text-neutral-600">{order.receiver.city}</p>
+              ) : null}
+              {order.trackingNumber ? (
+                <p className="text-sm text-neutral-600">
+                  No. Resi:{' '}
+                  <span className="font-medium text-foreground">{order.trackingNumber}</span>
+                </p>
               ) : null}
             </div>
             <div>
@@ -240,13 +263,49 @@ export function OrderDetailModal({
                     key={next}
                     type="button"
                     disabled={updating}
-                    onClick={() => handleStatusChange(next)}
+                    onClick={() => handleNextStatusClick(next)}
                     className={btnSolidSm}
                   >
                     Tandai {ORDER_STATUS_LABELS[next]}
                   </button>
                 ))}
               </div>
+              {resiInputOpen ? (
+                <div className="mt-3 flex flex-col gap-2 rounded-sm border border-neutral-200 bg-neutral-50 p-3">
+                  <label className="text-xs font-medium text-neutral-600">
+                    Nomor Resi / Tracking Number (opsional)
+                  </label>
+                  <input
+                    type="text"
+                    value={trackingNumber}
+                    onChange={(event) => setTrackingNumber(event.target.value)}
+                    placeholder="Contoh: JNE123456789"
+                    className={inputBase}
+                    autoFocus
+                  />
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      disabled={updating}
+                      onClick={() => handleStatusChange('SHIPPED', trackingNumber)}
+                      className={btnSolidSm}
+                    >
+                      {updating ? 'Memproses...' : 'Konfirmasi & Tandai Dikirim'}
+                    </button>
+                    <button
+                      type="button"
+                      disabled={updating}
+                      onClick={() => {
+                        setResiInputOpen(false);
+                        setTrackingNumber('');
+                      }}
+                      className={btnOutlineSm}
+                    >
+                      Batal
+                    </button>
+                  </div>
+                </div>
+              ) : null}
             </div>
           ) : null}
         </div>
