@@ -9,7 +9,19 @@ import { z } from 'zod';
 
 import { btnSolid, inputBase } from '@/lib/styles';
 
-const INDONESIAN_PHONE_REGEX = /^(?:\+62|62|0)8[1-9][0-9]{6,10}$/;
+function formatPhoneDisplay(value: string): string {
+  const digits = value.replace(/\D/g, '');
+  if (digits.length <= 3) return digits;
+  if (digits.length <= 7) return `${digits.slice(0, 3)}-${digits.slice(3)}`;
+  return `${digits.slice(0, 3)}-${digits.slice(3, 7)}-${digits.slice(7, 11)}`;
+}
+
+function normalizePhone(value: string): string {
+  const digits = value.replace(/\D/g, '');
+  if (digits.startsWith('62')) return digits;
+  if (digits.startsWith('0')) return `62${digits.slice(1)}`;
+  return `62${digits}`;
+}
 
 const signupSchema = z
   .object({
@@ -18,7 +30,8 @@ const signupSchema = z
     whatsappNumber: z
       .string()
       .min(1, 'Nomor WhatsApp wajib diisi')
-      .regex(INDONESIAN_PHONE_REGEX, 'Format nomor WhatsApp tidak valid'),
+      .transform((val) => normalizePhone(val))
+      .pipe(z.string().regex(/^628[1-9][0-9]{6,10}$/, 'Format nomor WhatsApp tidak valid')),
     password: z
       .string()
       .min(8, 'Password minimal 8 karakter')
@@ -105,12 +118,21 @@ function SignupForm() {
 
           <div className="flex flex-col gap-1">
             <label className="text-sm font-medium text-neutral-600">Nomor WhatsApp</label>
-            <input
-              type="tel"
-              placeholder="08xx-xxxx-xxxx"
-              {...register('whatsappNumber')}
-              className={inputBase}
-            />
+            <div className="flex items-center gap-2">
+              <span className="flex h-10 items-center rounded-md border border-neutral-300 bg-neutral-50 px-3 text-sm text-neutral-600">
+                +62
+              </span>
+              <input
+                type="tel"
+                placeholder="812-3456-7890"
+                {...register('whatsappNumber', {
+                  onChange: (e) => {
+                    e.target.value = formatPhoneDisplay(e.target.value);
+                  },
+                })}
+                className={inputBase}
+              />
+            </div>
             {errors.whatsappNumber ? (
               <p className="text-xs text-red">{errors.whatsappNumber.message}</p>
             ) : null}

@@ -50,6 +50,7 @@ describe('POST /api/auth/register', () => {
     const dbUser = await prisma.user.findUnique({ where: { email: payload.email } });
     expect(dbUser?.role).toBe('BUYER');
     expect(dbUser?.passwordHash).not.toBe(payload.password);
+    expect(dbUser?.whatsappNumber).toBe('6281234567890');
   });
 
   it('rejects invalid input with 400', async () => {

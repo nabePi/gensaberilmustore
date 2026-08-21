@@ -5,7 +5,12 @@ import { prisma } from '@/lib/db';
 import { hashPassword } from '@/server/auth/password';
 import { createSession, sessionCookieOptions, SESSION_COOKIE_NAME } from '@/server/auth/session';
 
-const INDONESIAN_PHONE_REGEX = /^(?:\+62|62|0)8[1-9][0-9]{6,10}$/;
+function normalizePhone(value: string): string {
+  const digits = value.replace(/\D/g, '');
+  if (digits.startsWith('62')) return digits;
+  if (digits.startsWith('0')) return `62${digits.slice(1)}`;
+  return `62${digits}`;
+}
 
 const registerSchema = z
   .object({
@@ -15,7 +20,8 @@ const registerSchema = z
     whatsappNumber: z
       .string()
       .min(1, 'Nomor WhatsApp wajib diisi')
-      .regex(INDONESIAN_PHONE_REGEX, 'Format nomor WhatsApp tidak valid'),
+      .transform((val) => normalizePhone(val))
+      .pipe(z.string().regex(/^628[1-9][0-9]{6,10}$/, 'Format nomor WhatsApp tidak valid')),
     password: z
       .string()
       .min(8, 'Password minimal 8 karakter')

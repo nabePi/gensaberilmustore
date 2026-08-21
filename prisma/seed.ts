@@ -130,7 +130,9 @@ async function seedCategories() {
 async function seedProducts(categoryIdBySlug: Map<string, string>, adminUserId: string) {
   for (const [index, item] of GENSA_PRODUCTS.entries()) {
     const sku = `GSI-${String(index + 1).padStart(3, '0')}`;
-    const slug = slugify(item.title);
+    let slug = slugify(item.title);
+    const existingSlug = await prisma.product.findFirst({ where: { slug, NOT: { sku } } });
+    if (existingSlug) slug = `${slug}-${sku.toLowerCase()}`;
     const primaryCategory = item.categories[0];
     const subtitle =
       (primaryCategory && CATEGORY_SUBTITLE[primaryCategory]) ??
