@@ -87,6 +87,13 @@ const buildPhaseFallbacks: Record<string, string> = {
   AUTH_SECRET: 'build-phase-placeholder-not-a-real-secret-000000',
 };
 
+// docker-compose sets every variable listed under `environment:` even when
+// the underlying value is unset (e.g. an unconfigured optional var becomes
+// "" in the container, not absent). Treat empty strings as not provided so
+// optional fields and defaults behave the same as when the var is unset.
+const dropEmptyStrings = (source: NodeJS.ProcessEnv) =>
+  Object.fromEntries(Object.entries(source).filter(([, value]) => value !== ''));
+
 const parseEnv = () => {
   const source = isBuildPhase
     ? {
@@ -100,7 +107,7 @@ const parseEnv = () => {
       }
     : process.env;
 
-  const parsed = validatedEnvSchema.safeParse(source);
+  const parsed = validatedEnvSchema.safeParse(dropEmptyStrings(source));
 
   if (!parsed.success) {
     const fieldErrors = parsed.error.flatten().fieldErrors;
