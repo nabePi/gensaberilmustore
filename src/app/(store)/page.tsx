@@ -36,7 +36,7 @@ export default async function HomePage() {
   return (
     <div className="container-prototype py-8 space-y-14">
       <section className="grid gap-4 lg:grid-cols-3">
-        <div className="relative h-[220px] lg:col-span-2 lg:h-[360px]">
+        <div className="relative aspect-[2/1] lg:col-span-2">
           {banners.HERO_MAIN.length > 0 ? (
             <BannerCarousel slides={banners.HERO_MAIN} className="h-full rounded-lg" />
           ) : (
@@ -49,7 +49,7 @@ export default async function HomePage() {
           )}
         </div>
         <div className="grid gap-4">
-          <div className="relative h-[100px] lg:h-[170px]">
+          <div className="relative aspect-[2/1]">
             {banners.HERO_SIDE_1.length > 0 ? (
               <BannerCarousel slides={banners.HERO_SIDE_1} className="h-full rounded-lg" />
             ) : (
@@ -58,7 +58,7 @@ export default async function HomePage() {
               </div>
             )}
           </div>
-          <div className="relative h-[100px] lg:h-[170px]">
+          <div className="relative aspect-[2/1]">
             {banners.HERO_SIDE_2.length > 0 ? (
               <BannerCarousel slides={banners.HERO_SIDE_2} className="h-full rounded-lg" />
             ) : (
