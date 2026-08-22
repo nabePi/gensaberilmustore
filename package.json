@@ -19,6 +19,7 @@
     "db:migrate:dev": "prisma migrate dev",
     "db:studio": "prisma studio",
     "db:seed": "tsx prisma/seed.ts",
+    "db:import-legacy": "tsx --env-file=.env scripts/import-legacy-users.ts",
     "test": "vitest --run --passWithNoTests",
     "prepare": "husky"
   },

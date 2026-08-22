@@ -1,11 +1,11 @@
-import { randomUUID } from 'node:crypto';
+import { createHash, randomUUID } from 'node:crypto';
 
 import { NextRequest } from 'next/server';
 import { afterAll, describe, expect, it } from 'vitest';
 
 import { POST } from '@/app/api/auth/admin/login/route';
 import { prisma } from '@/lib/db';
-import { hashPassword } from '@/server/auth/password';
+import { hashPassword, verifyPassword } from '@/server/auth/password';
 
 const TEST_PASSWORD = 'Password123';
 const createdEmails: string[] = [];
@@ -59,6 +59,23 @@ describe('POST /api/auth/admin/login', () => {
     const response = await POST(buildRequest({ email: admin.email, password: 'WrongPass123' }));
 
     expect(response.status).toBe(401);
+  });
+
+  it('logs in a legacy admin with an MD5 password and upgrades it to bcrypt', async () => {
+    const email = `test-${randomUUID()}@example.com`;
+    createdEmails.push(email);
+    const passwordmd5 = createHash('md5').update(TEST_PASSWORD).digest('hex');
+    await prisma.user.create({
+      data: { email, passwordmd5, passwordHash: null, name: 'Legacy Admin', role: 'ADMIN' },
+    });
+
+    const response = await POST(buildRequest({ email, password: TEST_PASSWORD }));
+
+    expect(response.status).toBe(200);
+
+    const updated = await prisma.user.findUnique({ where: { email } });
+    expect(updated?.passwordmd5).toBeNull();
+    expect(await verifyPassword(TEST_PASSWORD, updated!.passwordHash!)).toBe(true);
   });
 
   it('rate limits after 5 attempts from the same IP', async () => {

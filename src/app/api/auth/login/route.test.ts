@@ -1,11 +1,12 @@
 import { randomUUID } from 'node:crypto';
+import { createHash } from 'node:crypto';
 
 import { NextRequest } from 'next/server';
 import { afterAll, describe, expect, it } from 'vitest';
 
 import { POST } from '@/app/api/auth/login/route';
 import { prisma } from '@/lib/db';
-import { hashPassword } from '@/server/auth/password';
+import { hashPassword, verifyPassword } from '@/server/auth/password';
 
 const TEST_PASSWORD = 'Password123';
 const createdEmails: string[] = [];
@@ -70,6 +71,43 @@ describe('POST /api/auth/login', () => {
     const response = await POST(buildRequest({ email: admin.email, password: TEST_PASSWORD }));
 
     expect(response.status).toBe(401);
+  });
+
+  it('logs in a legacy user with an MD5 password and upgrades it to bcrypt', async () => {
+    const email = `test-${randomUUID()}@example.com`;
+    createdEmails.push(email);
+    const passwordmd5 = createHash('md5').update(TEST_PASSWORD).digest('hex');
+    await prisma.user.create({
+      data: { email, passwordmd5, passwordHash: null, name: 'Legacy User', role: 'BUYER' },
+    });
+
+    const response = await POST(buildRequest({ email, password: TEST_PASSWORD }));
+    const json = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(json.user.email).toBe(email);
+
+    const updated = await prisma.user.findUnique({ where: { email } });
+    expect(updated?.passwordmd5).toBeNull();
+    expect(updated?.passwordHash).toBeTruthy();
+    expect(await verifyPassword(TEST_PASSWORD, updated!.passwordHash!)).toBe(true);
+  });
+
+  it('rejects a legacy user with a wrong MD5 password', async () => {
+    const email = `test-${randomUUID()}@example.com`;
+    createdEmails.push(email);
+    const passwordmd5 = createHash('md5').update(TEST_PASSWORD).digest('hex');
+    await prisma.user.create({
+      data: { email, passwordmd5, passwordHash: null, name: 'Legacy User', role: 'BUYER' },
+    });
+
+    const response = await POST(buildRequest({ email, password: 'WrongPass123' }));
+
+    expect(response.status).toBe(401);
+
+    const unchanged = await prisma.user.findUnique({ where: { email } });
+    expect(unchanged?.passwordmd5).toBe(passwordmd5);
+    expect(unchanged?.passwordHash).toBeNull();
   });
 
   it('sets a longer-lived cookie when remember is true', async () => {

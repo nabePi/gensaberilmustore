@@ -46,7 +46,12 @@ export async function POST(request: NextRequest) {
   const passwordHash = await hashPassword(password);
 
   await prisma.$transaction([
-    prisma.user.update({ where: { id: resetToken.userId }, data: { passwordHash } }),
+    prisma.user.update({
+      where: { id: resetToken.userId },
+      // Move legacy users fully to bcrypt: clear the MD5 password once a new
+      // password is set.
+      data: { passwordHash, passwordmd5: null },
+    }),
     prisma.passwordResetToken.update({
       where: { id: resetToken.id },
       data: { usedAt: new Date() },

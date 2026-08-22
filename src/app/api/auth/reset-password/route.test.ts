@@ -65,7 +65,7 @@ describe('POST /api/auth/reset-password', () => {
     expect(response.status).toBe(200);
 
     const updatedUser = await prisma.user.findUniqueOrThrow({ where: { id: user.id } });
-    expect(await verifyPassword('NewPassword123', updatedUser.passwordHash)).toBe(true);
+    expect(await verifyPassword('NewPassword123', updatedUser.passwordHash!)).toBe(true);
 
     const tokenHash = createHash('sha256').update(rawToken).digest('hex');
     const usedToken = await prisma.passwordResetToken.findFirst({ where: { tokenHash } });
@@ -73,6 +73,30 @@ describe('POST /api/auth/reset-password', () => {
 
     const remainingSessions = await prisma.session.count({ where: { userId: user.id } });
     expect(remainingSessions).toBe(0);
+  });
+
+  it('clears passwordmd5 when a legacy user resets their password', async () => {
+    const email = `test-${randomUUID()}@example.com`;
+    createdEmails.push(email);
+    const passwordmd5 = createHash('md5').update('OldPassword123').digest('hex');
+    const user = await prisma.user.create({
+      data: { email, passwordmd5, passwordHash: null, name: 'Legacy User', role: 'BUYER' },
+    });
+    const rawToken = await createResetToken(user.id);
+
+    const response = await POST(
+      buildRequest({
+        token: rawToken,
+        password: 'NewPassword123',
+        confirmPassword: 'NewPassword123',
+      }),
+    );
+
+    expect(response.status).toBe(200);
+
+    const updatedUser = await prisma.user.findUniqueOrThrow({ where: { id: user.id } });
+    expect(updatedUser.passwordmd5).toBeNull();
+    expect(await verifyPassword('NewPassword123', updatedUser.passwordHash!)).toBe(true);
   });
 
   it('rejects an unknown token with 400', async () => {

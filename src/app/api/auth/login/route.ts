@@ -2,7 +2,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 
 import { prisma } from '@/lib/db';
-import { DUMMY_PASSWORD_HASH, verifyPassword } from '@/server/auth/password';
+import {
+  DUMMY_PASSWORD_HASH,
+  hashPassword,
+  verifyMd5Password,
+  verifyPassword,
+} from '@/server/auth/password';
 import { checkLoginRateLimit, resetLoginRateLimit } from '@/server/auth/rate-limit';
 import {
   createSession,
@@ -45,10 +50,25 @@ export async function POST(request: NextRequest) {
   const { email, password, remember } = parsed.data;
 
   const user = await prisma.user.findUnique({ where: { email } });
-  const isPasswordValid = await verifyPassword(password, user?.passwordHash ?? DUMMY_PASSWORD_HASH);
+
+  // Legacy users imported from the previous store authenticate with their MD5
+  // password (passwordmd5); everyone else uses the bcrypt passwordHash.
+  const usesLegacyMd5 = Boolean(user?.passwordmd5);
+  const isPasswordValid = usesLegacyMd5
+    ? verifyMd5Password(password, user!.passwordmd5!)
+    : await verifyPassword(password, user?.passwordHash ?? DUMMY_PASSWORD_HASH);
 
   if (!user || !isPasswordValid || user.role === 'ADMIN') {
     return NextResponse.json({ error: GENERIC_ERROR_MESSAGE }, { status: 401 });
+  }
+
+  // Transparently upgrade legacy MD5 passwords to bcrypt on successful login.
+  if (usesLegacyMd5) {
+    const passwordHash = await hashPassword(password);
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { passwordHash, passwordmd5: null },
+    });
   }
 
   resetLoginRateLimit(ip);

@@ -106,7 +106,8 @@ enum VoucherChannel {
 model User {
   id              String    @id @default(uuid())
   email           String    @unique
-  passwordHash    String
+  passwordHash    String?
+  passwordmd5     String?
   name            String?
   phone           String?
   whatsappNumber  String?
@@ -543,13 +544,13 @@ enum HomepageBannerSlot {
 }
 
 model HomepageBanner {
-  id        String            @id @default(uuid())
+  id        String             @id @default(uuid())
   slot      HomepageBannerSlot
   imageUrl  String
   linkUrl   String?
-  position  Int               @default(0)
-  createdAt DateTime          @default(now())
-  updatedAt DateTime          @updatedAt
+  position  Int                @default(0)
+  createdAt DateTime           @default(now())
+  updatedAt DateTime           @updatedAt
 
   @@index([slot, position])
 }
