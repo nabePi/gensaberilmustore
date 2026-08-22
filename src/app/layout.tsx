@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
 import { Fredoka, Source_Sans_3 } from 'next/font/google';
 import type { ReactNode } from 'react';
+
+import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from '@/lib/site';
 import './globals.css';
 
 const sourceSans = Source_Sans_3({
@@ -18,8 +20,40 @@ const fredoka = Fredoka({
 });
 
 export const metadata: Metadata = {
-  title: 'Gensa Berilmu Store',
-  description: 'Toko buku Islam dan produk muslim keluarga',
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: SITE_NAME,
+    template: `%s - ${SITE_NAME}`,
+  },
+  description: SITE_DESCRIPTION,
+  applicationName: SITE_NAME,
+  keywords: [
+    'toko buku islam',
+    'buku islami',
+    'produk muslim',
+    'perlengkapan keluarga muslim',
+    'GenSa Berilmu',
+  ],
+  alternates: {
+    canonical: '/',
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
+  openGraph: {
+    type: 'website',
+    locale: 'id_ID',
+    url: SITE_URL,
+    siteName: SITE_NAME,
+    title: SITE_NAME,
+    description: SITE_DESCRIPTION,
+  },
+  twitter: {
+    card: 'summary',
+    title: SITE_NAME,
+    description: SITE_DESCRIPTION,
+  },
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {

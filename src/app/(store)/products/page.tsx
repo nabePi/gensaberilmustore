@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 
@@ -6,6 +7,9 @@ import { prisma } from '@/lib/db';
 import { btnOutline, btnSolid, inputBase } from '@/lib/styles';
 import { listProducts } from '@/server/products/list';
 import { listProductsQuerySchema } from '@/server/products/schema';
+
+const PRODUCTS_DESCRIPTION =
+  'Jelajahi koleksi lengkap buku Islam dan produk keluarga muslim GenSa Berilmu: buku dewasa, buku anak, dan merchandise.';
 
 type SearchParams = Record<string, string | string[] | undefined>;
 
@@ -168,6 +172,44 @@ function PaginationLink({
       {children}
     </Link>
   );
+}
+
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: Promise<SearchParams>;
+}): Promise<Metadata> {
+  const params = await searchParams;
+  const categorySlug = first(params.category);
+  const q = first(params.q);
+  const page = first(params.page);
+
+  let title = 'Semua Produk';
+  if (q) {
+    title = `Hasil pencarian "${q}"`;
+  } else if (categorySlug) {
+    const category = await prisma.category.findFirst({
+      where: { slug: categorySlug, isActive: true },
+      select: { name: true },
+    });
+    if (category) title = category.name;
+  }
+
+  const canonical = categorySlug ? `/products?category=${categorySlug}` : '/products';
+  const isFiltered = Boolean(
+    q ||
+    first(params.minPrice) ||
+    first(params.maxPrice) ||
+    first(params.sort) ||
+    (page && page !== '1'),
+  );
+
+  return {
+    title,
+    description: PRODUCTS_DESCRIPTION,
+    alternates: { canonical },
+    robots: { index: !isFiltered, follow: true },
+  };
 }
 
 export default async function ProductsPage({

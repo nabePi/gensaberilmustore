@@ -1,8 +1,16 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
 
 import { KidsProductCard } from '@/components/kids/KidsProductCard';
 import { BannerCarousel } from '@/components/ui/BannerCarousel';
 import { getKidsData } from '@/server/kids/data';
+
+export const metadata: Metadata = {
+  title: 'Buku Anak',
+  description:
+    'Koleksi buku anak Islami GenSa Berilmu untuk berbagai kelompok usia: board book, dongeng, komik, hingga novel inspiratif.',
+  alternates: { canonical: '/kids' },
+};
 
 const AGE_GROUPS = [
   {

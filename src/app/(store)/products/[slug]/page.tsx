@@ -8,6 +8,7 @@ import { ProductGallery } from '@/components/product/ProductGallery';
 import { ProductTabs } from '@/components/product/ProductTabs';
 import { Carousel } from '@/components/ui/Carousel';
 import { formatCurrency } from '@/lib/format';
+import { SITE_URL } from '@/lib/site';
 import { badgeBase } from '@/lib/styles';
 import { getProductDetail } from '@/server/products/detail';
 
@@ -32,12 +33,36 @@ export async function generateMetadata({
   const product = await getProductDetail(slug);
 
   if (!product) {
-    return { title: 'Produk Tidak Ditemukan - GenSa Berilmu' };
+    return { title: 'Produk Tidak Ditemukan', robots: { index: false } };
   }
 
+  const description = product.description.replace(/\s+/g, ' ').trim().slice(0, 160);
+  const primaryImage = product.images[0]?.url;
+  const path = `/products/${product.slug}`;
+
   return {
-    title: `${product.title} - GenSa Berilmu`,
-    description: product.description.slice(0, 160),
+    title: product.title,
+    description,
+    keywords: [
+      product.author,
+      product.publisher,
+      ...product.categories.map((category) => category.name),
+      ...product.tags.map((tag) => tag.name),
+    ].filter((value): value is string => Boolean(value)),
+    alternates: { canonical: path },
+    openGraph: {
+      type: 'website',
+      title: product.title,
+      description,
+      url: path,
+      images: primaryImage ? [{ url: primaryImage, alt: product.title }] : undefined,
+    },
+    twitter: {
+      card: primaryImage ? 'summary_large_image' : 'summary',
+      title: product.title,
+      description,
+      images: primaryImage ? [primaryImage] : undefined,
+    },
   };
 }
 
@@ -49,8 +74,31 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
     notFound();
   }
 
+  const productJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: product.title,
+    description: product.description,
+    sku: product.sku,
+    image: product.images.map((image) => image.url),
+    ...(product.author ? { author: { '@type': 'Person', name: product.author } } : {}),
+    ...(product.publisher ? { brand: { '@type': 'Brand', name: product.publisher } } : {}),
+    offers: {
+      '@type': 'Offer',
+      url: `${SITE_URL}/products/${product.slug}`,
+      priceCurrency: 'IDR',
+      price: product.finalPrice,
+      availability:
+        product.stock > 0 ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
+    },
+  };
+
   return (
     <div className="container-prototype py-8">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }}
+      />
       <nav className="mb-6 flex items-center gap-2 text-sm text-neutral-500">
         <Link href="/" className="hover:text-brand">
           Beranda
