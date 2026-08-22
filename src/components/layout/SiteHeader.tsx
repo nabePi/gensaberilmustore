@@ -128,12 +128,14 @@ export function SiteHeader({ initialUser }: { initialUser: HeaderUser | null }) 
             >
               Produk
             </Link>
+            {/* Sementara disembunyikan, nanti akan dimunculkan kembali
             <Link
               href="/kids"
               className="px-0.5 py-2 text-[15px] font-medium text-neutral-700 hover:text-brand"
             >
               Buku Anak
             </Link>
+            */}
           </nav>
         </div>
 
@@ -314,6 +316,7 @@ export function SiteHeader({ initialUser }: { initialUser: HeaderUser | null }) 
             >
               Produk
             </Link>
+            {/* Sementara disembunyikan, nanti akan dimunculkan kembali
             <Link
               href="/kids"
               onClick={() => setMobileOpen(false)}
@@ -321,6 +324,7 @@ export function SiteHeader({ initialUser }: { initialUser: HeaderUser | null }) 
             >
               Buku Anak
             </Link>
+            */}
           </nav>
           <div className="mt-4 flex flex-col gap-2">
             {user ? (
