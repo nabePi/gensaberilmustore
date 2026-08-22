@@ -9,7 +9,6 @@ import { hashPassword } from '@/server/auth/password';
 import { ADMIN_SESSION_COOKIE_NAME, createSession } from '@/server/auth/session';
 
 const createdEmails: string[] = [];
-const createdProductIds: string[] = [];
 
 async function createAdminCookie() {
   const email = `test-${randomUUID()}@example.com`;
@@ -22,29 +21,6 @@ async function createAdminCookie() {
   return `${ADMIN_SESSION_COOKIE_NAME}=${token}`;
 }
 
-async function createProduct() {
-  const product = await prisma.product.create({
-    data: {
-      sku: `SKU-${randomUUID()}`,
-      slug: `slug-${randomUUID()}`,
-      title: `Homepage Product ${randomUUID()}`,
-      subtitle: '',
-      author: 'Author',
-      description: 'Desc',
-      price: 100000,
-      finalPrice: 100000,
-      stock: 5,
-      weightGram: 100,
-      pageCount: 100,
-      coverType: 'SOFTCOVER',
-      publishYear: 2024,
-      isActive: true,
-    },
-  });
-  createdProductIds.push(product.id);
-  return product;
-}
-
 function buildRequest(method: string, body: unknown, cookie: string) {
   return new NextRequest('http://localhost/api/admin/config/homepage', {
     method,
@@ -53,7 +29,7 @@ function buildRequest(method: string, body: unknown, cookie: string) {
   });
 }
 
-function validPayload(productId: string) {
+function validPayload() {
   return {
     banners: {
       HERO_MAIN: [
@@ -63,30 +39,10 @@ function validPayload(productId: string) {
       HERO_SIDE_1: [{ imageUrl: '/img/side1.jpg', linkUrl: '' }],
       HERO_SIDE_2: [{ imageUrl: '/img/side2.jpg', linkUrl: '' }],
     },
-    sections: [
-      {
-        key: 'newest',
-        title: 'Buku Terbaru',
-        subtitle: 'Rilisan terbaru',
-        promoImageUrl: 'https://example.com/img/promo1.jpg',
-        position: 0,
-        productIds: [productId],
-      },
-    ],
   };
 }
 
-async function cleanupTestSections() {
-  await prisma.homepageSectionProduct.deleteMany({});
-  await prisma.homepageSection.deleteMany({});
-}
-
 afterAll(async () => {
-  await cleanupTestSections();
-  await prisma.homepageSectionProduct.deleteMany({
-    where: { productId: { in: createdProductIds } },
-  });
-  await prisma.product.deleteMany({ where: { id: { in: createdProductIds } } });
   await prisma.user.deleteMany({ where: { email: { in: createdEmails } } });
 });
 
@@ -96,25 +52,16 @@ describe('GET /api/admin/config/homepage', () => {
     expect(response.status).toBe(401);
   });
 
-  it('returns config and dynamic sections array', async () => {
+  it('returns banners grouped by slot', async () => {
     const cookie = await createAdminCookie();
-    await cleanupTestSections();
-    await prisma.homepageSection.create({
-      data: {
-        key: 'test-newest',
-        title: 'Buku Terbaru',
-        subtitle: 'Rilisan terbaru',
-        promoImageUrl: '',
-        position: 0,
-      },
-    });
 
     const response = await GET(buildRequest('GET', undefined, cookie));
     const json = await response.json();
 
     expect(response.status).toBe(200);
-    expect(Array.isArray(json.sections)).toBe(true);
-    expect(json.sections[0].key).toBe('test-newest');
+    expect(json.banners).toHaveProperty('HERO_MAIN');
+    expect(json.banners).toHaveProperty('HERO_SIDE_1');
+    expect(json.banners).toHaveProperty('HERO_SIDE_2');
   });
 });
 
@@ -124,26 +71,40 @@ describe('PUT /api/admin/config/homepage', () => {
     expect(response.status).toBe(401);
   });
 
-  it('rejects an unknown product id in a section', async () => {
+  it('saves the homepage hero banners', async () => {
     const cookie = await createAdminCookie();
-    const response = await PUT(buildRequest('PUT', validPayload(randomUUID()), cookie));
-    expect(response.status).toBe(400);
-  });
 
-  it('saves the config, banners, and dynamic sections', async () => {
-    const cookie = await createAdminCookie();
-    const product = await createProduct();
-    await cleanupTestSections();
-
-    const response = await PUT(buildRequest('PUT', validPayload(product.id), cookie));
+    const response = await PUT(buildRequest('PUT', validPayload(), cookie));
     const json = await response.json();
 
     expect(response.status).toBe(200);
     expect(json.banners.HERO_MAIN).toHaveLength(2);
     expect(json.banners.HERO_MAIN[0].imageUrl).toBe('/img/hero.jpg');
     expect(json.banners.HERO_MAIN[0].linkUrl).toBe('https://example.com');
-    expect(json.sections).toHaveLength(1);
-    expect(json.sections[0].key).toBe('newest');
-    expect(json.sections[0].productIds).toEqual([product.id]);
+  });
+
+  it('does not affect homepage sections when saving banners', async () => {
+    const cookie = await createAdminCookie();
+    const sectionKey = `test-section-${randomUUID()}`;
+    const section = await prisma.homepageSection.create({
+      data: {
+        key: sectionKey,
+        title: 'Section Uji',
+        subtitle: 'Jangan terhapus',
+        promoImageUrl: '',
+        position: 999,
+      },
+    });
+
+    try {
+      const response = await PUT(buildRequest('PUT', validPayload(), cookie));
+      expect(response.status).toBe(200);
+
+      const persisted = await prisma.homepageSection.findUnique({ where: { id: section.id } });
+      expect(persisted).not.toBeNull();
+      expect(persisted?.key).toBe(sectionKey);
+    } finally {
+      await prisma.homepageSection.deleteMany({ where: { id: section.id } });
+    }
   });
 });

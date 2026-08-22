@@ -23,12 +23,15 @@ export const homepageSectionSchema = z.object({
   productIds: z.array(z.string().uuid()),
 });
 
-export const homepageConfigUpdateSchema = z.object({
+export const homepageBannersUpdateSchema = z.object({
   banners: z.object({
     HERO_MAIN: z.array(bannerImageSchema),
     HERO_SIDE_1: z.array(bannerImageSchema),
     HERO_SIDE_2: z.array(bannerImageSchema),
   }),
+});
+
+export const homepageSectionsUpdateSchema = z.object({
   sections: z.array(homepageSectionSchema),
 });
 

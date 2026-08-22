@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 
+import { ProductPicker, type ProductOption } from '@/components/admin/ProductPicker';
 import { SingleImageUpload } from '@/components/admin/SingleImageUpload';
 import { btnOutline, btnSolid, inputBase } from '@/lib/styles';
 
@@ -13,6 +14,7 @@ type SectionForm = {
   subtitle: string;
   promoImageUrl: string;
   position: number;
+  productIds: string[];
 };
 
 function emptySection(position: number): SectionForm {
@@ -22,6 +24,7 @@ function emptySection(position: number): SectionForm {
     subtitle: '',
     promoImageUrl: '',
     position,
+    productIds: [],
   };
 }
 
@@ -54,6 +57,7 @@ function formatSaveError(data: unknown): string {
 
 export default function AdminKonfigurasiSectionPage() {
   const [sections, setSections] = useState<SectionForm[]>([]);
+  const [products, setProducts] = useState<ProductOption[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
@@ -63,10 +67,17 @@ export default function AdminKonfigurasiSectionPage() {
   useEffect(() => {
     async function load() {
       setLoading(true);
-      const response = await fetch('/api/admin/config/homepage');
-      if (response.ok) {
-        const data = await response.json();
+      const [sectionsRes, productsRes] = await Promise.all([
+        fetch('/api/admin/config/homepage/sections'),
+        fetch('/api/admin/products?limit=60'),
+      ]);
+      if (sectionsRes.ok) {
+        const data = await sectionsRes.json();
         setSections(data.sections ?? []);
+      }
+      if (productsRes.ok) {
+        const data: { items: ProductOption[] } = await productsRes.json();
+        setProducts(data.items);
       }
       setLoading(false);
     }
@@ -114,19 +125,30 @@ export default function AdminKonfigurasiSectionPage() {
     setSections((prev) => prev.filter((_, i) => i !== index));
   }
 
+  function toggleSectionProduct(index: number, productId: string) {
+    setSections((prev) => {
+      const next = [...prev];
+      const current = next[index];
+      if (!current) return prev;
+      const productIds = current.productIds.includes(productId)
+        ? current.productIds.filter((id) => id !== productId)
+        : [...current.productIds, productId];
+      next[index] = { ...current, productIds };
+      return next;
+    });
+  }
+
   async function handleSave() {
     setSaving(true);
     setSaveMessage(null);
 
-    const response = await fetch('/api/admin/config/homepage', {
+    const response = await fetch('/api/admin/config/homepage/sections', {
       method: 'PUT',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({
-        banners: { HERO_MAIN: [], HERO_SIDE_1: [], HERO_SIDE_2: [] },
         sections: sections.map((section, position) => ({
           ...section,
           position,
-          productIds: [],
         })),
       }),
     });
@@ -207,6 +229,12 @@ export default function AdminKonfigurasiSectionPage() {
                   imageUrl={section.promoImageUrl}
                   onChange={(url) => updateSection(index, { promoImageUrl: url })}
                   placeholder="Upload gambar promo untuk section ini (opsional)."
+                />
+                <ProductPicker
+                  label="Buku di Section Ini"
+                  products={products}
+                  selected={section.productIds}
+                  onToggle={(productId) => toggleSectionProduct(index, productId)}
                 />
               </div>
 
