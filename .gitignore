@@ -56,3 +56,6 @@ yarn-error.log*
 next-env.d.ts
 
 import-legacy-users.sql
+seed-admin-user.sql
+seed-homepage-sections.sql
+seed-products.sql

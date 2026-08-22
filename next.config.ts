@@ -1,17 +1,12 @@
 import type { NextConfig } from 'next';
-import { PHASE_PRODUCTION_BUILD } from 'next/constants';
 
+// Env validation happens lazily the first time a server module imports
+// `@/env` (e.g. src/server/auth/session.ts on the first request), not here.
+// `next.config.ts`'s own transpiler only bundles static imports, so a
+// dynamic `import('@/env')` here would break `next dev`/`next start` (it
+// falls through to a plain Node require, which can't resolve the .ts file).
 const nextConfig: NextConfig = {
   output: 'standalone',
 };
 
-export default async function config(phase: string) {
-  // Secrets aren't available yet during `next build` in Docker (they're
-  // only injected at container runtime), so skip eager validation here.
-  // `next dev` / `next start` still validate env on startup as normal.
-  if (phase !== PHASE_PRODUCTION_BUILD) {
-    await import('@/env');
-  }
-
-  return nextConfig;
-}
+export default nextConfig;
