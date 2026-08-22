@@ -81,6 +81,7 @@ export function Carousel({ children }: { children: ReactNode }) {
         <div
           ref={trackRef}
           onPointerDown={(event) => {
+            event.currentTarget.setPointerCapture(event.pointerId);
             dragRef.current = { dragging: true, startX: event.clientX };
           }}
           onPointerUp={(event) => {
@@ -90,10 +91,13 @@ export function Carousel({ children }: { children: ReactNode }) {
             if (diff < -40) goTo(index + 1);
             else if (diff > 40) goTo(index - 1);
           }}
+          onPointerCancel={() => {
+            dragRef.current.dragging = false;
+          }}
           onPointerLeave={() => {
             dragRef.current.dragging = false;
           }}
-          style={{ transform: `translateX(-${translateX}px)` }}
+          style={{ transform: `translateX(-${translateX}px)`, touchAction: 'pan-y' }}
           className="flex gap-4 transition-transform duration-[450ms] ease-[cubic-bezier(0.4,0,0.2,1)] [&>*]:min-w-0 [&>*]:shrink-0 [&>*]:basis-[calc((100%-80px)/6)] max-[1024px]:[&>*]:basis-[calc((100%-48px)/4)] max-[640px]:[&>*]:basis-[calc((100%-16px)/2)]"
         >
           {children}
