@@ -4,6 +4,8 @@ import type { NextConfig } from 'next';
 // and stop the process if any required env var is missing or invalid.
 import '@/env';
 
-const nextConfig: NextConfig = {/* config options here */};
+const nextConfig: NextConfig = {
+  output: 'standalone',
+};
 
 export default nextConfig;

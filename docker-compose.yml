@@ -1,0 +1,82 @@
+services:
+  migrate:
+    build:
+      context: .
+      target: builder
+      args:
+        DATABASE_URL: ${DATABASE_URL}
+        JWT_SECRET: ${JWT_SECRET}
+        AUTH_SECRET: ${AUTH_SECRET}
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+    networks:
+      - dokploy-network
+    command: ['pnpm', 'db:migrate']
+    restart: 'no'
+
+  # One-off seeding, excluded from the default `docker compose up` (Dokploy
+  # deploy) via the "seed" profile. Some seed rows use plain `create` (not
+  # `upsert`), so re-running it duplicates data — trigger it manually only
+  # once, e.g. after the first deploy:
+  #   docker compose --profile seed run --rm seed
+  seed:
+    profiles: ['seed']
+    build:
+      context: .
+      target: builder
+      args:
+        DATABASE_URL: ${DATABASE_URL}
+        JWT_SECRET: ${JWT_SECRET}
+        AUTH_SECRET: ${AUTH_SECRET}
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+    networks:
+      - dokploy-network
+    command: ['pnpm', 'db:seed']
+    restart: 'no'
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        DATABASE_URL: ${DATABASE_URL}
+        JWT_SECRET: ${JWT_SECRET}
+        AUTH_SECRET: ${AUTH_SECRET}
+        NEXT_PUBLIC_MIDTRANS_CLIENT_KEY: ${NEXT_PUBLIC_MIDTRANS_CLIENT_KEY}
+        NEXT_PUBLIC_MIDTRANS_IS_PRODUCTION: ${NEXT_PUBLIC_MIDTRANS_IS_PRODUCTION}
+    restart: unless-stopped
+    ports:
+      - '3000'
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: ${DATABASE_URL}
+      JWT_SECRET: ${JWT_SECRET}
+      AUTH_SECRET: ${AUTH_SECRET}
+      # Payment gateway (Midtrans)
+      MIDTRANS_SERVER_KEY: ${MIDTRANS_SERVER_KEY}
+      MIDTRANS_CLIENT_KEY: ${MIDTRANS_CLIENT_KEY}
+      MIDTRANS_IS_PRODUCTION: ${MIDTRANS_IS_PRODUCTION}
+      # WhatsApp / email notifications
+      FONNTE_TOKEN: ${FONNTE_TOKEN}
+      RESEND_API_KEY: ${RESEND_API_KEY}
+      NOTIFY_FROM_EMAIL: ${NOTIFY_FROM_EMAIL}
+      CRON_SECRET: ${CRON_SECRET}
+      # File storage: local (default) or r2 (Cloudflare R2)
+      STORAGE_PROVIDER: ${STORAGE_PROVIDER}
+      R2_ACCOUNT_ID: ${R2_ACCOUNT_ID}
+      R2_ACCESS_KEY_ID: ${R2_ACCESS_KEY_ID}
+      R2_SECRET_ACCESS_KEY: ${R2_SECRET_ACCESS_KEY}
+      R2_BUCKET: ${R2_BUCKET}
+      R2_PUBLIC_URL: ${R2_PUBLIC_URL}
+      # Monitoring
+      SENTRY_DSN: ${SENTRY_DSN}
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    networks:
+      - dokploy-network
+
+networks:
+  dokploy-network:
+    external: true
