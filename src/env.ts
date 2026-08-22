@@ -71,8 +71,36 @@ const formatFieldErrors = (errors: Record<string, string[] | undefined>) =>
     .map(([key, messages]) => `  - ${key}: ${messages.join(', ')}`)
     .join('\n');
 
+// During `next build`, Next.js spawns worker processes to collect page data
+// (importing every route module, including this one transitively) before
+// any server actually starts. Those workers inherit NEXT_PHASE=
+// 'phase-production-build' from the parent build process. Docker builds
+// don't have real secrets available yet at that point (they're injected at
+// container runtime), so fall back to placeholders for required fields in
+// that phase only. `next dev` / `next start` never set NEXT_PHASE this way,
+// so real secrets are still enforced normally at runtime.
+const isBuildPhase = process.env.NEXT_PHASE === 'phase-production-build';
+
+const buildPhaseFallbacks: Record<string, string> = {
+  DATABASE_URL: 'postgresql://user:password@localhost:5432/placeholder',
+  JWT_SECRET: 'build-phase-placeholder-not-a-real-secret-000000',
+  AUTH_SECRET: 'build-phase-placeholder-not-a-real-secret-000000',
+};
+
 const parseEnv = () => {
-  const parsed = validatedEnvSchema.safeParse(process.env);
+  const source = isBuildPhase
+    ? {
+        ...process.env,
+        ...Object.fromEntries(
+          Object.entries(buildPhaseFallbacks).map(([key, fallback]) => [
+            key,
+            process.env[key] || fallback,
+          ]),
+        ),
+      }
+    : process.env;
+
+  const parsed = validatedEnvSchema.safeParse(source);
 
   if (!parsed.success) {
     const fieldErrors = parsed.error.flatten().fieldErrors;

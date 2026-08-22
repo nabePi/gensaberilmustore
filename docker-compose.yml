@@ -3,10 +3,6 @@ services:
     build:
       context: .
       target: builder
-      args:
-        DATABASE_URL: ${DATABASE_URL}
-        JWT_SECRET: ${JWT_SECRET}
-        AUTH_SECRET: ${AUTH_SECRET}
     environment:
       DATABASE_URL: ${DATABASE_URL}
     networks:
@@ -24,10 +20,6 @@ services:
     build:
       context: .
       target: builder
-      args:
-        DATABASE_URL: ${DATABASE_URL}
-        JWT_SECRET: ${JWT_SECRET}
-        AUTH_SECRET: ${AUTH_SECRET}
     environment:
       DATABASE_URL: ${DATABASE_URL}
     networks:
@@ -40,9 +32,6 @@ services:
       context: .
       dockerfile: Dockerfile
       args:
-        DATABASE_URL: ${DATABASE_URL}
-        JWT_SECRET: ${JWT_SECRET}
-        AUTH_SECRET: ${AUTH_SECRET}
         NEXT_PUBLIC_MIDTRANS_CLIENT_KEY: ${NEXT_PUBLIC_MIDTRANS_CLIENT_KEY}
         NEXT_PUBLIC_MIDTRANS_IS_PRODUCTION: ${NEXT_PUBLIC_MIDTRANS_IS_PRODUCTION}
     restart: unless-stopped
@@ -52,7 +41,9 @@ services:
       NODE_ENV: production
       DATABASE_URL: ${DATABASE_URL}
       JWT_SECRET: ${JWT_SECRET}
+      # Either one is accepted (src/env.ts); set whichever is configured.
       AUTH_SECRET: ${AUTH_SECRET}
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
       # Payment gateway (Midtrans)
       MIDTRANS_SERVER_KEY: ${MIDTRANS_SERVER_KEY}
       MIDTRANS_CLIENT_KEY: ${MIDTRANS_CLIENT_KEY}

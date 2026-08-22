@@ -14,19 +14,15 @@ FROM base AS builder
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# Placeholder values so env validation (imported by next.config.ts) passes
-# at build time. Real values are injected at runtime via environment vars.
-ARG DATABASE_URL=postgresql://user:password@localhost:5432/db
-ARG JWT_SECRET=build-time-placeholder-secret-please-override-32
-ARG AUTH_SECRET=build-time-placeholder-secret-please-override-32
 # NEXT_PUBLIC_* vars are inlined into the client bundle at build time, so
 # they must be passed as build args (see docker-compose.yml build.args).
+# Secrets (DATABASE_URL, JWT_SECRET, AUTH_SECRET) are NOT needed here: `next
+# build` runs in NEXT_PHASE=phase-production-build, and src/env.ts falls
+# back to placeholders in that phase. Real secrets are only required when
+# the app actually starts (`next start`), injected via runtime environment.
 ARG NEXT_PUBLIC_MIDTRANS_CLIENT_KEY=
 ARG NEXT_PUBLIC_MIDTRANS_IS_PRODUCTION=false
-ENV DATABASE_URL=$DATABASE_URL \
-  JWT_SECRET=$JWT_SECRET \
-  AUTH_SECRET=$AUTH_SECRET \
-  NEXT_PUBLIC_MIDTRANS_CLIENT_KEY=$NEXT_PUBLIC_MIDTRANS_CLIENT_KEY \
+ENV NEXT_PUBLIC_MIDTRANS_CLIENT_KEY=$NEXT_PUBLIC_MIDTRANS_CLIENT_KEY \
   NEXT_PUBLIC_MIDTRANS_IS_PRODUCTION=$NEXT_PUBLIC_MIDTRANS_IS_PRODUCTION \
   NEXT_TELEMETRY_DISABLED=1
 

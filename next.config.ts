@@ -1,11 +1,17 @@
 import type { NextConfig } from 'next';
-
-// Validate environment variables at startup. This will throw a clear error
-// and stop the process if any required env var is missing or invalid.
-import '@/env';
+import { PHASE_PRODUCTION_BUILD } from 'next/constants';
 
 const nextConfig: NextConfig = {
   output: 'standalone',
 };
 
-export default nextConfig;
+export default async function config(phase: string) {
+  // Secrets aren't available yet during `next build` in Docker (they're
+  // only injected at container runtime), so skip eager validation here.
+  // `next dev` / `next start` still validate env on startup as normal.
+  if (phase !== PHASE_PRODUCTION_BUILD) {
+    await import('@/env');
+  }
+
+  return nextConfig;
+}
