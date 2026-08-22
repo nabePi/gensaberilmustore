@@ -8,6 +8,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
+import { CitySelect } from '@/components/ui/CitySelect';
 import { formatCurrency } from '@/lib/format';
 import { btnOutline, btnSolid, inputBase } from '@/lib/styles';
 
@@ -462,17 +463,14 @@ export default function CheckoutPage() {
                   ) : null}
                 </div>
                 <div className="flex flex-col gap-1">
-                  <label className="text-xs font-medium text-neutral-600">Kota</label>
-                  <select {...register('cityId')} className={inputBase} defaultValue="">
-                    <option value="" disabled>
-                      Pilih kota
-                    </option>
-                    {cities.map((city) => (
-                      <option key={city.id} value={city.id}>
-                        {city.name}, {city.province}
-                      </option>
-                    ))}
-                  </select>
+                  <label className="text-xs font-medium text-neutral-600">Kota / Kabupaten</label>
+                  <CitySelect
+                    cities={cities}
+                    value={selectedCityId ?? ''}
+                    onChange={(cityId) => setValue('cityId', cityId, { shouldValidate: true })}
+                    placeholder="Pilih Kota / Kabupaten"
+                    hasError={Boolean(errors.cityId)}
+                  />
                   {errors.cityId ? (
                     <p className="text-xs text-red">{errors.cityId.message}</p>
                   ) : null}
