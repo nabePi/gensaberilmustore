@@ -1,0 +1,57 @@
+# Changelog
+
+## [0.2.0](https://github.com/nabePi/gensaberilmustore/compare/v0.1.0...v0.2.0) (2026-08-22)
+
+
+### Features
+
+* **admin:** add category management page; fix homepage layout to match prototype ([#50](https://github.com/nabePi/gensaberilmustore/issues/50)) ([baf98ed](https://github.com/nabePi/gensaberilmustore/commit/baf98ed712dbaf974ebd632b693a31aab1a6282c))
+* **admin:** separate homepage hero banner config from sections ([829296a](https://github.com/nabePi/gensaberilmustore/commit/829296a15c34c812674e6cd6e687f5c4a9448a2d))
+* **auth:** normalize WhatsApp number to 62xxx on signup; fix duplicate product slug in seed ([6927bbc](https://github.com/nabePi/gensaberilmustore/commit/6927bbc0943e2d628b0b7aaba0939d57764dc4ab))
+* **auth:** support legacy MD5 passwords with auto-upgrade to bcrypt ([972fd73](https://github.com/nabePi/gensaberilmustore/commit/972fd730ecd993db4bfb291212905512e91593cd))
+* **deploy:** add Dockerfile and docker-compose for Dokploy deployment ([a2ba900](https://github.com/nabePi/gensaberilmustore/commit/a2ba900cc6ce896f67eea0c7ca7b5de5c763f980))
+* dynamic homepage sections managed via admin ([#48](https://github.com/nabePi/gensaberilmustore/issues/48)) ([63008ca](https://github.com/nabePi/gensaberilmustore/commit/63008cafd65391399628266d852fee4614e7681a))
+* **GEN-101..103:** cart endpoints ([#22](https://github.com/nabePi/gensaberilmustore/issues/22)) ([c30d0a5](https://github.com/nabePi/gensaberilmustore/commit/c30d0a56ed1e2d106bed295f9c2178153106db9c))
+* **GEN-104..110:** cart delete/merge and orders API ([#23](https://github.com/nabePi/gensaberilmustore/issues/23)) ([3348b90](https://github.com/nabePi/gensaberilmustore/commit/3348b90c1b9082c7b63c740ed2771821bc2cb194))
+* **GEN-111..115:** admin order status workflow, CSV export, and shipping cities API ([#24](https://github.com/nabePi/gensaberilmustore/issues/24)) ([9f7e557](https://github.com/nabePi/gensaberilmustore/commit/9f7e557d62f3c6870357cb8d96998efd2f573ddf))
+* **GEN-116..123:** member profile and receiver management endpoints ([#26](https://github.com/nabePi/gensaberilmustore/issues/26)) ([7354acf](https://github.com/nabePi/gensaberilmustore/commit/7354acf38d8ae3e39e6d3ddafdbb8860480242e6))
+* **GEN-124..134:** storefront frontend pages ([#27](https://github.com/nabePi/gensaberilmustore/issues/27)) ([172ca7d](https://github.com/nabePi/gensaberilmustore/commit/172ca7d896b6be3150f9c7757130699ae13a95cc))
+* **GEN-135..142:** member area (dashboard, profile, orders, affiliate, receivers) ([#28](https://github.com/nabePi/gensaberilmustore/issues/28)) ([3ec5033](https://github.com/nabePi/gensaberilmustore/commit/3ec5033f1c03f5d3b20f37a1ad2a7326ac21dcf3))
+* **GEN-143..150:** admin panel frontend ([#29](https://github.com/nabePi/gensaberilmustore/issues/29)) ([b43e1c7](https://github.com/nabePi/gensaberilmustore/commit/b43e1c7d305a72e6bf6b157876289735e772254f))
+* **GEN-151..157:** pos, affiliate admin, reports, config, and settings pages ([#30](https://github.com/nabePi/gensaberilmustore/issues/30)) ([7e25ff3](https://github.com/nabePi/gensaberilmustore/commit/7e25ff312abb1aad4a0ed4966ffab15e984599dc))
+* **GEN-158-162:** midtrans snap payment integration ([#32](https://github.com/nabePi/gensaberilmustore/issues/32)) ([ee4af21](https://github.com/nabePi/gensaberilmustore/commit/ee4af21487ea8d6745f4c2f5a29ebcfe2b9051ee))
+* **GEN-163..172:** affiliate join, tracking, commission, and payouts ([#33](https://github.com/nabePi/gensaberilmustore/issues/33)) ([4f255e9](https://github.com/nabePi/gensaberilmustore/commit/4f255e99040733d43862745b52cfb0b84ee601e9))
+* **GEN-173..180:** notification system with email delivery and retry ([#34](https://github.com/nabePi/gensaberilmustore/issues/34)) ([65970e1](https://github.com/nabePi/gensaberilmustore/commit/65970e16c6675fbacaebad02ef21e5528ba8338e))
+* **GEN-181..185:** admin settings, config, and uploads endpoints ([#35](https://github.com/nabePi/gensaberilmustore/issues/35)) ([a2d5e14](https://github.com/nabePi/gensaberilmustore/commit/a2d5e1415c1e8d69aea6eef6d8b09596945d5c35))
+* **GEN-186..194:** admin reports and analytics endpoints ([#36](https://github.com/nabePi/gensaberilmustore/issues/36)) ([109aa61](https://github.com/nabePi/gensaberilmustore/commit/109aa61ba5abc770ac589f27a2c359afc91b6701))
+* **GEN-216:** add POST /api/vouchers/validate endpoint ([#25](https://github.com/nabePi/gensaberilmustore/issues/25)) ([9f4ad89](https://github.com/nabePi/gensaberilmustore/commit/9f4ad897b16ac661e28d4dd4010604dffc3903ed))
+* **GEN-218:** admin voucher management page ([#31](https://github.com/nabePi/gensaberilmustore/issues/31)) ([724de7e](https://github.com/nabePi/gensaberilmustore/commit/724de7e968e145c6811608a1918c733cee8460fa))
+* **GEN-65:** add local PostgreSQL env example and setup docs ([#1](https://github.com/nabePi/gensaberilmustore/issues/1)) ([9fcd248](https://github.com/nabePi/gensaberilmustore/commit/9fcd248c02fe45d6b297f38cd754fcd2c2b2c601))
+* **GEN-66:** setup Prisma ORM + singleton client ([#2](https://github.com/nabePi/gensaberilmustore/issues/2)) ([5df75d9](https://github.com/nabePi/gensaberilmustore/commit/5df75d9833154dee9ab3810f9a2a2ae18b681fde))
+* **GEN-67:** setup Tailwind CSS + design system dari prototype ([#3](https://github.com/nabePi/gensaberilmustore/issues/3)) ([a6e77f8](https://github.com/nabePi/gensaberilmustore/commit/a6e77f86c8d533e3f20f41348737137bc11bf2ca))
+* **GEN-69:** setup env validation with zod and complete .env.example ([#5](https://github.com/nabePi/gensaberilmustore/issues/5)) ([ed5f6cc](https://github.com/nabePi/gensaberilmustore/commit/ed5f6cc2f2813ccfb9fb3107392ae7e5bb152e5e))
+* **GEN-74:** Prisma schema - User, Session, PasswordResetToken ([#7](https://github.com/nabePi/gensaberilmustore/issues/7)) ([e475d09](https://github.com/nabePi/gensaberilmustore/commit/e475d099d45e4d054d736a1103b490f4806ec7c9))
+* **GEN-75:** prisma schema - product, category, tag, productimage ([#8](https://github.com/nabePi/gensaberilmustore/issues/8)) ([71a0f2a](https://github.com/nabePi/gensaberilmustore/commit/71a0f2a75b974cdc78ca58c4b57ac7ff026d11bf))
+* **GEN-76:** prisma schema - Cart, CartItem (guest + member) ([#9](https://github.com/nabePi/gensaberilmustore/issues/9)) ([4161465](https://github.com/nabePi/gensaberilmustore/commit/416146526dfc40d33c80e65a997b6564726041cf))
+* **GEN-77:** prisma schema - Order, OrderItem, OrderStatusHistory ([#10](https://github.com/nabePi/gensaberilmustore/issues/10)) ([7c73453](https://github.com/nabePi/gensaberilmustore/commit/7c73453198380a8dea62d25199b214f26272857f))
+* **GEN-78,79,80,81,82,83,215:** stage 2 schema batch + seed data ([#11](https://github.com/nabePi/gensaberilmustore/issues/11)) ([6388979](https://github.com/nabePi/gensaberilmustore/commit/6388979b453c77806fcab66ac6ec659f20fb6ae5))
+* **GEN-84:** add member registration endpoint ([#12](https://github.com/nabePi/gensaberilmustore/issues/12)) ([2dee186](https://github.com/nabePi/gensaberilmustore/commit/2dee1867a1e297d5a9c4549d5f4f46d3d7affcf8))
+* **GEN-85:** add member login endpoint with rate limiting ([#13](https://github.com/nabePi/gensaberilmustore/issues/13)) ([fc16229](https://github.com/nabePi/gensaberilmustore/commit/fc16229474542656e94871418f0dc145332721c2))
+* **GEN-86:** add member logout endpoint ([#14](https://github.com/nabePi/gensaberilmustore/issues/14)) ([b7905d6](https://github.com/nabePi/gensaberilmustore/commit/b7905d6ec20b93e796cd7749ef7dffe64b39ba3e))
+* **GEN-87..91:** session, password reset, admin login, and auth middleware ([#20](https://github.com/nabePi/gensaberilmustore/issues/20)) ([5eecd2a](https://github.com/nabePi/gensaberilmustore/commit/5eecd2a012afeeeeabc26889662138efe115c321))
+* **GEN-92..100:** product catalog API ([#21](https://github.com/nabePi/gensaberilmustore/issues/21)) ([e79c9eb](https://github.com/nabePi/gensaberilmustore/commit/e79c9eb4341410211224912150fcee9630e5b7a5))
+* kids section, dynamic config, product form enhancements ([942be11](https://github.com/nabePi/gensaberilmustore/commit/942be11808478e5fe4093ff4c7bfc31589eec6c8))
+* multi-image clickable banners with carousel and R2 upload ([#47](https://github.com/nabePi/gensaberilmustore/issues/47)) ([3956d46](https://github.com/nabePi/gensaberilmustore/commit/3956d46d77c4d5483472bbeedf2caac698fc003b))
+* optional checkout email, tracking number for shipped orders, bank dropdown on affiliate join ([8549671](https://github.com/nabePi/gensaberilmustore/commit/85496710e1e62091001277dbe3f2d7072c513ff3))
+* **seed:** replace sample products with 239 Gensa Berilmu products ([b04e700](https://github.com/nabePi/gensaberilmustore/commit/b04e70016040ecaddff717570f7bb03214b7e91d))
+* support Cloudflare R2 storage for product, avatar, and misc images ([#37](https://github.com/nabePi/gensaberilmustore/issues/37)) ([beceafb](https://github.com/nabePi/gensaberilmustore/commit/beceafbe1486d992c36a6057c595f405475ec4e6))
+
+
+### Bug Fixes
+
+* **admin:** make board order cards clickable without triggering drag ([#46](https://github.com/nabePi/gensaberilmustore/issues/46)) ([dd870ee](https://github.com/nabePi/gensaberilmustore/commit/dd870ee75c51968bba964cf80137e79f8b654087))
+* **admin:** prevent layout overflow and repair board data load ([#45](https://github.com/nabePi/gensaberilmustore/issues/45)) ([5f0938f](https://github.com/nabePi/gensaberilmustore/commit/5f0938f71526f9d03961c259c48696e867adb764))
+* **deploy:** skip strict env validation during next build ([031bec3](https://github.com/nabePi/gensaberilmustore/commit/031bec306fe79a7467107e56e3ee1e772f2150ee))
+* **env:** treat empty-string env vars as unset ([6375f19](https://github.com/nabePi/gensaberilmustore/commit/6375f1984f0c11ed61f1035249383b3e888a0d94))
+* **middleware:** whitelist /admin/login to prevent redirect loop ([#39](https://github.com/nabePi/gensaberilmustore/issues/39)) ([f1d838e](https://github.com/nabePi/gensaberilmustore/commit/f1d838eec0c4e0c16cc08c1aa45402b30ce7087b))
+* **store:** match homepage carousel and product card to prototype ([#49](https://github.com/nabePi/gensaberilmustore/issues/49)) ([86364ff](https://github.com/nabePi/gensaberilmustore/commit/86364ff02ffb4af4a6e2a29cc714a0626ec6c581))
