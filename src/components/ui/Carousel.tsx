@@ -9,12 +9,15 @@ function visibleCount(width: number) {
   return 6;
 }
 
+const DRAG_THRESHOLD = 10;
+const SWIPE_THRESHOLD = 40;
+
 export function Carousel({ children }: { children: ReactNode }) {
   const trackRef = useRef<HTMLDivElement>(null);
   const [index, setIndex] = useState(0);
   const [translateX, setTranslateX] = useState(0);
   const [count, setCount] = useState(0);
-  const dragRef = useRef({ dragging: false, startX: 0 });
+  const dragRef = useRef({ dragging: false, captured: false, startX: 0 });
 
   function step() {
     const track = trackRef.current;
@@ -81,21 +84,33 @@ export function Carousel({ children }: { children: ReactNode }) {
         <div
           ref={trackRef}
           onPointerDown={(event) => {
-            event.currentTarget.setPointerCapture(event.pointerId);
-            dragRef.current = { dragging: true, startX: event.clientX };
+            dragRef.current = { dragging: true, captured: false, startX: event.clientX };
+          }}
+          onPointerMove={(event) => {
+            if (!dragRef.current.dragging || dragRef.current.captured) return;
+            const diff = event.clientX - dragRef.current.startX;
+            if (Math.abs(diff) >= DRAG_THRESHOLD) {
+              dragRef.current.captured = true;
+              event.currentTarget.setPointerCapture(event.pointerId);
+            }
           }}
           onPointerUp={(event) => {
             if (!dragRef.current.dragging) return;
+            const wasCaptured = dragRef.current.captured;
             dragRef.current.dragging = false;
+            dragRef.current.captured = false;
+            if (!wasCaptured) return;
             const diff = event.clientX - dragRef.current.startX;
-            if (diff < -40) goTo(index + 1);
-            else if (diff > 40) goTo(index - 1);
+            if (diff < -SWIPE_THRESHOLD) goTo(index + 1);
+            else if (diff > SWIPE_THRESHOLD) goTo(index - 1);
           }}
           onPointerCancel={() => {
             dragRef.current.dragging = false;
+            dragRef.current.captured = false;
           }}
           onPointerLeave={() => {
             dragRef.current.dragging = false;
+            dragRef.current.captured = false;
           }}
           style={{ transform: `translateX(-${translateX}px)`, touchAction: 'pan-y' }}
           className="flex gap-4 transition-transform duration-[450ms] ease-[cubic-bezier(0.4,0,0.2,1)] [&>*]:min-w-0 [&>*]:shrink-0 [&>*]:basis-[calc((100%-80px)/6)] max-[1024px]:[&>*]:basis-[calc((100%-48px)/4)] max-[640px]:[&>*]:basis-[calc((100%-16px)/2)]"
