@@ -4,31 +4,10 @@ import { ProductCard } from '@/components/product/ProductCard';
 import { BannerCarousel } from '@/components/ui/BannerCarousel';
 import { Carousel } from '@/components/ui/Carousel';
 import { SectionHead } from '@/components/ui/SectionHead';
+import { BLOG_POSTS } from '@/lib/blog';
 import { getHomepageData } from '@/server/homepage/data';
 
-const BLOG_POSTS = [
-  {
-    tag: 'Resensi',
-    title: '5 Rekomendasi Buku Islami untuk Menemani Ramadhan',
-    excerpt: 'Kumpulan buku terbaik untuk mengisi bulan penuh berkah dengan ilmu dan hikmah.',
-    author: 'Redaksi',
-    date: '5 Jan 2026',
-  },
-  {
-    tag: 'Resensi',
-    title: 'Tips Menumbuhkan Minat Baca pada Anak Sejak Dini',
-    excerpt: 'Strategi sederhana orang tua agar si kecil jatuh cinta pada buku.',
-    author: 'Redaksi',
-    date: '3 Jan 2026',
-  },
-  {
-    tag: 'Resensi',
-    title: 'Mengenal Karya-Karya Ulama Klasik yang Wajib Dibaca',
-    excerpt: 'Panduan memilih rujukan Islam klasik yang relevan untuk kehidupan modern.',
-    author: 'Redaksi',
-    date: '17 Jan 2026',
-  },
-];
+const HOMEPAGE_BLOG_POSTS = BLOG_POSTS.slice(0, 3);
 
 export default async function HomePage() {
   const { banners, sections } = await getHomepageData();
@@ -114,17 +93,22 @@ export default async function HomePage() {
       ))}
 
       <section>
-        <SectionHead title="Blog Kami" subtitle="Kabar, tips, dan rekomendasi dari GenSa Berilmu" />
+        <SectionHead
+          title="Blog Kami"
+          subtitle="Kabar, tips, dan rekomendasi dari GenSa Berilmu"
+          viewAllHref="/blog"
+          viewAllLabel="Baca Lainnya"
+        />
         <div className="grid gap-5 sm:grid-cols-3">
-          {BLOG_POSTS.map((post) => (
+          {HOMEPAGE_BLOG_POSTS.map((post) => (
             <Link
-              key={post.title}
-              href="#"
+              key={post.slug}
+              href={`/blog/${post.slug}`}
               className="flex flex-col overflow-hidden rounded-sm border border-neutral-200"
             >
               <div className="relative aspect-[16/10] bg-neutral-100">
                 <span className="absolute left-2.5 top-2.5 rounded-full bg-brand px-2.5 py-1 text-[11px] font-bold text-white">
-                  {post.tag}
+                  {post.tags[0]}
                 </span>
               </div>
               <div className="flex flex-1 flex-col gap-2 px-4 py-3.5">

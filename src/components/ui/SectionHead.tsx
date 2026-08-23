@@ -4,10 +4,12 @@ export function SectionHead({
   title,
   subtitle,
   viewAllHref,
+  viewAllLabel = 'Lihat Semua',
 }: {
   title: string;
   subtitle?: string;
   viewAllHref?: string;
+  viewAllLabel?: string;
 }) {
   return (
     <div className="mb-5 flex items-start justify-between gap-4">
@@ -20,7 +22,7 @@ export function SectionHead({
           href={viewAllHref}
           className="flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border border-neutral-200 px-4 py-2 text-sm font-semibold text-foreground hover:bg-neutral-50"
         >
-          Lihat Semua <span>&rarr;</span>
+          {viewAllLabel} <span>&rarr;</span>
         </Link>
       ) : null}
     </div>
