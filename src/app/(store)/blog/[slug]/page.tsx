@@ -2,10 +2,10 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
-import { ShareButton } from '@/components/blog/ShareButton';
 import { ProductCard } from '@/components/product/ProductCard';
 import { Carousel } from '@/components/ui/Carousel';
 import { SectionHead } from '@/components/ui/SectionHead';
+import { ShareButton } from '@/components/ui/ShareButton';
 import { BLOG_POSTS, getBlogPostBySlug } from '@/lib/blog';
 import { getHomepageData } from '@/server/homepage/data';
 

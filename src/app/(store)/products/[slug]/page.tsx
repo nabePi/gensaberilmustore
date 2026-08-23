@@ -7,6 +7,7 @@ import { ProductCard } from '@/components/product/ProductCard';
 import { ProductGallery } from '@/components/product/ProductGallery';
 import { ProductTabs } from '@/components/product/ProductTabs';
 import { Carousel } from '@/components/ui/Carousel';
+import { ShareButton } from '@/components/ui/ShareButton';
 import { formatCurrency } from '@/lib/format';
 import { SITE_URL } from '@/lib/site';
 import { badgeBase } from '@/lib/styles';
@@ -99,7 +100,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }}
       />
-      <nav className="mb-6 flex items-center gap-2 text-sm text-neutral-500">
+      <nav className="mb-6 hidden items-center gap-2 text-sm text-neutral-500 lg:flex">
         <Link href="/" className="hover:text-brand">
           Beranda
         </Link>
@@ -123,7 +124,10 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
             </span>
           ) : null}
 
-          <h1 className="text-2xl font-bold text-foreground lg:text-3xl">{product.title}</h1>
+          <div className="flex items-start justify-between gap-4">
+            <h1 className="text-2xl font-bold text-foreground lg:text-3xl">{product.title}</h1>
+            <ShareButton title={product.title} text={product.subtitle ?? undefined} />
+          </div>
           {product.subtitle ? <p className="text-sm text-neutral-500">{product.subtitle}</p> : null}
           {product.author ? (
             <p className="text-sm text-neutral-600">Oleh {product.author}</p>
