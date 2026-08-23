@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Fredoka, Source_Sans_3 } from 'next/font/google';
 import type { ReactNode } from 'react';
 
@@ -54,6 +54,10 @@ export const metadata: Metadata = {
     title: SITE_NAME,
     description: SITE_DESCRIPTION,
   },
+};
+
+export const viewport: Viewport = {
+  themeColor: '#95271b',
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
