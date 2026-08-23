@@ -32,7 +32,7 @@ const SOCIAL_HOVER: Record<string, string> = {
 
 export function SiteFooter() {
   return (
-    <footer className="mt-16 bg-[#f4f5f7]">
+    <footer className="mt-16 hidden bg-[#f4f5f7] lg:block">
       <div className="container-prototype grid grid-cols-1 gap-8 pt-12 pb-8 sm:grid-cols-2 lg:grid-cols-[1.8fr_1fr_1.2fr_0.9fr]">
         <div>
           <img src={LOGO_URL} alt="GenSa Berilmu" className="mb-4 h-[50px] w-auto object-contain" />
