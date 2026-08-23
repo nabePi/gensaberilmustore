@@ -8,8 +8,8 @@ const CONTACT_VCARD = [
   'N:Berilmu;GenSa;;;',
   'FN:GenSa Berilmu',
   'ORG:GenSa Berilmu',
-  'TEL;TYPE=WORK,VOICE:+6281234567890',
-  'EMAIL:info@gensaberilmu.co.id',
+  'TEL;TYPE=WORK,VOICE:+6281384804494',
+  'EMAIL:info@gensaberilmu.com',
   'END:VCARD',
 ].join('\n');
 
@@ -33,7 +33,7 @@ const LINKS: { href: string; label: string; primary?: boolean; icon: ReactNode }
     ),
   },
   {
-    href: 'https://wa.me/6281234567890',
+    href: 'https://wa.me/6281384804494',
     label: 'Pemesanan Via WhatsApp',
     icon: <path d="M21 11.5a8.5 8.5 0 01-8.5 8.5H4l1.6-4A8.5 8.5 0 1121 11.5z" />,
   },

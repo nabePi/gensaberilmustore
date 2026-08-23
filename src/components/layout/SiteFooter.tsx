@@ -46,17 +46,17 @@ export function SiteFooter() {
           <h4 className="mb-4 text-[13px] font-bold tracking-[0.04em] text-foreground">MENU</h4>
           <ul className="flex flex-col gap-3 text-sm text-neutral-500">
             <li>
-              <a href="#" className="hover:text-brand">
+              <a href="/terms" className="hover:text-brand">
                 Terms &amp; Conditions
               </a>
             </li>
             <li>
-              <a href="#" className="hover:text-brand">
+              <a href="/privacy" className="hover:text-brand">
                 Privacy Policy
               </a>
             </li>
             <li>
-              <a href="#" className="hover:text-brand">
+              <a href="/about" className="hover:text-brand">
                 Tentang Kami
               </a>
             </li>
@@ -91,8 +91,8 @@ export function SiteFooter() {
                   <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z" />
                 </svg>
               </span>
-              <a href="https://wa.me/6281234567890" className="hover:text-brand">
-                0812-3456-7890
+              <a href="https://wa.me/6281384804494" className="hover:text-brand">
+                0813-8480-4494
               </a>
             </li>
             <li className="flex items-center gap-2.5">
@@ -109,8 +109,8 @@ export function SiteFooter() {
                   <polyline points="22,6 12,13 2,6" />
                 </svg>
               </span>
-              <a href="mailto:info@gensaberilmu.co.id" className="hover:text-brand">
-                info@gensaberilmu.co.id
+              <a href="mailto:info@gensaberilmu.com" className="hover:text-brand">
+                info@gensaberilmu.com
               </a>
             </li>
             <li className="flex items-start gap-2.5">
@@ -127,7 +127,10 @@ export function SiteFooter() {
                   <circle cx="12" cy="10" r="3" />
                 </svg>
               </span>
-              <span>Jl. Raya Bogor KM. 29, Cibinong, Bogor 16912, Indonesia</span>
+              <span>
+                Jalan Margonda Raya Gang H. Fatimah Bawah Rt 02/014 No. 8, Kemiri Muka, Beji, Kota
+                Depok, Jawa Barat 16423
+              </span>
             </li>
           </ul>
         </div>
