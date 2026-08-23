@@ -141,7 +141,7 @@ export function SiteHeader({ initialUser }: { initialUser: HeaderUser | null }) 
   const mobileSearchPlaceholder = `Cari "${SEARCH_PLACEHOLDER_EXAMPLES[placeholderIndex]}"`;
 
   return (
-    <header className="sticky top-0 z-40 border-b border-neutral-200 bg-white">
+    <header className="sticky top-0 z-40 border-b border-neutral-200 bg-white shadow-sm lg:shadow-none">
       <div className="container-prototype flex items-center gap-3 py-2.5 lg:hidden">
         <Link href="/" className="shrink-0" aria-label="GenSa Berilmu">
           <Image src={gensaIcon} alt="GenSa Berilmu" className="h-9 w-9 object-contain" priority />
