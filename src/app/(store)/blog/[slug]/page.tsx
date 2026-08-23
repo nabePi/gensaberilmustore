@@ -52,18 +52,6 @@ export default async function BlogDetailPage({ params }: { params: Promise<{ slu
 
   return (
     <div className="container-prototype max-w-3xl py-10">
-      <nav className="mb-6 flex items-center gap-2 text-sm text-neutral-500">
-        <Link href="/" className="hover:text-brand">
-          Beranda
-        </Link>
-        <span>/</span>
-        <Link href="/blog" className="hover:text-brand">
-          Blog
-        </Link>
-        <span>/</span>
-        <span className="text-foreground">{post.title}</span>
-      </nav>
-
       <h1 className="text-2xl font-bold text-foreground md:text-3xl">{post.title}</h1>
       <div className="mt-3 flex gap-4 text-sm text-neutral-400">
         <span>{post.author}</span>
@@ -77,7 +65,8 @@ export default async function BlogDetailPage({ params }: { params: Promise<{ slu
         dangerouslySetInnerHTML={{ __html: post.contentHtml }}
       />
 
-      <div className="mt-8 flex flex-wrap gap-2 border-t border-neutral-200 pt-6">
+      <div className="mt-8 flex flex-wrap items-center gap-2">
+        <span className="text-sm text-neutral-400">Topik:</span>
         {post.tags.map((tag) => (
           <span
             key={tag}
