@@ -2,10 +2,20 @@
 
 import { useState } from 'react';
 
-import { dispatchCartUpdated } from '@/lib/cart-events';
+import { dispatchCartItemAdded } from '@/lib/cart-events';
 import { btnSolid } from '@/lib/styles';
 
-export function AddToCartPanel({ productId, stock }: { productId: string; stock: number }) {
+export function AddToCartPanel({
+  productId,
+  productTitle,
+  imageUrl,
+  stock,
+}: {
+  productId: string;
+  productTitle: string;
+  imageUrl: string | null;
+  stock: number;
+}) {
   const [quantity, setQuantity] = useState(1);
   const [status, setStatus] = useState<'idle' | 'loading' | 'added' | 'error'>('idle');
   const outOfStock = stock <= 0;
@@ -24,7 +34,12 @@ export function AddToCartPanel({ productId, stock }: { productId: string; stock:
         return;
       }
 
-      dispatchCartUpdated();
+      dispatchCartItemAdded({
+        imageUrl,
+        productTitle,
+        sourceRect:
+          document.getElementById('product-gallery-frame')?.getBoundingClientRect() ?? null,
+      });
       setStatus('added');
       setTimeout(() => setStatus('idle'), 1500);
     } catch {

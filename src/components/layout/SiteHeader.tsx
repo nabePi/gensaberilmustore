@@ -45,7 +45,9 @@ export function SiteHeader({ initialUser }: { initialUser: HeaderUser | null }) 
   const [suggestions, setSuggestions] = useState<SearchSuggestion[]>([]);
   const [suggestOpen, setSuggestOpen] = useState(false);
   const [placeholderIndex, setPlaceholderIndex] = useState(0);
+  const [badgeBump, setBadgeBump] = useState(false);
   const searchBoxRef = useRef<HTMLDivElement>(null);
+  const prevCartCountRef = useRef<number | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -68,6 +70,16 @@ export function SiteHeader({ initialUser }: { initialUser: HeaderUser | null }) 
       window.removeEventListener(CART_UPDATED_EVENT, refreshCart);
     };
   }, []);
+
+  useEffect(() => {
+    if (prevCartCountRef.current !== null && cartCount > prevCartCountRef.current) {
+      setBadgeBump(true);
+      const timer = setTimeout(() => setBadgeBump(false), 300);
+      prevCartCountRef.current = cartCount;
+      return () => clearTimeout(timer);
+    }
+    prevCartCountRef.current = cartCount;
+  }, [cartCount]);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -157,6 +169,7 @@ export function SiteHeader({ initialUser }: { initialUser: HeaderUser | null }) 
 
         <Link
           href="/cart"
+          id="cart-icon-mobile"
           aria-label="Keranjang"
           className="relative flex h-9 w-9 shrink-0 items-center justify-center"
         >
@@ -173,7 +186,9 @@ export function SiteHeader({ initialUser }: { initialUser: HeaderUser | null }) 
             <path d="M2.25 3h1.386c.51 0 .955.343 1.087.836l2.877 10.794A1.875 1.875 0 0 0 9.42 16.5h8.457c.828 0 1.556-.556 1.773-1.356l1.607-5.93A1.125 1.125 0 0 0 20.169 7.8H5.106M6 20.25a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Zm12.75 0a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z" />
           </svg>
           {cartCount > 0 ? (
-            <span className="absolute right-1 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-brand text-[9px] font-bold text-white">
+            <span
+              className={`absolute right-1 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-brand text-[9px] font-bold text-white transition-transform duration-300 ${badgeBump ? 'scale-125' : 'scale-100'}`}
+            >
               {cartCount > 99 ? '99+' : cartCount}
             </span>
           ) : null}
@@ -260,6 +275,7 @@ export function SiteHeader({ initialUser }: { initialUser: HeaderUser | null }) 
         <div className="ml-auto flex items-center gap-3">
           <Link
             href="/cart"
+            id="cart-icon-desktop"
             aria-label="Keranjang"
             className="relative flex h-10 w-10 items-center justify-center rounded-full hover:bg-neutral-50"
           >
@@ -276,7 +292,9 @@ export function SiteHeader({ initialUser }: { initialUser: HeaderUser | null }) 
               <path d="M2.25 3h1.386c.51 0 .955.343 1.087.836l2.877 10.794A1.875 1.875 0 0 0 9.42 16.5h8.457c.828 0 1.556-.556 1.773-1.356l1.607-5.93A1.125 1.125 0 0 0 20.169 7.8H5.106M6 20.25a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Zm12.75 0a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z" />
             </svg>
             {cartCount > 0 ? (
-              <span className="absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-brand text-[10px] font-bold text-white">
+              <span
+                className={`absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-brand text-[10px] font-bold text-white transition-transform duration-300 ${badgeBump ? 'scale-125' : 'scale-100'}`}
+              >
                 {cartCount > 99 ? '99+' : cartCount}
               </span>
             ) : null}

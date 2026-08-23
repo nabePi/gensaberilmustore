@@ -56,7 +56,14 @@ export function MobileRecommendedProducts() {
 
   const allLoaded = total !== null && items.length >= total;
 
-  if (pathname === '/products' || pathname === '/login' || pathname === '/signup') return null;
+  if (
+    pathname === '/products' ||
+    pathname === '/login' ||
+    pathname === '/signup' ||
+    pathname === '/cart' ||
+    pathname === '/checkout'
+  )
+    return null;
 
   return (
     <section className="container-prototype py-10 lg:hidden">

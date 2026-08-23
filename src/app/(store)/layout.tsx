@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 
+import { CartFlyToast } from '@/components/cart/CartFlyToast';
 import { BackToTop } from '@/components/layout/BackToTop';
 import { MobileBottomNav } from '@/components/layout/MobileBottomNav';
 import { SiteFooter } from '@/components/layout/SiteFooter';
@@ -18,6 +19,7 @@ export default async function StoreLayout({ children }: { children: ReactNode })
       <SiteFooter />
       <BackToTop />
       <MobileBottomNav isLoggedIn={!!user} />
+      <CartFlyToast />
     </div>
   );
 }

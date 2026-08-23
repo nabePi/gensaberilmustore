@@ -35,7 +35,10 @@ export function ProductGallery({ images, title }: { images: GalleryImage[]; titl
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="relative aspect-square overflow-hidden rounded-lg bg-neutral-100">
+      <div
+        id="product-gallery-frame"
+        className="relative aspect-square overflow-hidden rounded-lg bg-neutral-100"
+      >
         {images.length > 0 ? (
           <div
             onPointerDown={(event) => {

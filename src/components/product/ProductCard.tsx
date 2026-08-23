@@ -1,9 +1,9 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 
-import { dispatchCartUpdated } from '@/lib/cart-events';
+import { dispatchCartItemAdded } from '@/lib/cart-events';
 import { formatCurrency } from '@/lib/format';
 
 export type ProductCardData = {
@@ -29,6 +29,7 @@ const RIBBON_STYLES: Record<string, string> = {
 export function ProductCard({ product }: { product: ProductCardData }) {
   const [status, setStatus] = useState<'idle' | 'loading' | 'added' | 'error'>('idle');
   const [wishlisted, setWishlisted] = useState(false);
+  const imageContainerRef = useRef<HTMLDivElement>(null);
   const outOfStock = product.stock !== undefined && product.stock <= 0;
 
   async function handleAddToCart() {
@@ -45,7 +46,11 @@ export function ProductCard({ product }: { product: ProductCardData }) {
         return;
       }
 
-      dispatchCartUpdated();
+      dispatchCartItemAdded({
+        imageUrl: product.primaryImageUrl,
+        productTitle: product.title,
+        sourceRect: imageContainerRef.current?.getBoundingClientRect() ?? null,
+      });
       setStatus('added');
       setTimeout(() => setStatus('idle'), 1500);
     } catch {
@@ -55,7 +60,10 @@ export function ProductCard({ product }: { product: ProductCardData }) {
 
   return (
     <div className="flex w-full flex-col overflow-hidden rounded-sm border border-neutral-200 bg-white">
-      <div className="relative aspect-square w-full overflow-hidden bg-neutral-100">
+      <div
+        ref={imageContainerRef}
+        className="relative aspect-square w-full overflow-hidden bg-neutral-100"
+      >
         {product.ribbonType ? (
           <span
             className={`absolute left-0 top-0 z-10 rounded-br-sm px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-white ${RIBBON_STYLES[product.ribbonType] ?? 'bg-neutral-700'}`}

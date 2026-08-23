@@ -159,7 +159,12 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
             )}
           </p>
 
-          <AddToCartPanel productId={product.id} stock={product.stock} />
+          <AddToCartPanel
+            productId={product.id}
+            productTitle={product.title}
+            imageUrl={product.images[0]?.url ?? null}
+            stock={product.stock}
+          />
 
           <div className="mt-4 rounded-lg border border-neutral-200 bg-white p-4">
             <h3 className="mb-3 text-sm font-bold text-foreground">Spesifikasi</h3>
