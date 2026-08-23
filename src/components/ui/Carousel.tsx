@@ -17,6 +17,8 @@ export function Carousel({ children }: { children: ReactNode }) {
   const [index, setIndex] = useState(0);
   const [translateX, setTranslateX] = useState(0);
   const [count, setCount] = useState(0);
+  const [dragOffset, setDragOffset] = useState(0);
+  const [transitionOn, setTransitionOn] = useState(true);
   const dragRef = useRef({ dragging: false, captured: false, startX: 0 });
 
   function step() {
@@ -87,12 +89,19 @@ export function Carousel({ children }: { children: ReactNode }) {
             dragRef.current = { dragging: true, captured: false, startX: event.clientX };
           }}
           onPointerMove={(event) => {
-            if (!dragRef.current.dragging || dragRef.current.captured) return;
+            if (!dragRef.current.dragging) return;
             const diff = event.clientX - dragRef.current.startX;
-            if (Math.abs(diff) >= DRAG_THRESHOLD) {
+            if (!dragRef.current.captured) {
+              if (Math.abs(diff) < DRAG_THRESHOLD) return;
               dragRef.current.captured = true;
-              event.currentTarget.setPointerCapture(event.pointerId);
+              setTransitionOn(false);
+              try {
+                event.currentTarget.setPointerCapture(event.pointerId);
+              } catch {
+                // Pointer may no longer be active (e.g. a very fast flick).
+              }
             }
+            setDragOffset(diff);
           }}
           onPointerUp={(event) => {
             if (!dragRef.current.dragging) return;
@@ -101,19 +110,33 @@ export function Carousel({ children }: { children: ReactNode }) {
             dragRef.current.captured = false;
             if (!wasCaptured) return;
             const diff = event.clientX - dragRef.current.startX;
+            setDragOffset(0);
+            setTransitionOn(true);
             if (diff < -SWIPE_THRESHOLD) goTo(index + 1);
             else if (diff > SWIPE_THRESHOLD) goTo(index - 1);
           }}
           onPointerCancel={() => {
             dragRef.current.dragging = false;
-            dragRef.current.captured = false;
+            if (dragRef.current.captured) {
+              dragRef.current.captured = false;
+              setDragOffset(0);
+              setTransitionOn(true);
+            }
           }}
           onPointerLeave={() => {
             dragRef.current.dragging = false;
-            dragRef.current.captured = false;
+            if (dragRef.current.captured) {
+              dragRef.current.captured = false;
+              setDragOffset(0);
+              setTransitionOn(true);
+            }
           }}
-          style={{ transform: `translateX(-${translateX}px)`, touchAction: 'pan-y' }}
-          className="flex gap-4 transition-transform duration-[450ms] ease-[cubic-bezier(0.4,0,0.2,1)] [&>*]:min-w-0 [&>*]:shrink-0 [&>*]:basis-[calc((100%-80px)/6)] max-[1024px]:[&>*]:basis-[calc((100%-48px)/4)] max-[640px]:[&>*]:basis-[calc((100%-16px)/2)]"
+          style={{
+            transform: `translateX(calc(-${translateX}px + ${dragOffset}px))`,
+            transition: transitionOn ? 'transform 450ms cubic-bezier(0.4,0,0.2,1)' : 'none',
+            touchAction: 'pan-y',
+          }}
+          className="flex gap-4 [&>*]:min-w-0 [&>*]:shrink-0 [&>*]:basis-[calc((100%-80px)/6)] max-[1024px]:[&>*]:basis-[calc((100%-48px)/4)] max-[640px]:[&>*]:basis-[calc((100%-16px)/2)]"
         >
           {children}
         </div>
