@@ -1,8 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import type { ReactNode } from 'react';
 
-import { ProductCard } from '@/components/product/ProductCard';
+import { InfiniteProductGrid } from '@/components/product/InfiniteProductGrid';
 import { prisma } from '@/lib/db';
 import { btnOutline, btnSolid, inputBase } from '@/lib/styles';
 import { listProducts } from '@/server/products/list';
@@ -35,20 +34,14 @@ function getCategories() {
   });
 }
 
-function buildQueryString(filters: ResolvedFilters, overrides: Record<string, string | undefined>) {
-  const base: Record<string, string> = {};
-  if (filters.q) base.q = filters.q;
-  if (filters.category) base.category = filters.category;
-  if (filters.minPrice !== undefined) base.minPrice = String(filters.minPrice);
-  if (filters.maxPrice !== undefined) base.maxPrice = String(filters.maxPrice);
-  if (filters.inStock) base.inStock = filters.inStock;
-  if (filters.sort !== 'newest') base.sort = filters.sort;
-
-  const merged = { ...base, ...overrides };
+function buildFilterQueryString(filters: ResolvedFilters) {
   const params = new URLSearchParams();
-  for (const [key, value] of Object.entries(merged)) {
-    if (value) params.set(key, value);
-  }
+  if (filters.q) params.set('q', filters.q);
+  if (filters.category) params.set('category', filters.category);
+  if (filters.minPrice !== undefined) params.set('minPrice', String(filters.minPrice));
+  if (filters.maxPrice !== undefined) params.set('maxPrice', String(filters.maxPrice));
+  if (filters.inStock) params.set('inStock', filters.inStock);
+  if (filters.sort !== 'newest') params.set('sort', filters.sort);
   return params.toString();
 }
 
@@ -145,35 +138,6 @@ function FilterForm({
   );
 }
 
-function PaginationLink({
-  page,
-  disabled,
-  href,
-  children,
-}: {
-  page: number;
-  disabled: boolean;
-  href: string;
-  children: ReactNode;
-}) {
-  if (disabled) {
-    return (
-      <span className="inline-flex h-9 min-w-9 items-center justify-center rounded-sm border border-neutral-200 px-2 text-sm text-neutral-300">
-        {children}
-      </span>
-    );
-  }
-
-  return (
-    <Link
-      href={href}
-      className="inline-flex h-9 min-w-9 items-center justify-center rounded-sm border border-neutral-200 px-2 text-sm text-foreground hover:border-brand hover:text-brand"
-    >
-      {children}
-    </Link>
-  );
-}
-
 export async function generateMetadata({
   searchParams,
 }: {
@@ -237,8 +201,6 @@ export default async function ProductsPage({
     getCategories(),
   ]);
 
-  const totalPages = Math.max(1, Math.ceil(total / limit));
-
   return (
     <div className="container-prototype py-8">
       <div className="mb-6">
@@ -275,34 +237,15 @@ export default async function ProductsPage({
               </Link>
             </div>
           ) : (
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-              {items.map((product) => (
-                <ProductCard key={product.id} product={product} />
-              ))}
-            </div>
+            <InfiniteProductGrid
+              key={buildFilterQueryString(filters)}
+              initialItems={items}
+              initialPage={page}
+              initialTotal={total}
+              limit={limit}
+              queryString={buildFilterQueryString(filters)}
+            />
           )}
-
-          {totalPages > 1 ? (
-            <div className="mt-8 flex items-center justify-center gap-2">
-              <PaginationLink
-                page={page - 1}
-                disabled={page <= 1}
-                href={`/products?${buildQueryString(filters, { page: String(page - 1) })}`}
-              >
-                Sebelumnya
-              </PaginationLink>
-              <span className="px-2 text-sm text-neutral-500">
-                Halaman {page} dari {totalPages}
-              </span>
-              <PaginationLink
-                page={page + 1}
-                disabled={page >= totalPages}
-                href={`/products?${buildQueryString(filters, { page: String(page + 1) })}`}
-              >
-                Berikutnya
-              </PaginationLink>
-            </div>
-          ) : null}
         </div>
       </div>
     </div>

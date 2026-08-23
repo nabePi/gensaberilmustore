@@ -1,22 +1,30 @@
 'use client';
 
-import { usePathname } from 'next/navigation';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { ProductCard, type ProductCardData } from '@/components/product/ProductCard';
-
-const PAGE_LIMIT = 12;
 
 type ProductsResponse = {
   items: ProductCardData[];
   total: number;
 };
 
-export function MobileRecommendedProducts() {
-  const pathname = usePathname();
-  const [items, setItems] = useState<ProductCardData[]>([]);
-  const [page, setPage] = useState(0);
-  const [total, setTotal] = useState<number | null>(null);
+export function InfiniteProductGrid({
+  initialItems,
+  initialPage,
+  initialTotal,
+  limit,
+  queryString,
+}: {
+  initialItems: ProductCardData[];
+  initialPage: number;
+  initialTotal: number;
+  limit: number;
+  queryString: string;
+}) {
+  const [items, setItems] = useState(initialItems);
+  const [page, setPage] = useState(initialPage);
+  const [total, setTotal] = useState(initialTotal);
   const [loading, setLoading] = useState(false);
   const loadingRef = useRef(false);
   const sentinelRef = useRef<HTMLDivElement>(null);
@@ -28,7 +36,7 @@ export function MobileRecommendedProducts() {
 
     const nextPage = page + 1;
     try {
-      const response = await fetch(`/api/products?page=${nextPage}&limit=${PAGE_LIMIT}`);
+      const response = await fetch(`/api/products?${queryString}&page=${nextPage}&limit=${limit}`);
       if (!response.ok) return;
       const data: ProductsResponse = await response.json();
       setItems((current) => [...current, ...data.items]);
@@ -38,7 +46,7 @@ export function MobileRecommendedProducts() {
       loadingRef.current = false;
       setLoading(false);
     }
-  }, [page]);
+  }, [page, queryString, limit]);
 
   useEffect(() => {
     const sentinel = sentinelRef.current;
@@ -54,16 +62,11 @@ export function MobileRecommendedProducts() {
     return () => observer.disconnect();
   }, [loadNextPage]);
 
-  const allLoaded = total !== null && items.length >= total;
-
-  if (pathname === '/products') return null;
+  const allLoaded = items.length >= total;
 
   return (
-    <section className="container-prototype py-10 lg:hidden">
-      <h2 className="text-lg font-bold text-foreground">Rekomendasi Untukmu</h2>
-      <p className="mt-1 text-sm text-neutral-500">Jelajahi koleksi buku kami lainnya</p>
-
-      <div className="mt-5 grid grid-cols-2 gap-4 sm:grid-cols-3">
+    <div>
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
         {items.map((product) => (
           <ProductCard key={product.id} product={product} />
         ))}
@@ -71,9 +74,9 @@ export function MobileRecommendedProducts() {
 
       {!allLoaded ? (
         <div ref={sentinelRef} className="flex justify-center py-6">
-          {loading ? <span className="text-sm text-neutral-400">Memuat buku...</span> : null}
+          {loading ? <span className="text-sm text-neutral-400">Memuat produk...</span> : null}
         </div>
       ) : null}
-    </section>
+    </div>
   );
 }
