@@ -170,11 +170,10 @@ export function SiteHeader({ initialUser }: { initialUser: HeaderUser | null }) 
             strokeLinecap="round"
             strokeLinejoin="round"
           >
-            <path d="M6.331 8H17.67a2 2 0 0 1 1.977 2.304l-1.255 8.152A3 3 0 0 1 15.426 21H8.574a3 3 0 0 1-2.965-2.544l-1.255-8.152A2 2 0 0 1 6.331 8" />
-            <path d="M9 11V6a3 3 0 0 1 6 0v5" />
+            <path d="M2.25 3h1.386c.51 0 .955.343 1.087.836l2.877 10.794A1.875 1.875 0 0 0 9.42 16.5h8.457c.828 0 1.556-.556 1.773-1.356l1.607-5.93A1.125 1.125 0 0 0 20.169 7.8H5.106M6 20.25a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Zm12.75 0a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z" />
           </svg>
           {cartCount > 0 ? (
-            <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-red text-[9px] font-bold text-white">
+            <span className="absolute right-1 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-brand text-[9px] font-bold text-white">
               {cartCount > 99 ? '99+' : cartCount}
             </span>
           ) : null}
@@ -274,11 +273,10 @@ export function SiteHeader({ initialUser }: { initialUser: HeaderUser | null }) 
               strokeLinecap="round"
               strokeLinejoin="round"
             >
-              <path d="M6.331 8H17.67a2 2 0 0 1 1.977 2.304l-1.255 8.152A3 3 0 0 1 15.426 21H8.574a3 3 0 0 1-2.965-2.544l-1.255-8.152A2 2 0 0 1 6.331 8" />
-              <path d="M9 11V6a3 3 0 0 1 6 0v5" />
+              <path d="M2.25 3h1.386c.51 0 .955.343 1.087.836l2.877 10.794A1.875 1.875 0 0 0 9.42 16.5h8.457c.828 0 1.556-.556 1.773-1.356l1.607-5.93A1.125 1.125 0 0 0 20.169 7.8H5.106M6 20.25a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Zm12.75 0a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z" />
             </svg>
             {cartCount > 0 ? (
-              <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-brand text-[10px] font-bold text-white">
+              <span className="absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-brand text-[10px] font-bold text-white">
                 {cartCount > 99 ? '99+' : cartCount}
               </span>
             ) : null}
