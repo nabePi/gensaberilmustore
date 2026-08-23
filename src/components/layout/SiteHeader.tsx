@@ -1,9 +1,11 @@
 'use client';
 
+import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 
+import gensaIcon from '@/app/icon.png';
 import { CART_UPDATED_EVENT } from '@/lib/cart-events';
 import { formatCurrency } from '@/lib/format';
 import { btnOutline, btnSolid } from '@/lib/styles';
@@ -25,15 +27,24 @@ type SearchSuggestion = {
 const LOGO_URL =
   'https://d33tu7komhhdsg.cloudfront.net/fL0bTwfYBTXRta-Ne8XDN_vScOqHAKlW4IHMcivnhbI/auto/0/250/no/1/bG9jYWw6Ly8vYnVzaW5lc3MvMjAyMS0xMi9neTZlZThjZWUwOTI0MGUyNmFhYWNlL2FsYnVtcy9wcm9maWxlL3BkZnRvanBnbWUtMS1jdXRvdXQucG5n.webp';
 
+const SEARCH_PLACEHOLDER_EXAMPLES = [
+  'Sahabat Nabi',
+  'Komik Sahabat',
+  'Kisah 25 Nabi',
+  'Buku Anak Islami',
+  'Doa Sehari-hari',
+];
+const SEARCH_PLACEHOLDER_INTERVAL_MS = 2500;
+
 export function SiteHeader({ initialUser }: { initialUser: HeaderUser | null }) {
   const router = useRouter();
   const [user, setUser] = useState<HeaderUser | null>(initialUser);
   const [cartCount, setCartCount] = useState(0);
-  const [mobileOpen, setMobileOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [suggestions, setSuggestions] = useState<SearchSuggestion[]>([]);
   const [suggestOpen, setSuggestOpen] = useState(false);
+  const [placeholderIndex, setPlaceholderIndex] = useState(0);
   const searchBoxRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -56,6 +67,13 @@ export function SiteHeader({ initialUser }: { initialUser: HeaderUser | null }) 
       active = false;
       window.removeEventListener(CART_UPDATED_EVENT, refreshCart);
     };
+  }, []);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setPlaceholderIndex((index) => (index + 1) % SEARCH_PLACEHOLDER_EXAMPLES.length);
+    }, SEARCH_PLACEHOLDER_INTERVAL_MS);
+    return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
@@ -108,14 +126,67 @@ export function SiteHeader({ initialUser }: { initialUser: HeaderUser | null }) 
     router.refresh();
   }
 
+  const mobileSearchPlaceholder = `Cari "${SEARCH_PLACEHOLDER_EXAMPLES[placeholderIndex]}"`;
+
   return (
     <header className="sticky top-0 z-40 border-b border-neutral-200 bg-white">
-      <div className="container-prototype flex items-center gap-8 py-3.5">
+      <div className="container-prototype flex items-center gap-3 py-2.5 lg:hidden">
+        <Link href="/" className="shrink-0" aria-label="GenSa Berilmu">
+          <Image src={gensaIcon} alt="GenSa Berilmu" className="h-9 w-9 object-contain" priority />
+        </Link>
+
+        <form
+          onSubmit={handleSearchSubmit}
+          className="flex h-9 flex-1 items-center rounded-md border border-neutral-200 bg-white px-3 shadow-xs"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            className="h-4 w-4 shrink-0 text-neutral-400"
+            fill="currentColor"
+          >
+            <path d="M10 4a6 6 0 104.47 10.03l4.75 4.75 1.41-1.41-4.75-4.75A6 6 0 0010 4zm0 2a4 4 0 110 8 4 4 0 010-8z" />
+          </svg>
+          <input
+            type="text"
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder={mobileSearchPlaceholder}
+            className="w-full min-w-0 bg-transparent px-2 text-sm outline-none"
+          />
+        </form>
+
+        <Link
+          href="/cart"
+          aria-label="Keranjang"
+          className="relative flex h-9 w-9 shrink-0 items-center justify-center"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            width="22"
+            height="22"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M6.331 8H17.67a2 2 0 0 1 1.977 2.304l-1.255 8.152A3 3 0 0 1 15.426 21H8.574a3 3 0 0 1-2.965-2.544l-1.255-8.152A2 2 0 0 1 6.331 8" />
+            <path d="M9 11V6a3 3 0 0 1 6 0v5" />
+          </svg>
+          {cartCount > 0 ? (
+            <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-red text-[9px] font-bold text-white">
+              {cartCount > 99 ? '99+' : cartCount}
+            </span>
+          ) : null}
+        </Link>
+      </div>
+
+      <div className="container-prototype hidden items-center gap-8 py-3.5 lg:flex">
         <div className="flex items-center gap-8">
           <Link href="/" className="shrink-0">
             <img src={LOGO_URL} alt="GenSa Berilmu" className="h-[50px] w-auto object-contain" />
           </Link>
-          <nav className="hidden items-center gap-[22px] lg:flex">
+          <nav className="flex items-center gap-[22px]">
             <Link
               href="/"
               className="px-0.5 py-2 text-[15px] font-medium text-neutral-700 hover:text-brand"
@@ -139,7 +210,7 @@ export function SiteHeader({ initialUser }: { initialUser: HeaderUser | null }) 
           </nav>
         </div>
 
-        <div ref={searchBoxRef} className="relative hidden flex-1 md:block">
+        <div ref={searchBoxRef} className="relative flex-1">
           <form
             onSubmit={handleSearchSubmit}
             className="flex items-center rounded-md border border-neutral-200 bg-white px-4 py-2.5 shadow-xs"
@@ -214,7 +285,7 @@ export function SiteHeader({ initialUser }: { initialUser: HeaderUser | null }) 
           </Link>
 
           {user ? (
-            <div className="relative hidden md:block">
+            <div className="relative">
               <button
                 type="button"
                 onClick={() => setUserMenuOpen((open) => !open)}
@@ -242,7 +313,7 @@ export function SiteHeader({ initialUser }: { initialUser: HeaderUser | null }) 
               ) : null}
             </div>
           ) : (
-            <div className="hidden items-center gap-2 md:flex">
+            <div className="flex items-center gap-2">
               <Link href="/login" className={btnOutline}>
                 <svg
                   viewBox="0 0 24 24"
@@ -273,86 +344,8 @@ export function SiteHeader({ initialUser }: { initialUser: HeaderUser | null }) 
               </Link>
             </div>
           )}
-
-          <button
-            type="button"
-            aria-label="Menu"
-            onClick={() => setMobileOpen((open) => !open)}
-            className="flex h-10 w-10 flex-col items-center justify-center gap-1.5 lg:hidden"
-          >
-            <span className="h-0.5 w-5 bg-foreground" />
-            <span className="h-0.5 w-5 bg-foreground" />
-            <span className="h-0.5 w-5 bg-foreground" />
-          </button>
         </div>
       </div>
-
-      {mobileOpen ? (
-        <div className="border-t border-neutral-200 bg-white px-4 py-4 lg:hidden">
-          <form
-            onSubmit={handleSearchSubmit}
-            className="mb-4 flex items-center rounded-md border border-neutral-200 bg-white px-4 py-2.5 shadow-xs"
-          >
-            <input
-              type="text"
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              placeholder="Cari produk..."
-              className="w-full bg-transparent text-sm outline-none"
-            />
-          </form>
-          <nav className="flex flex-col gap-3">
-            <Link
-              href="/"
-              onClick={() => setMobileOpen(false)}
-              className="text-[15px] font-medium text-neutral-700"
-            >
-              Beranda
-            </Link>
-            <Link
-              href="/products"
-              onClick={() => setMobileOpen(false)}
-              className="text-[15px] font-medium text-neutral-700"
-            >
-              Produk
-            </Link>
-            {/* Sementara disembunyikan, nanti akan dimunculkan kembali
-            <Link
-              href="/kids"
-              onClick={() => setMobileOpen(false)}
-              className="text-[15px] font-medium text-neutral-700"
-            >
-              Buku Anak
-            </Link>
-            */}
-          </nav>
-          <div className="mt-4 flex flex-col gap-2">
-            {user ? (
-              <>
-                <Link
-                  href="/member/dashboard"
-                  onClick={() => setMobileOpen(false)}
-                  className={btnOutline}
-                >
-                  Dashboard
-                </Link>
-                <button type="button" onClick={handleLogout} className={btnSolid}>
-                  Keluar
-                </button>
-              </>
-            ) : (
-              <>
-                <Link href="/login" onClick={() => setMobileOpen(false)} className={btnOutline}>
-                  Masuk
-                </Link>
-                <Link href="/signup" onClick={() => setMobileOpen(false)} className={btnSolid}>
-                  Daftar
-                </Link>
-              </>
-            )}
-          </div>
-        </div>
-      ) : null}
     </header>
   );
 }
