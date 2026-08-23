@@ -138,7 +138,7 @@ export function SiteHeader({ initialUser }: { initialUser: HeaderUser | null }) 
     router.refresh();
   }
 
-  const mobileSearchPlaceholder = `Cari "${SEARCH_PLACEHOLDER_EXAMPLES[placeholderIndex]}"`;
+  const searchPlaceholder = `Cari "${SEARCH_PLACEHOLDER_EXAMPLES[placeholderIndex]}"`;
 
   return (
     <header className="sticky top-0 z-40 border-b border-neutral-200 bg-white shadow-sm lg:shadow-none">
@@ -162,7 +162,7 @@ export function SiteHeader({ initialUser }: { initialUser: HeaderUser | null }) 
             type="text"
             value={query}
             onChange={(event) => setQuery(event.target.value)}
-            placeholder={mobileSearchPlaceholder}
+            placeholder={searchPlaceholder}
             className="w-full min-w-0 bg-transparent px-2 text-sm outline-none"
           />
         </form>
@@ -241,7 +241,7 @@ export function SiteHeader({ initialUser }: { initialUser: HeaderUser | null }) 
               value={query}
               onChange={(event) => setQuery(event.target.value)}
               onFocus={() => suggestions.length > 0 && setSuggestOpen(true)}
-              placeholder="Cari produk, penulis, atau kategori..."
+              placeholder={searchPlaceholder}
               className="w-full bg-transparent px-3 text-sm outline-none"
             />
           </form>
