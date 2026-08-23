@@ -26,7 +26,7 @@ export function BackToTop() {
       type="button"
       onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
       aria-label="Kembali ke atas"
-      className={`fixed right-4 bottom-4 z-40 flex h-11 w-11 items-center justify-center rounded-full bg-brand text-white shadow-lg transition-colors hover:bg-[#c95d00] ${visibleOnDesktop ? '' : 'lg:hidden'}`}
+      className={`fixed right-4 bottom-20 z-40 flex h-11 w-11 items-center justify-center rounded-full bg-brand text-white shadow-lg transition-colors hover:bg-[#c95d00] lg:bottom-4 ${visibleOnDesktop ? '' : 'lg:hidden'}`}
     >
       <svg
         viewBox="0 0 24 24"
