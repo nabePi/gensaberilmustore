@@ -32,10 +32,11 @@ const BLOG_POSTS = [
 
 export default async function HomePage() {
   const { banners, sections } = await getHomepageData();
+  const heroMobileSlides = [...banners.HERO_MAIN, ...banners.HERO_SIDE_1, ...banners.HERO_SIDE_2];
 
   return (
     <div className="container-prototype py-8 space-y-14">
-      <section className="grid gap-4 lg:grid-cols-3">
+      <section className="hidden gap-4 lg:grid lg:grid-cols-3">
         <div className="relative aspect-[2/1] lg:col-span-2">
           {banners.HERO_MAIN.length > 0 ? (
             <BannerCarousel slides={banners.HERO_MAIN} className="h-full rounded-lg" />
@@ -68,6 +69,19 @@ export default async function HomePage() {
             )}
           </div>
         </div>
+      </section>
+
+      <section className="relative aspect-[2/1] lg:hidden">
+        {heroMobileSlides.length > 0 ? (
+          <BannerCarousel slides={heroMobileSlides} className="h-full rounded-lg" />
+        ) : (
+          <div className="flex h-full items-center justify-center rounded-lg bg-gradient-to-br from-brand to-brand-700 text-center text-white">
+            <div>
+              <p className="text-2xl font-bold">Selamat Datang di GenSa Berilmu</p>
+              <p className="mt-2 text-sm">Toko buku Islam dan produk keluarga muslim</p>
+            </div>
+          </div>
+        )}
       </section>
 
       {sections.map((section) => (
