@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 
+import { BackToTop } from '@/components/layout/BackToTop';
 import { SiteFooter } from '@/components/layout/SiteFooter';
 import { SiteHeader } from '@/components/layout/SiteHeader';
 import { MobileRecommendedProducts } from '@/components/product/MobileRecommendedProducts';
@@ -14,6 +15,7 @@ export default async function StoreLayout({ children }: { children: ReactNode })
       <main className="flex-1">{children}</main>
       <MobileRecommendedProducts />
       <SiteFooter />
+      <BackToTop />
     </div>
   );
 }
