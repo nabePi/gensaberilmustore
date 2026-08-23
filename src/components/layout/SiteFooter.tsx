@@ -1,3 +1,5 @@
+import Link from 'next/link';
+
 const LOGO_URL =
   'https://d33tu7komhhdsg.cloudfront.net/fL0bTwfYBTXRta-Ne8XDN_vScOqHAKlW4IHMcivnhbI/auto/0/250/no/1/bG9jYWw6Ly8vYnVzaW5lc3MvMjAyMS0xMi9neTZlZThjZWUwOTI0MGUyNmFhYWNlL2FsYnVtcy9wcm9maWxlL3BkZnRvanBnbWUtMS1jdXRvdXQucG5n.webp';
 
@@ -59,6 +61,11 @@ export function SiteFooter() {
               <a href="/about" className="hover:text-brand">
                 Tentang Kami
               </a>
+            </li>
+            <li>
+              <Link href="/blog" className="hover:text-brand">
+                Blog
+              </Link>
             </li>
             <li>
               <a href="#" className="hover:text-brand">

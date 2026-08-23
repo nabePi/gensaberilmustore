@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
+import { ShareButton } from '@/components/blog/ShareButton';
 import { ProductCard } from '@/components/product/ProductCard';
 import { Carousel } from '@/components/ui/Carousel';
 import { SectionHead } from '@/components/ui/SectionHead';
@@ -53,9 +54,12 @@ export default async function BlogDetailPage({ params }: { params: Promise<{ slu
   return (
     <div className="container-prototype max-w-3xl py-10">
       <h1 className="text-2xl font-bold text-foreground md:text-3xl">{post.title}</h1>
-      <div className="mt-3 flex gap-4 text-sm text-neutral-400">
-        <span>{post.author}</span>
-        <span>{post.date}</span>
+      <div className="mt-3 flex items-center justify-between gap-4">
+        <div className="flex gap-4 text-sm text-neutral-400">
+          <span>{post.author}</span>
+          <span>{post.date}</span>
+        </div>
+        <ShareButton title={post.title} text={post.excerpt} />
       </div>
 
       <div className="mt-6 aspect-[16/8] rounded-lg bg-neutral-100" />
