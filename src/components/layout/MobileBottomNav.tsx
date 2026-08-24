@@ -109,9 +109,19 @@ export function MobileBottomNav({ isLoggedIn }: { isLoggedIn: boolean }) {
     },
   ];
 
+  const activeIndex = items.findIndex((item) => item.active);
+
   return (
     <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-neutral-200 bg-white pb-[env(safe-area-inset-bottom)] lg:hidden">
-      <div className="grid grid-cols-5">
+      <div className="relative grid grid-cols-5">
+        {activeIndex !== -1 && (
+          <div
+            className="absolute top-0 left-0 h-0.5 w-1/5 px-3 transition-transform duration-300 ease-out"
+            style={{ transform: `translateX(${activeIndex * 100}%)` }}
+          >
+            <span className="block h-full w-full rounded-full bg-brand" />
+          </div>
+        )}
         {items.map(({ href, label, Icon, active }) => (
           <Link
             key={label}
