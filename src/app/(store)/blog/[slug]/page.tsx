@@ -7,6 +7,7 @@ import { Carousel } from '@/components/ui/Carousel';
 import { SectionHead } from '@/components/ui/SectionHead';
 import { ShareButton } from '@/components/ui/ShareButton';
 import { BLOG_POSTS, getBlogPostBySlug } from '@/lib/blog';
+import { SITE_NAME, SITE_URL } from '@/lib/site';
 import { getHomepageData } from '@/server/homepage/data';
 
 export function generateStaticParams() {
@@ -30,10 +31,27 @@ export async function generateMetadata({
   const post = getBlogPostBySlug(slug);
   if (!post) return {};
 
+  const path = `/blog/${post.slug}`;
+
   return {
     title: post.title,
     description: post.excerpt,
-    alternates: { canonical: `/blog/${post.slug}` },
+    keywords: post.tags,
+    alternates: { canonical: path },
+    openGraph: {
+      type: 'article',
+      title: post.title,
+      description: post.excerpt,
+      url: path,
+      publishedTime: new Date(post.date).toISOString(),
+      authors: [post.author],
+      tags: post.tags,
+    },
+    twitter: {
+      card: 'summary',
+      title: post.title,
+      description: post.excerpt,
+    },
   };
 }
 
@@ -51,8 +69,46 @@ export default async function BlogDetailPage({ params }: { params: Promise<{ slu
       ? sectionsWithProducts[hashStringToIndex(slug, sectionsWithProducts.length)]
       : null;
 
+  const publishedDate = new Date(post.date).toISOString();
+
+  const articleJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BlogPosting',
+    headline: post.title,
+    description: post.excerpt,
+    datePublished: publishedDate,
+    dateModified: publishedDate,
+    author: { '@type': 'Organization', name: post.author },
+    publisher: { '@type': 'Organization', name: SITE_NAME, logo: `${SITE_URL}/icon.png` },
+    mainEntityOfPage: { '@type': 'WebPage', '@id': `${SITE_URL}/blog/${post.slug}` },
+    keywords: post.tags.join(', '),
+  };
+
+  const breadcrumbJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Beranda', item: SITE_URL },
+      { '@type': 'ListItem', position: 2, name: 'Blog', item: `${SITE_URL}/blog` },
+      {
+        '@type': 'ListItem',
+        position: 3,
+        name: post.title,
+        item: `${SITE_URL}/blog/${post.slug}`,
+      },
+    ],
+  };
+
   return (
     <div className="container-prototype max-w-3xl py-10">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
       <h1 className="text-2xl font-bold text-foreground md:text-3xl">{post.title}</h1>
       <div className="mt-3 flex items-center justify-between gap-4">
         <div className="flex gap-4 text-sm text-neutral-400">

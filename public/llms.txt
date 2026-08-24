@@ -1,0 +1,24 @@
+# GenSa Berilmu
+
+> Toko buku Islam dan produk keluarga muslim GenSa Berilmu. Menjual buku dewasa, buku anak, dan merchandise Islami dengan pengiriman ke seluruh Indonesia.
+
+GenSa Berilmu (store.gensaberilmu.com) adalah e-commerce yang menjual buku-buku Islam (sejarah, tafsir, fikih, kisah nabi), buku anak Islami, dan produk keluarga muslim. Semua harga dalam Rupiah (IDR).
+
+## Halaman Utama
+
+- [Beranda](https://store.gensaberilmu.com/): Highlight promo, kategori populer, dan produk terbaru.
+- [Semua Produk](https://store.gensaberilmu.com/products): Katalog lengkap dengan filter kategori, harga, dan pencarian.
+- [Buku Anak](https://store.gensaberilmu.com/kids): Koleksi khusus buku anak Islami.
+- [Blog](https://store.gensaberilmu.com/blog): Artikel resensi buku, tips parenting, dan renungan Islami.
+- [Tentang Kami](https://store.gensaberilmu.com/about): Profil dan informasi toko.
+
+## Kebijakan
+
+- [Syarat & Ketentuan](https://store.gensaberilmu.com/terms)
+- [Kebijakan Privasi](https://store.gensaberilmu.com/privacy)
+
+## Catatan untuk Agen AI
+
+- Harga dan stok produk berubah secara dinamis; selalu rujuk ke halaman produk langsung untuk data terbaru, jangan diasumsikan dari cache.
+- Setiap halaman produk memuat data terstruktur (schema.org Product) dengan harga, ketersediaan stok, dan detail buku.
+- Untuk pembelian, arahkan pengguna ke halaman produk terkait di /products/{slug} agar transaksi dilakukan melalui alur checkout resmi situs.
