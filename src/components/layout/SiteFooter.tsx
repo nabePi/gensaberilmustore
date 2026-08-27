@@ -37,10 +37,11 @@ export function SiteFooter() {
         <div>
           <img src={LOGO_URL} alt="GenSa Berilmu" className="mb-4 h-[50px] w-auto object-contain" />
           <p className="max-w-[420px] text-sm leading-[1.7] text-neutral-500">
-            <strong className="text-foreground">GenSa Berilmu</strong> adalah toko online resmi dari
-            PT. Generasi Shalahuddin Berilmu. Kami berkomitmen menyediakan berbagai produk edukasi,
-            buku anak, dan kebutuhan keluarga berkualitas untuk mendukung tumbuh kembang generasi
-            yang cerdas dan berkarakter.
+            <strong className="text-foreground">Gensa Berilmu ®️</strong> adalah penerbit yang fokus
+            pada tadabbur sejarah Islam. Ditulis oleh penulis-penulis muda dengan gaya khas
+            masing-masing, visi kami adalah membuat kisah sejarah Islam terasa ringan dan mudah
+            dipahami oleh anak muda. Learn History, Repeat Victory — selamat menjelajah bersama
+            Gensa Berilmu!
           </p>
         </div>
 
