@@ -176,9 +176,13 @@ export default async function BlogDetailPage({ params }: { params: Promise<{ slu
                 className="flex flex-col overflow-hidden rounded-sm border border-neutral-200"
               >
                 {item.coverImageUrl ? (
-                  <div className="relative overflow-hidden bg-neutral-100">
+                  <div className="relative aspect-[16/10] overflow-hidden bg-neutral-100">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={item.coverImageUrl} alt={item.title} className="h-auto w-full" />
+                    <img
+                      src={item.coverImageUrl}
+                      alt={item.title}
+                      className="h-full w-full object-cover"
+                    />
                     <span className="absolute left-2.5 top-2.5 rounded-full bg-brand px-2.5 py-1 text-[11px] font-bold text-white">
                       {item.tags[0] ?? 'Blog'}
                     </span>
@@ -194,6 +198,7 @@ export default async function BlogDetailPage({ params }: { params: Promise<{ slu
                   <h3 className="line-clamp-2 text-[15px] leading-[1.35] font-bold text-foreground">
                     {item.title}
                   </h3>
+                  <p className="line-clamp-3 text-[13px] text-neutral-500">{item.contentPreview}</p>
                   <div className="mt-auto flex gap-4 pt-1.5 text-xs text-neutral-400">
                     <span>{item.author}</span>
                     <span>{item.date}</span>

@@ -33,9 +33,13 @@ export default async function BlogPage() {
               className="flex flex-col overflow-hidden rounded-sm border border-neutral-200"
             >
               {post.coverImageUrl ? (
-                <div className="relative overflow-hidden bg-neutral-100">
+                <div className="relative aspect-[16/10] overflow-hidden bg-neutral-100">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={post.coverImageUrl} alt={post.title} className="h-auto w-full" />
+                  <img
+                    src={post.coverImageUrl}
+                    alt={post.title}
+                    className="h-full w-full object-cover"
+                  />
                   <span className="absolute left-2.5 top-2.5 rounded-full bg-brand px-2.5 py-1 text-[11px] font-bold text-white">
                     {post.tags[0] ?? 'Blog'}
                   </span>
