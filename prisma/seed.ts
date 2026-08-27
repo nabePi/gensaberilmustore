@@ -204,6 +204,131 @@ async function seedCities() {
   }
 }
 
+const BLOG_POSTS: {
+  slug: string;
+  title: string;
+  excerpt: string;
+  author: string;
+  tags: string[];
+  publishedAt: Date;
+  contentHtml: string;
+}[] = [
+  {
+    slug: '5-rekomendasi-buku-islami-ramadhan',
+    title: '5 Rekomendasi Buku Islami untuk Menemani Ramadhan',
+    excerpt: 'Kumpulan buku terbaik untuk mengisi bulan penuh berkah dengan ilmu dan hikmah.',
+    author: 'Redaksi',
+    tags: ['Resensi', 'Ramadhan', 'Buku'],
+    publishedAt: new Date('2026-01-05T00:00:00.000Z'),
+    contentHtml: `
+      <p>Bulan Ramadhan adalah waktu terbaik untuk memperbanyak amal, termasuk menambah ilmu melalui bacaan yang bermanfaat. Berikut lima rekomendasi buku yang cocok menemani hari-hari puasa Anda.</p>
+      <p>1. Tafsir Juz Amma — penjelasan ringkas dan mudah dipahami untuk surat-surat pendek yang sering dibaca saat shalat.</p>
+      <p>2. Fiqih Puasa Praktis — membahas hukum-hukum puasa secara sederhana, lengkap dengan dalil dan contoh kasus sehari-hari.</p>
+      <p>3. Kisah Para Nabi — cocok dibacakan untuk anak-anak sebagai pengantar sebelum berbuka atau menjelang tidur.</p>
+      <p>4. Renungan Menuju Lailatul Qadar — kumpulan tulisan reflektif untuk menyambut malam seribu bulan.</p>
+      <p>5. Doa dan Dzikir Harian — panduan praktis doa-doa yang dianjurkan sepanjang bulan Ramadhan.</p>
+      <p>Semoga rekomendasi ini membantu Anda dan keluarga mengisi Ramadhan dengan lebih bermakna.</p>
+    `,
+  },
+  {
+    slug: 'tips-menumbuhkan-minat-baca-anak',
+    title: 'Tips Menumbuhkan Minat Baca pada Anak Sejak Dini',
+    excerpt: 'Strategi sederhana orang tua agar si kecil jatuh cinta pada buku.',
+    author: 'Redaksi',
+    tags: ['Resensi', 'Anak', 'Parenting'],
+    publishedAt: new Date('2026-01-03T00:00:00.000Z'),
+    contentHtml: `
+      <p>Menumbuhkan kecintaan anak pada buku tidak harus rumit. Berikut beberapa strategi sederhana yang bisa diterapkan orang tua di rumah.</p>
+      <p>Pertama, jadikan membaca sebagai rutinitas bersama, misalnya sebelum tidur. Konsistensi lebih penting daripada durasi.</p>
+      <p>Kedua, biarkan anak memilih sendiri buku yang ingin dibaca. Minat yang tumbuh dari pilihan sendiri biasanya lebih tahan lama.</p>
+      <p>Ketiga, jadilah contoh. Anak cenderung meniru kebiasaan orang tua, termasuk kebiasaan membaca.</p>
+      <p>Keempat, sediakan buku bergambar dan berwarna untuk anak usia dini agar pengalaman membaca terasa menyenangkan.</p>
+      <p>Dengan konsistensi dan kesabaran, minat baca anak akan tumbuh secara alami seiring waktu.</p>
+    `,
+  },
+  {
+    slug: 'karya-ulama-klasik-wajib-dibaca',
+    title: 'Mengenal Karya-Karya Ulama Klasik yang Wajib Dibaca',
+    excerpt: 'Panduan memilih rujukan Islam klasik yang relevan untuk kehidupan modern.',
+    author: 'Redaksi',
+    tags: ['Resensi', 'Sejarah', 'Ulama'],
+    publishedAt: new Date('2026-01-17T00:00:00.000Z'),
+    contentHtml: `
+      <p>Karya-karya ulama klasik menyimpan kedalaman ilmu yang tetap relevan hingga saat ini. Berikut beberapa karya yang layak menjadi rujukan.</p>
+      <p>Ihya Ulumuddin karya Imam Al-Ghazali membahas penyucian jiwa dan akhlak secara mendalam, cocok bagi yang ingin memperbaiki diri.</p>
+      <p>Riyadhus Shalihin karya Imam An-Nawawi berisi kumpulan hadits pilihan seputar akhlak dan ibadah sehari-hari.</p>
+      <p>Al-Hikam karya Ibnu Athaillah menawarkan renungan sufistik yang ringkas namun sarat makna.</p>
+      <p>Bagi pemula, disarankan memilih edisi terjemahan dengan penjelasan tambahan agar lebih mudah dipahami konteksnya.</p>
+      <p>Membaca karya klasik bukan sekadar bernostalgia, melainkan cara menyambungkan diri dengan warisan keilmuan Islam yang panjang.</p>
+    `,
+  },
+  {
+    slug: 'memilih-buku-anak-sesuai-usia',
+    title: 'Cara Memilih Buku Anak Sesuai Usia dan Tahap Perkembangan',
+    excerpt: 'Panduan praktis memilih bacaan yang tepat untuk setiap tahap tumbuh kembang anak.',
+    author: 'Redaksi',
+    tags: ['Tips', 'Anak', 'Parenting'],
+    publishedAt: new Date('2026-01-22T00:00:00.000Z'),
+    contentHtml: `
+      <p>Memilih buku yang sesuai usia membantu anak menikmati proses membaca tanpa merasa kesulitan atau bosan.</p>
+      <p>Untuk usia 0-2 tahun, pilih board book dengan gambar besar dan sedikit teks agar tahan terhadap gigitan dan tarikan.</p>
+      <p>Untuk usia 3-5 tahun, cerita bergambar dengan alur sederhana dan pesan moral ringan sangat cocok diperkenalkan.</p>
+      <p>Untuk usia 6-9 tahun, anak mulai bisa menikmati cerita bersambung dengan ilustrasi yang lebih sedikit dan teks lebih panjang.</p>
+      <p>Untuk usia 10 tahun ke atas, novel anak dan buku pengetahuan populer dapat memperluas wawasan sekaligus melatih daya baca mandiri.</p>
+      <p>Sesuaikan juga dengan minat anak, karena buku yang sesuai minat akan lebih mudah membuat mereka betah membaca.</p>
+    `,
+  },
+  {
+    slug: 'manfaat-sedekah-dalam-islam',
+    title: 'Manfaat Sedekah dalam Islam bagi Kehidupan Dunia dan Akhirat',
+    excerpt: 'Mengulas keutamaan sedekah sebagai amalan yang tak pernah mengurangi harta.',
+    author: 'Redaksi',
+    tags: ['Renungan', 'Umat', 'Akhlak'],
+    publishedAt: new Date('2026-02-02T00:00:00.000Z'),
+    contentHtml: `
+      <p>Sedekah merupakan salah satu amalan yang sangat dianjurkan dalam Islam, bukan hanya untuk membantu sesama tetapi juga membersihkan harta dan jiwa.</p>
+      <p>Rasulullah SAW bersabda bahwa sedekah tidak akan mengurangi harta, justru sebaliknya, Allah akan melipatgandakan rezeki bagi yang gemar bersedekah.</p>
+      <p>Selain manfaat spiritual, sedekah juga memiliki dampak sosial yang nyata, seperti mempererat hubungan antar sesama dan mengurangi kesenjangan ekonomi.</p>
+      <p>Sedekah dapat dilakukan kapan saja dan dalam bentuk apa saja, mulai dari harta, tenaga, hingga senyuman yang tulus.</p>
+      <p>Semoga kita senantiasa dimudahkan untuk istiqomah dalam bersedekah, sekecil apa pun bentuknya.</p>
+    `,
+  },
+  {
+    slug: 'menjaga-adab-menuntut-ilmu',
+    title: 'Menjaga Adab dalam Menuntut Ilmu ala Ulama Terdahulu',
+    excerpt: 'Adab yang perlu dijaga agar ilmu yang dipelajari membawa keberkahan.',
+    author: 'Redaksi',
+    tags: ['Renungan', 'Umat', 'Peradaban'],
+    publishedAt: new Date('2026-02-10T00:00:00.000Z'),
+    contentHtml: `
+      <p>Para ulama terdahulu sangat menekankan pentingnya adab sebelum ilmu. Bahkan dikatakan, adab menempati porsi yang lebih besar daripada ilmu itu sendiri.</p>
+      <p>Salah satu adab penting adalah niat yang lurus, yaitu menuntut ilmu semata-mata karena Allah, bukan untuk kepentingan duniawi semata.</p>
+      <p>Adab lainnya adalah menghormati guru, bersabar dalam proses belajar, serta senantiasa mengamalkan ilmu yang telah dipelajari.</p>
+      <p>Ilmu yang dipelajari dengan adab yang baik akan lebih mudah dipahami dan membawa keberkahan bagi pemiliknya.</p>
+      <p>Mari kita jadikan adab sebagai pondasi utama dalam setiap proses belajar yang kita jalani.</p>
+    `,
+  },
+];
+
+async function seedBlogPosts() {
+  for (const post of BLOG_POSTS) {
+    await prisma.blogPost.upsert({
+      where: { slug: post.slug },
+      update: {},
+      create: {
+        slug: post.slug,
+        title: post.title,
+        excerpt: post.excerpt,
+        author: post.author,
+        tags: post.tags,
+        contentHtml: post.contentHtml,
+        status: 'PUBLISHED',
+        publishedAt: post.publishedAt,
+      },
+    });
+  }
+}
+
 async function seedVouchers(adminUserId: string) {
   await prisma.voucher.upsert({
     where: { code: 'WELCOME10' },
@@ -242,6 +367,7 @@ async function main() {
   await seedProducts(categoryIdBySlug, admin.id);
   await seedCities();
   await seedVouchers(admin.id);
+  await seedBlogPosts();
 }
 
 main()

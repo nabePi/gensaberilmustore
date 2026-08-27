@@ -4,13 +4,15 @@ import { ProductCard } from '@/components/product/ProductCard';
 import { BannerCarousel } from '@/components/ui/BannerCarousel';
 import { Carousel } from '@/components/ui/Carousel';
 import { SectionHead } from '@/components/ui/SectionHead';
-import { BLOG_POSTS } from '@/lib/blog';
+import { getPublishedBlogPosts } from '@/server/blog/data';
 import { getHomepageData } from '@/server/homepage/data';
 
-const HOMEPAGE_BLOG_POSTS = BLOG_POSTS.slice(0, 3);
-
 export default async function HomePage() {
-  const { banners, sections } = await getHomepageData();
+  const [{ banners, sections }, blogPosts] = await Promise.all([
+    getHomepageData(),
+    getPublishedBlogPosts(),
+  ]);
+  const homepageBlogPosts = blogPosts.slice(0, 3);
   const heroMobileSlides = [...banners.HERO_MAIN, ...banners.HERO_SIDE_1, ...banners.HERO_SIDE_2];
 
   return (
@@ -100,31 +102,47 @@ export default async function HomePage() {
             viewAllHref="/blog"
             viewAllLabel="Baca Lainnya"
           />
-          <div className="grid gap-5 sm:grid-cols-3">
-            {HOMEPAGE_BLOG_POSTS.map((post) => (
-              <Link
-                key={post.slug}
-                href={`/blog/${post.slug}`}
-                className="flex flex-col overflow-hidden rounded-sm border border-neutral-200"
-              >
-                <div className="relative aspect-[16/10] bg-neutral-100">
-                  <span className="absolute left-2.5 top-2.5 rounded-full bg-brand px-2.5 py-1 text-[11px] font-bold text-white">
-                    {post.tags[0]}
-                  </span>
-                </div>
-                <div className="flex flex-1 flex-col gap-2 px-4 py-3.5">
-                  <h3 className="line-clamp-2 text-[15px] leading-[1.35] font-bold text-foreground">
-                    {post.title}
-                  </h3>
-                  <p className="line-clamp-3 text-[13px] text-neutral-500">{post.excerpt}</p>
-                  <div className="mt-auto flex gap-4 pt-1.5 text-xs text-neutral-400">
-                    <span>{post.author}</span>
-                    <span>{post.date}</span>
+          {homepageBlogPosts.length > 0 ? (
+            <div className="grid gap-5 sm:grid-cols-3">
+              {homepageBlogPosts.map((post) => (
+                <Link
+                  key={post.slug}
+                  href={`/blog/${post.slug}`}
+                  className="flex flex-col overflow-hidden rounded-sm border border-neutral-200"
+                >
+                  {post.coverImageUrl ? (
+                    <div className="relative overflow-hidden bg-neutral-100">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={post.coverImageUrl} alt={post.title} className="h-auto w-full" />
+                      <span className="absolute left-2.5 top-2.5 rounded-full bg-brand px-2.5 py-1 text-[11px] font-bold text-white">
+                        {post.tags[0] ?? 'Blog'}
+                      </span>
+                    </div>
+                  ) : (
+                    <div className="relative aspect-[16/10] bg-neutral-100">
+                      <span className="absolute left-2.5 top-2.5 rounded-full bg-brand px-2.5 py-1 text-[11px] font-bold text-white">
+                        {post.tags[0] ?? 'Blog'}
+                      </span>
+                    </div>
+                  )}
+                  <div className="flex flex-1 flex-col gap-2 px-4 py-3.5">
+                    <h3 className="line-clamp-2 text-[15px] leading-[1.35] font-bold text-foreground">
+                      {post.title}
+                    </h3>
+                    <p className="line-clamp-3 text-[13px] text-neutral-500">
+                      {post.contentPreview}
+                    </p>
+                    <div className="mt-auto flex gap-4 pt-1.5 text-xs text-neutral-400">
+                      <span>{post.author}</span>
+                      <span>{post.date}</span>
+                    </div>
                   </div>
-                </div>
-              </Link>
-            ))}
-          </div>
+                </Link>
+              ))}
+            </div>
+          ) : (
+            <p className="text-sm text-neutral-500">Belum ada artikel yang diterbitkan.</p>
+          )}
         </section>
       </div>
     </>

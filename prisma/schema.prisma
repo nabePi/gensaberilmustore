@@ -103,6 +103,11 @@ enum VoucherChannel {
   POS
 }
 
+enum BlogPostStatus {
+  DRAFT
+  PUBLISHED
+}
+
 model User {
   id              String    @id @default(uuid())
   email           String    @unique
@@ -743,4 +748,22 @@ model WebhookLog {
   createdAt       DateTime  @default(now())
 
   @@index([provider, createdAt])
+}
+
+model BlogPost {
+  id            String         @id @default(uuid())
+  slug          String         @unique
+  title         String
+  excerpt       String
+  contentHtml   String
+  coverImageUrl String?
+  author        String         @default("Redaksi")
+  tags          String[]
+  status        BlogPostStatus @default(DRAFT)
+  publishedAt   DateTime?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  @@index([slug])
+  @@index([status, publishedAt])
 }

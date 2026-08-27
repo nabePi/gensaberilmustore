@@ -18,6 +18,7 @@ const NAV_ITEMS: NavItem[] = [
   { href: '/admin/fulfillment', label: 'Fulfillment' },
   { href: '/admin/produk', label: 'Produk' },
   { href: '/admin/kategori', label: 'Kategori' },
+  { href: '/admin/blog', label: 'Blog' },
   { href: '/admin/member', label: 'Member' },
   { href: '/admin/pos', label: 'POS' },
   { href: '/admin/afiliasi', label: 'Afiliasi' },

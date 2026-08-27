@@ -6,13 +6,11 @@ import { ProductCard } from '@/components/product/ProductCard';
 import { Carousel } from '@/components/ui/Carousel';
 import { SectionHead } from '@/components/ui/SectionHead';
 import { ShareButton } from '@/components/ui/ShareButton';
-import { BLOG_POSTS, getBlogPostBySlug } from '@/lib/blog';
 import { SITE_NAME, SITE_URL } from '@/lib/site';
+import { getPublishedBlogPostBySlug, getPublishedBlogPosts } from '@/server/blog/data';
 import { getHomepageData } from '@/server/homepage/data';
 
-export function generateStaticParams() {
-  return BLOG_POSTS.map((post) => ({ slug: post.slug }));
-}
+export const dynamic = 'force-dynamic';
 
 function hashStringToIndex(value: string, length: number) {
   let hash = 0;
@@ -28,39 +26,42 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const post = getBlogPostBySlug(slug);
+  const post = await getPublishedBlogPostBySlug(slug);
   if (!post) return {};
 
   const path = `/blog/${post.slug}`;
+  const description = post.excerpt || post.title;
 
   return {
     title: post.title,
-    description: post.excerpt,
+    description,
     keywords: post.tags,
     alternates: { canonical: path },
     openGraph: {
       type: 'article',
       title: post.title,
-      description: post.excerpt,
+      description,
       url: path,
-      publishedTime: new Date(post.date).toISOString(),
+      publishedTime: post.publishedAt.toISOString(),
       authors: [post.author],
       tags: post.tags,
+      ...(post.coverImageUrl ? { images: [post.coverImageUrl] } : {}),
     },
     twitter: {
-      card: 'summary',
+      card: post.coverImageUrl ? 'summary_large_image' : 'summary',
       title: post.title,
-      description: post.excerpt,
+      description,
     },
   };
 }
 
 export default async function BlogDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const post = getBlogPostBySlug(slug);
+  const post = await getPublishedBlogPostBySlug(slug);
   if (!post) notFound();
 
-  const otherPosts = BLOG_POSTS.filter((item) => item.slug !== post.slug).slice(0, 3);
+  const allPosts = await getPublishedBlogPosts();
+  const otherPosts = allPosts.filter((item) => item.slug !== post.slug).slice(0, 3);
 
   const { sections } = await getHomepageData();
   const sectionsWithProducts = sections.filter((section) => section.products.length > 0);
@@ -69,19 +70,20 @@ export default async function BlogDetailPage({ params }: { params: Promise<{ slu
       ? sectionsWithProducts[hashStringToIndex(slug, sectionsWithProducts.length)]
       : null;
 
-  const publishedDate = new Date(post.date).toISOString();
+  const publishedDate = post.publishedAt.toISOString();
 
   const articleJsonLd = {
     '@context': 'https://schema.org',
     '@type': 'BlogPosting',
     headline: post.title,
-    description: post.excerpt,
+    description: post.excerpt || post.title,
     datePublished: publishedDate,
     dateModified: publishedDate,
     author: { '@type': 'Organization', name: post.author },
     publisher: { '@type': 'Organization', name: SITE_NAME, logo: `${SITE_URL}/icon.png` },
     mainEntityOfPage: { '@type': 'WebPage', '@id': `${SITE_URL}/blog/${post.slug}` },
     keywords: post.tags.join(', '),
+    ...(post.coverImageUrl ? { image: [post.coverImageUrl] } : {}),
   };
 
   const breadcrumbJsonLd = {
@@ -100,7 +102,7 @@ export default async function BlogDetailPage({ params }: { params: Promise<{ slu
   };
 
   return (
-    <div className="container-prototype max-w-3xl py-10">
+    <div className="container-prototype py-10">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd) }}
@@ -109,7 +111,8 @@ export default async function BlogDetailPage({ params }: { params: Promise<{ slu
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
       />
-      <h1 className="text-2xl font-bold text-foreground md:text-3xl">{post.title}</h1>
+
+      <h1 className="text-2xl font-bold text-foreground md:text-3xl lg:text-4xl">{post.title}</h1>
       <div className="mt-3 flex items-center justify-between gap-4">
         <div className="flex gap-4 text-sm text-neutral-400">
           <span>{post.author}</span>
@@ -118,23 +121,33 @@ export default async function BlogDetailPage({ params }: { params: Promise<{ slu
         <ShareButton title={post.title} text={post.excerpt} />
       </div>
 
-      <div className="mt-6 aspect-[16/8] rounded-lg bg-neutral-100" />
+      <div className="mt-8 grid items-start gap-8 md:grid-cols-5 lg:gap-12">
+        {post.coverImageUrl ? (
+          <div className="overflow-hidden rounded-lg bg-neutral-100 md:col-span-2">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={post.coverImageUrl} alt={post.title} className="h-auto w-full" />
+          </div>
+        ) : (
+          <div className="aspect-[4/5] rounded-lg bg-neutral-100 md:col-span-2" />
+        )}
 
-      <div
-        className="mt-8 space-y-4 text-[15px] leading-relaxed text-neutral-600"
-        dangerouslySetInnerHTML={{ __html: post.contentHtml }}
-      />
-
-      <div className="mt-8 flex flex-wrap items-center gap-2">
-        <span className="text-sm text-neutral-400">Topik:</span>
-        {post.tags.map((tag) => (
-          <span
-            key={tag}
-            className="rounded-full bg-brand/10 px-3 py-1 text-[13px] font-bold text-brand"
-          >
-            {tag}
-          </span>
-        ))}
+        <div className="md:col-span-3">
+          <div
+            className="space-y-4 text-[15px] leading-relaxed text-neutral-600 [&_h2]:mt-6 [&_h2]:text-xl [&_h2]:font-bold [&_h2]:text-foreground [&_h3]:mt-4 [&_h3]:text-lg [&_h3]:font-bold [&_h3]:text-foreground [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_blockquote]:border-l-4 [&_blockquote]:border-neutral-200 [&_blockquote]:pl-3 [&_blockquote]:italic [&_a]:text-brand [&_a]:underline [&_img]:h-auto [&_img]:rounded-lg"
+            dangerouslySetInnerHTML={{ __html: post.contentHtml }}
+          />
+          <div className="mt-8 flex flex-wrap items-center gap-2">
+            <span className="text-sm text-neutral-400">Topik:</span>
+            {post.tags.map((tag) => (
+              <span
+                key={tag}
+                className="rounded-full bg-brand/10 px-3 py-1 text-[13px] font-bold text-brand"
+              >
+                {tag}
+              </span>
+            ))}
+          </div>
+        </div>
       </div>
 
       {randomSection ? (
@@ -162,11 +175,21 @@ export default async function BlogDetailPage({ params }: { params: Promise<{ slu
                 href={`/blog/${item.slug}`}
                 className="flex flex-col overflow-hidden rounded-sm border border-neutral-200"
               >
-                <div className="relative aspect-[16/10] bg-neutral-100">
-                  <span className="absolute left-2.5 top-2.5 rounded-full bg-brand px-2.5 py-1 text-[11px] font-bold text-white">
-                    {item.tags[0]}
-                  </span>
-                </div>
+                {item.coverImageUrl ? (
+                  <div className="relative overflow-hidden bg-neutral-100">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={item.coverImageUrl} alt={item.title} className="h-auto w-full" />
+                    <span className="absolute left-2.5 top-2.5 rounded-full bg-brand px-2.5 py-1 text-[11px] font-bold text-white">
+                      {item.tags[0] ?? 'Blog'}
+                    </span>
+                  </div>
+                ) : (
+                  <div className="relative aspect-[16/10] bg-neutral-100">
+                    <span className="absolute left-2.5 top-2.5 rounded-full bg-brand px-2.5 py-1 text-[11px] font-bold text-white">
+                      {item.tags[0] ?? 'Blog'}
+                    </span>
+                  </div>
+                )}
                 <div className="flex flex-1 flex-col gap-2 px-4 py-3.5">
                   <h3 className="line-clamp-2 text-[15px] leading-[1.35] font-bold text-foreground">
                     {item.title}

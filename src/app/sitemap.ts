@@ -1,13 +1,12 @@
 import type { MetadataRoute } from 'next';
 
-import { BLOG_POSTS } from '@/lib/blog';
 import { prisma } from '@/lib/db';
 import { SITE_URL } from '@/lib/site';
 
 export const dynamic = 'force-dynamic';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const [products, categories] = await Promise.all([
+  const [products, categories, blogPosts] = await Promise.all([
     prisma.product.findMany({
       where: { isActive: true },
       select: { slug: true, updatedAt: true },
@@ -16,6 +15,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     prisma.category.findMany({
       where: { isActive: true },
       select: { slug: true },
+    }),
+    prisma.blogPost.findMany({
+      where: { status: 'PUBLISHED' },
+      select: { slug: true, updatedAt: true },
+      orderBy: { publishedAt: 'desc' },
     }),
   ]);
 
@@ -42,8 +46,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.8,
   }));
 
-  const blogRoutes: MetadataRoute.Sitemap = BLOG_POSTS.map((post) => ({
+  const blogRoutes: MetadataRoute.Sitemap = blogPosts.map((post) => ({
     url: `${SITE_URL}/blog/${post.slug}`,
+    lastModified: post.updatedAt,
     changeFrequency: 'monthly',
     priority: 0.5,
   }));
