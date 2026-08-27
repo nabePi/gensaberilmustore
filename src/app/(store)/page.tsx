@@ -95,14 +95,14 @@ export default async function HomePage() {
           </section>
         ))}
 
-        <section>
-          <SectionHead
-            title="Blog Kami"
-            subtitle="Kabar, tips, dan rekomendasi dari GenSa Berilmu"
-            viewAllHref="/blog"
-            viewAllLabel="Baca Lainnya"
-          />
-          {homepageBlogPosts.length > 0 ? (
+        {homepageBlogPosts.length > 0 ? (
+          <section>
+            <SectionHead
+              title="Blog Kami"
+              subtitle="Kabar, tips, dan rekomendasi dari GenSa Berilmu"
+              viewAllHref="/blog"
+              viewAllLabel="Baca Lainnya"
+            />
             <div className="grid gap-5 sm:grid-cols-3">
               {homepageBlogPosts.map((post) => (
                 <Link
@@ -140,10 +140,8 @@ export default async function HomePage() {
                 </Link>
               ))}
             </div>
-          ) : (
-            <p className="text-sm text-neutral-500">Belum ada artikel yang diterbitkan.</p>
-          )}
-        </section>
+          </section>
+        ) : null}
       </div>
     </>
   );
