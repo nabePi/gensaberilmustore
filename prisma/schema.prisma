@@ -566,14 +566,17 @@ model HomepageConfig {
 }
 
 model HomepageSection {
-  id            String   @id @default(uuid())
-  key           String   @unique
-  title         String
-  subtitle      String
-  promoImageUrl String
-  position      Int      @default(0)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id              String   @id @default(uuid())
+  key             String   @unique
+  title           String
+  subtitle        String
+  promoImageUrl   String
+  position        Int      @default(0)
+  isEnabled       Boolean  @default(true)
+  backgroundColor String?
+  titleColor      String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
   products HomepageSectionProduct[]
 

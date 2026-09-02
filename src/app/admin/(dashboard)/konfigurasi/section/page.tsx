@@ -14,8 +14,21 @@ type SectionForm = {
   subtitle: string;
   promoImageUrl: string;
   position: number;
+  isEnabled: boolean;
+  backgroundColor: string;
+  titleColor: string;
   productIds: string[];
 };
+
+function normalizeSections(
+  raw: (SectionForm & { backgroundColor?: string | null; titleColor?: string | null })[],
+): SectionForm[] {
+  return raw.map((section) => ({
+    ...section,
+    backgroundColor: section.backgroundColor ?? '',
+    titleColor: section.titleColor ?? '',
+  }));
+}
 
 function emptySection(position: number): SectionForm {
   return {
@@ -24,6 +37,9 @@ function emptySection(position: number): SectionForm {
     subtitle: '',
     promoImageUrl: '',
     position,
+    isEnabled: true,
+    backgroundColor: '',
+    titleColor: '',
     productIds: [],
   };
 }
@@ -73,7 +89,7 @@ export default function AdminKonfigurasiSectionPage() {
       ]);
       if (sectionsRes.ok) {
         const data = await sectionsRes.json();
-        setSections(data.sections ?? []);
+        setSections(normalizeSections(data.sections ?? []));
       }
       if (productsRes.ok) {
         const data: { items: ProductOption[] } = await productsRes.json();
@@ -155,7 +171,7 @@ export default function AdminKonfigurasiSectionPage() {
 
     if (response.ok) {
       const data = await response.json();
-      setSections(data.sections ?? []);
+      setSections(normalizeSections(data.sections ?? []));
       setSaveMessage('Section berhasil disimpan!');
       setDirty(false);
     } else {
@@ -230,6 +246,60 @@ export default function AdminKonfigurasiSectionPage() {
                   onChange={(url) => updateSection(index, { promoImageUrl: url })}
                   placeholder="Upload gambar promo untuk section ini (opsional)."
                 />
+                <label className="flex items-center gap-2 text-xs font-medium text-neutral-600">
+                  <input
+                    type="checkbox"
+                    checked={section.isEnabled}
+                    onChange={(e) => updateSection(index, { isEnabled: e.target.checked })}
+                  />
+                  Tampilkan section ini di beranda
+                </label>
+                <div className="grid gap-2 sm:grid-cols-2">
+                  <div className="flex flex-col gap-1">
+                    <label className="text-xs font-medium text-neutral-600">
+                      Warna Background (opsional)
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="color"
+                        value={section.backgroundColor || '#dc2626'}
+                        onChange={(e) => updateSection(index, { backgroundColor: e.target.value })}
+                        className="h-9 w-10 shrink-0 rounded-sm border border-neutral-200 p-0.5"
+                      />
+                      <input
+                        type="text"
+                        value={section.backgroundColor}
+                        onChange={(e) => updateSection(index, { backgroundColor: e.target.value })}
+                        placeholder="Kosongkan untuk tampilan default"
+                        className={inputBase}
+                      />
+                    </div>
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <label className="text-xs font-medium text-neutral-600">
+                      Warna Judul (opsional)
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="color"
+                        value={section.titleColor || '#ffffff'}
+                        onChange={(e) => updateSection(index, { titleColor: e.target.value })}
+                        className="h-9 w-10 shrink-0 rounded-sm border border-neutral-200 p-0.5"
+                      />
+                      <input
+                        type="text"
+                        value={section.titleColor}
+                        onChange={(e) => updateSection(index, { titleColor: e.target.value })}
+                        placeholder="Kosongkan untuk tampilan default"
+                        className={inputBase}
+                      />
+                    </div>
+                  </div>
+                </div>
+                <p className="text-xs text-neutral-400">
+                  Isi warna background untuk menjadikan section ini banner promo berwarna (mis.
+                  Special Promotion). Kosongkan keduanya untuk tampilan section biasa.
+                </p>
                 <ProductPicker
                   label="Buku di Section Ini"
                   products={products}

@@ -12,6 +12,9 @@ function serializeSections(
     subtitle: string;
     promoImageUrl: string;
     position: number;
+    isEnabled: boolean;
+    backgroundColor: string | null;
+    titleColor: string | null;
     products: { productId: string; position: number }[];
   }[],
 ) {
@@ -88,6 +91,9 @@ export const PUT = withAuth(
           subtitle: rest.subtitle,
           promoImageUrl: rest.promoImageUrl ?? '',
           position: rest.position,
+          isEnabled: rest.isEnabled,
+          backgroundColor: rest.backgroundColor || null,
+          titleColor: rest.titleColor || null,
         };
         const upserted = await tx.homepageSection.upsert({
           where: { id: id ?? '' },

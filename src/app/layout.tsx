@@ -97,7 +97,7 @@ const websiteJsonLd = {
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="id" className={`${sourceSans.variable} ${fredoka.variable} h-full antialiased`}>
-      <body className="min-h-full flex flex-col bg-background text-foreground font-sans text-sm">
+      <body className="min-h-full flex flex-col overflow-x-hidden bg-background text-foreground font-sans text-sm">
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}

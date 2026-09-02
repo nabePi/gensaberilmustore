@@ -7,6 +7,16 @@ export const bannerImageSchema = z.object({
   position: z.number().int().min(0).default(0),
 });
 
+const hexColorSchema = z
+  .string()
+  .trim()
+  .regex(/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/, {
+    message: 'Warna harus dalam format hex, mis. #dc2626',
+  })
+  .optional()
+  .or(z.literal(''))
+  .nullable();
+
 export const homepageSectionSchema = z.object({
   id: z.string().uuid().optional(),
   key: z
@@ -20,6 +30,9 @@ export const homepageSectionSchema = z.object({
   subtitle: z.string().trim().min(1),
   promoImageUrl: z.string().trim().url().optional().or(z.literal('')),
   position: z.number().int().min(0).default(0),
+  isEnabled: z.boolean().default(true),
+  backgroundColor: hexColorSchema,
+  titleColor: hexColorSchema,
   productIds: z.array(z.string().uuid()),
 });
 

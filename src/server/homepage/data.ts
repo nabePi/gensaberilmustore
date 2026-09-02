@@ -22,6 +22,8 @@ export type HomepageSectionData = {
   title: string;
   subtitle: string;
   promoImageUrl: string;
+  backgroundColor: string | null;
+  titleColor: string | null;
   products: ProductCardData[];
 };
 
@@ -110,8 +112,17 @@ export async function getHomepageData() {
     getHomepageConfig(),
     getHomepageBanners(),
     prisma.homepageSection.findMany({
+      where: { isEnabled: true },
       orderBy: { position: 'asc' },
-      select: { id: true, key: true, title: true, subtitle: true, promoImageUrl: true },
+      select: {
+        id: true,
+        key: true,
+        title: true,
+        subtitle: true,
+        promoImageUrl: true,
+        backgroundColor: true,
+        titleColor: true,
+      },
     }),
   ]);
 

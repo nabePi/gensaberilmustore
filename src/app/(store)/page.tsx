@@ -1,5 +1,6 @@
 import Link from 'next/link';
 
+import { SpecialPromotionSection } from '@/components/home/SpecialPromotionSection';
 import { ProductCard } from '@/components/product/ProductCard';
 import { BannerCarousel } from '@/components/ui/BannerCarousel';
 import { Carousel } from '@/components/ui/Carousel';
@@ -66,34 +67,46 @@ export default async function HomePage() {
           </div>
         </section>
 
-        {sections.map((section) => (
-          <section key={section.id}>
-            <SectionHead
+        {sections.map((section) =>
+          section.backgroundColor ? (
+            <SpecialPromotionSection
+              key={section.id}
               title={section.title}
               subtitle={section.subtitle}
               viewAllHref={`/products?section=${section.key}`}
+              products={section.products}
+              backgroundColor={section.backgroundColor}
+              titleColor={section.titleColor ?? '#ffffff'}
             />
-            {section.products.length > 0 ? (
-              <Carousel>
-                {section.promoImageUrl ? (
-                  <div className="overflow-hidden rounded-sm">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={section.promoImageUrl}
-                      alt={section.title}
-                      className="h-full w-full object-cover"
-                    />
-                  </div>
-                ) : null}
-                {section.products.map((product) => (
-                  <ProductCard key={product.id} product={product} />
-                ))}
-              </Carousel>
-            ) : (
-              <p className="text-sm text-neutral-500">Belum ada produk untuk kategori ini.</p>
-            )}
-          </section>
-        ))}
+          ) : (
+            <section key={section.id}>
+              <SectionHead
+                title={section.title}
+                subtitle={section.subtitle}
+                viewAllHref={`/products?section=${section.key}`}
+              />
+              {section.products.length > 0 ? (
+                <Carousel>
+                  {section.promoImageUrl ? (
+                    <div className="overflow-hidden rounded-sm">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={section.promoImageUrl}
+                        alt={section.title}
+                        className="h-full w-full object-cover"
+                      />
+                    </div>
+                  ) : null}
+                  {section.products.map((product) => (
+                    <ProductCard key={product.id} product={product} />
+                  ))}
+                </Carousel>
+              ) : (
+                <p className="text-sm text-neutral-500">Belum ada produk untuk kategori ini.</p>
+              )}
+            </section>
+          ),
+        )}
 
         {homepageBlogPosts.length > 0 ? (
           <section>

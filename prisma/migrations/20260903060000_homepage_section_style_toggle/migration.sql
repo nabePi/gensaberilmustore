@@ -1,0 +1,5 @@
+-- AlterTable
+ALTER TABLE "HomepageSection"
+  ADD COLUMN IF NOT EXISTS "isEnabled" BOOLEAN NOT NULL DEFAULT true,
+  ADD COLUMN IF NOT EXISTS "backgroundColor" TEXT,
+  ADD COLUMN IF NOT EXISTS "titleColor" TEXT;
