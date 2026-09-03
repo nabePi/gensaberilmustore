@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { AdminModal } from '@/components/admin/AdminModal';
 import { formatCurrency } from '@/lib/format';
 import { btnOutline, btnSolid, btnSolidSm, cardBase, inputBase } from '@/lib/styles';
+import { computeUnitPrice } from '@/server/products/pricing';
 
 type CatalogProduct = {
   id: string;
@@ -12,6 +13,8 @@ type CatalogProduct = {
   title: string;
   author: string;
   finalPrice: number;
+  wholesalePrice: number | null;
+  wholesaleMinQty: number | null;
   stock: number;
   primaryImageUrl: string | null;
   categories: { id: string; name: string }[];
@@ -22,10 +25,29 @@ type CategoryNode = { id: string; name: string; children: CategoryNode[] };
 type CartLine = {
   productId: string;
   title: string;
-  price: number;
+  finalPrice: number;
+  wholesalePrice: number | null;
+  wholesaleMinQty: number | null;
   stock: number;
   quantity: number;
 };
+
+function unitPriceOf(line: CartLine): number {
+  return computeUnitPrice(
+    line.finalPrice,
+    line.quantity,
+    line.wholesalePrice,
+    line.wholesaleMinQty,
+  );
+}
+
+function isWholesaleApplied(line: CartLine): boolean {
+  return (
+    line.wholesalePrice != null &&
+    line.wholesaleMinQty != null &&
+    line.quantity >= line.wholesaleMinQty
+  );
+}
 
 type PosOrderSummary = {
   id: string;
@@ -138,7 +160,9 @@ export default function AdminPosPage() {
         {
           productId: product.id,
           title: product.title,
-          price: product.finalPrice,
+          finalPrice: product.finalPrice,
+          wholesalePrice: product.wholesalePrice,
+          wholesaleMinQty: product.wholesaleMinQty,
           stock: product.stock,
           quantity: 1,
         },
@@ -162,7 +186,7 @@ export default function AdminPosPage() {
     setCart((prev) => prev.filter((line) => line.productId !== productId));
   }
 
-  const cartTotal = cart.reduce((sum, line) => sum + line.price * line.quantity, 0);
+  const cartTotal = cart.reduce((sum, line) => sum + unitPriceOf(line) * line.quantity, 0);
   const cartCount = cart.reduce((sum, line) => sum + line.quantity, 0);
 
   async function handleCheckout() {
@@ -270,6 +294,12 @@ export default function AdminPosPage() {
                     </span>
                     <span className="text-xs text-neutral-500">Stok {product.stock}</span>
                   </div>
+                  {product.wholesalePrice != null && product.wholesaleMinQty != null ? (
+                    <p className="text-[11px] text-navy">
+                      Grosir {product.wholesaleMinQty}+ pcs:{' '}
+                      {formatCurrency(product.wholesalePrice)}
+                    </p>
+                  ) : null}
                 </button>
               ))}
             </div>
@@ -302,7 +332,23 @@ export default function AdminPosPage() {
                 <div key={line.productId} className="flex items-center justify-between gap-2">
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium text-foreground">{line.title}</p>
-                    <p className="text-xs text-neutral-500">{formatCurrency(line.price)}</p>
+                    {isWholesaleApplied(line) ? (
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-xs text-neutral-400 line-through">
+                          {formatCurrency(line.finalPrice)}
+                        </span>
+                        <span className="text-xs font-semibold text-brand">
+                          {formatCurrency(unitPriceOf(line))}
+                        </span>
+                        <span className="rounded-sm bg-navy/10 px-1 py-0.5 text-[9px] font-bold uppercase tracking-wide text-navy">
+                          Grosir
+                        </span>
+                      </div>
+                    ) : (
+                      <p className="text-xs text-neutral-500">
+                        {formatCurrency(unitPriceOf(line))}
+                      </p>
+                    )}
                   </div>
                   <div className="flex items-center gap-1">
                     <button
