@@ -10,6 +10,7 @@ const PAYMENT_METHOD_LABELS: Record<string, string> = {
   POS_CASH: 'Tunai',
   POS_QRIS: 'QRIS',
   POS_TRANSFER: 'Transfer',
+  POS_GATEWAY: 'Payment Gateway',
 };
 
 export default async function PosReceiptPrintPage({ params }: { params: Promise<{ id: string }> }) {

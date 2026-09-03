@@ -44,10 +44,10 @@ export async function POST(request: NextRequest) {
     });
   }
 
-  const { snapToken, redirectUrl } = await createSnapTransaction(order).catch(() => ({
-    snapToken: null,
-    redirectUrl: null,
-  }));
+  const { snapToken, redirectUrl } = await createSnapTransaction(order).catch((error) => {
+    console.error('createSnapTransaction failed', error);
+    return { snapToken: null, redirectUrl: null };
+  });
 
   if (!snapToken || !redirectUrl) {
     return NextResponse.json(

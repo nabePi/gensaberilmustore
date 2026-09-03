@@ -15,6 +15,7 @@ const snap = new Snap(clientOptions);
 const coreApi = new CoreApi(clientOptions);
 
 const ENABLED_PAYMENTS = ['bank_transfer', 'gopay', 'qris', 'shopeepay'];
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export type OrderForSnapTransaction = Order & { items: OrderItem[] };
 
@@ -58,7 +59,9 @@ export async function createSnapTransaction(
     },
     customer_details: {
       first_name: order.receiverName,
-      ...(order.receiverEmail ? { email: order.receiverEmail } : {}),
+      ...(order.receiverEmail && EMAIL_REGEX.test(order.receiverEmail)
+        ? { email: order.receiverEmail }
+        : {}),
       phone: order.receiverPhone,
       shipping_address: {
         address: order.receiverAddress,

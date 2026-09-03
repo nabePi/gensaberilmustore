@@ -118,6 +118,8 @@ export const POST = withAuth(
           ),
         );
 
+        const initialStatus = data.paymentMethod === 'POS_GATEWAY' ? 'AWAITING_PAYMENT' : 'PAID';
+
         const createdOrder = await tx.order.create({
           data: {
             orderNumber,
@@ -133,7 +135,7 @@ export const POST = withAuth(
             total,
             paymentMethod: data.paymentMethod,
             source: 'POS',
-            status: 'PAID',
+            status: initialStatus,
             posCashierUserId: user.id,
             voucherId: lockedVoucher?.id ?? null,
             voucherCode: lockedVoucher?.code ?? null,
@@ -161,9 +163,12 @@ export const POST = withAuth(
             },
             history: {
               create: {
-                fromStatus: 'PAID',
-                toStatus: 'PAID',
-                note: 'Transaksi POS dibuat',
+                fromStatus: initialStatus,
+                toStatus: initialStatus,
+                note:
+                  initialStatus === 'PAID'
+                    ? 'Transaksi POS dibuat'
+                    : 'Transaksi POS dibuat, menunggu pembayaran gateway',
                 changedByUserId: user.id,
               },
             },

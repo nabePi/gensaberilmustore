@@ -43,6 +43,7 @@ const PAYMENT_METHOD_LABELS: Record<PaymentMethod, string> = {
   POS_CASH: 'Tunai (POS)',
   POS_TRANSFER: 'Transfer (POS)',
   POS_QRIS: 'QRIS (POS)',
+  POS_GATEWAY: 'Payment Gateway (POS)',
 };
 
 function StatCard({ label, value }: { label: string; value: string }) {

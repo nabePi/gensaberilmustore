@@ -1,11 +1,33 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import Script from 'next/script';
+import { useEffect, useRef, useState } from 'react';
 
 import { AdminModal } from '@/components/admin/AdminModal';
 import { formatCurrency } from '@/lib/format';
 import { btnOutline, btnSolid, btnSolidSm, cardBase, inputBase } from '@/lib/styles';
 import { computeUnitPrice } from '@/server/products/pricing';
+
+declare global {
+  interface Window {
+    snap?: {
+      pay: (
+        snapToken: string,
+        callbacks: {
+          onSuccess: () => void;
+          onPending: () => void;
+          onError: () => void;
+          onClose: () => void;
+        },
+      ) => void;
+    };
+  }
+}
+
+const SNAP_SCRIPT_URL =
+  process.env.NEXT_PUBLIC_MIDTRANS_IS_PRODUCTION === 'true'
+    ? 'https://app.midtrans.com/snap/snap.js'
+    : 'https://app.sandbox.midtrans.com/snap/snap.js';
 
 function QuantityInput({
   quantity,
@@ -104,12 +126,17 @@ type PosOrderSummary = {
   receiverName: string;
 };
 
-const PAYMENT_METHOD_OPTIONS: { value: 'POS_CASH' | 'POS_QRIS' | 'POS_TRANSFER'; label: string }[] =
-  [
-    { value: 'POS_CASH', label: 'Tunai' },
-    { value: 'POS_QRIS', label: 'QRIS' },
-    { value: 'POS_TRANSFER', label: 'Transfer' },
-  ];
+const PAYMENT_METHOD_OPTIONS: { value: 'POS_CASH' | 'POS_GATEWAY'; label: string }[] = [
+  { value: 'POS_CASH', label: 'Tunai' },
+  { value: 'POS_GATEWAY', label: 'Payment Gateway' },
+];
+
+type PosReceiptState = {
+  orderId: string;
+  orderNumber: string;
+  paymentMethod: 'POS_CASH' | 'POS_GATEWAY';
+  paymentStatus: 'paid' | 'checking' | 'awaiting' | 'cancelled';
+};
 
 function flattenCategories(
   nodes: CategoryNode[],
@@ -129,16 +156,15 @@ export default function AdminPosPage() {
   const [loadingCatalog, setLoadingCatalog] = useState(true);
 
   const [cart, setCart] = useState<CartLine[]>([]);
-  const [paymentMethod, setPaymentMethod] = useState<'POS_CASH' | 'POS_QRIS' | 'POS_TRANSFER'>(
-    'POS_CASH',
-  );
+  const [paymentMethod, setPaymentMethod] = useState<'POS_CASH' | 'POS_GATEWAY'>('POS_CASH');
   const [customerName, setCustomerName] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
   const [note, setNote] = useState('');
   const [checkingOut, setCheckingOut] = useState(false);
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
+  const snapFailedRef = useRef(false);
 
-  const [receipt, setReceipt] = useState<{ orderId: string; orderNumber: string } | null>(null);
+  const [receipt, setReceipt] = useState<PosReceiptState | null>(null);
 
   const [history, setHistory] = useState<PosOrderSummary[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(true);
@@ -236,6 +262,67 @@ export default function AdminPosPage() {
   const cartTotal = cart.reduce((sum, line) => sum + unitPriceOf(line) * line.quantity, 0);
   const cartCount = cart.reduce((sum, line) => sum + line.quantity, 0);
 
+  async function refreshPaymentStatus(orderId: string) {
+    setReceipt((prev) =>
+      prev && prev.orderId === orderId ? { ...prev, paymentStatus: 'checking' } : prev,
+    );
+
+    const response = await fetch(`/api/payment/status/${orderId}`);
+    if (!response.ok) {
+      setReceipt((prev) =>
+        prev && prev.orderId === orderId ? { ...prev, paymentStatus: 'awaiting' } : prev,
+      );
+      return;
+    }
+
+    const data: { orderStatus: string } = await response.json();
+    const paymentStatus: PosReceiptState['paymentStatus'] =
+      data.orderStatus === 'PAID'
+        ? 'paid'
+        : data.orderStatus === 'CANCELLED'
+          ? 'cancelled'
+          : 'awaiting';
+
+    setReceipt((prev) => (prev && prev.orderId === orderId ? { ...prev, paymentStatus } : prev));
+    if (paymentStatus === 'paid') loadHistory();
+  }
+
+  async function openGatewayPayment(orderId: string) {
+    setCheckoutError(null);
+
+    const paymentResponse = await fetch('/api/payment/create', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ orderId }),
+    });
+
+    if (!paymentResponse.ok) {
+      const data = await paymentResponse.json().catch(() => null);
+      setCheckoutError(data?.error ?? 'Gagal memulai pembayaran gateway');
+      setReceipt((prev) =>
+        prev && prev.orderId === orderId ? { ...prev, paymentStatus: 'awaiting' } : prev,
+      );
+      return;
+    }
+
+    const { snapToken, redirectUrl } = await paymentResponse.json();
+
+    if (snapFailedRef.current || !window.snap) {
+      window.open(redirectUrl, '_blank');
+      setReceipt((prev) =>
+        prev && prev.orderId === orderId ? { ...prev, paymentStatus: 'awaiting' } : prev,
+      );
+      return;
+    }
+
+    window.snap.pay(snapToken, {
+      onSuccess: () => refreshPaymentStatus(orderId),
+      onPending: () => refreshPaymentStatus(orderId),
+      onError: () => refreshPaymentStatus(orderId),
+      onClose: () => refreshPaymentStatus(orderId),
+    });
+  }
+
   async function handleCheckout() {
     if (cart.length === 0) return;
     setCheckingOut(true);
@@ -253,25 +340,53 @@ export default function AdminPosPage() {
       }),
     });
 
-    setCheckingOut(false);
-
     if (!response.ok) {
       const data = await response.json().catch(() => null);
       setCheckoutError(data?.error ?? 'Checkout gagal, silakan coba lagi');
+      setCheckingOut(false);
       return;
     }
 
     const data: { orderId: string; orderNumber: string } = await response.json();
-    setReceipt(data);
+    const currentPaymentMethod = paymentMethod;
+
     setCart([]);
     setCustomerName('');
     setCustomerPhone('');
     setNote('');
     loadHistory();
+
+    if (currentPaymentMethod === 'POS_CASH') {
+      setReceipt({
+        orderId: data.orderId,
+        orderNumber: data.orderNumber,
+        paymentMethod: 'POS_CASH',
+        paymentStatus: 'paid',
+      });
+      setCheckingOut(false);
+      return;
+    }
+
+    setReceipt({
+      orderId: data.orderId,
+      orderNumber: data.orderNumber,
+      paymentMethod: 'POS_GATEWAY',
+      paymentStatus: 'checking',
+    });
+    await openGatewayPayment(data.orderId);
+    setCheckingOut(false);
   }
 
   return (
     <div className="flex flex-col gap-6">
+      <Script
+        src={SNAP_SCRIPT_URL}
+        data-client-key={process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY}
+        strategy="afterInteractive"
+        onError={() => {
+          snapFailedRef.current = true;
+        }}
+      />
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Point of Sale</h1>
@@ -566,10 +681,41 @@ export default function AdminPosPage() {
       {receipt ? (
         <AdminModal title="Struk POS" onClose={() => setReceipt(null)}>
           <div className="flex flex-col items-center gap-2 py-4 text-center">
-            <p className="text-sm text-neutral-500">Transaksi berhasil dibuat</p>
+            {receipt.paymentStatus === 'paid' ? (
+              <p className="text-sm font-medium text-green">Transaksi berhasil dibuat</p>
+            ) : receipt.paymentStatus === 'checking' ? (
+              <p className="text-sm text-neutral-500">Memeriksa status pembayaran...</p>
+            ) : receipt.paymentStatus === 'cancelled' ? (
+              <p className="text-sm font-medium text-red">Pembayaran dibatalkan / ditolak</p>
+            ) : (
+              <p className="text-sm font-medium text-navy">Menunggu pembayaran dari pelanggan</p>
+            )}
             <p className="text-lg font-bold text-foreground">{receipt.orderNumber}</p>
           </div>
-          <div className="flex justify-end gap-2">
+
+          {checkoutError ? (
+            <p className="mb-2 text-center text-sm text-red">{checkoutError}</p>
+          ) : null}
+
+          <div className="flex flex-wrap justify-end gap-2">
+            {receipt.paymentMethod === 'POS_GATEWAY' && receipt.paymentStatus === 'awaiting' ? (
+              <>
+                <button
+                  type="button"
+                  onClick={() => refreshPaymentStatus(receipt.orderId)}
+                  className={btnOutline}
+                >
+                  Cek Status
+                </button>
+                <button
+                  type="button"
+                  onClick={() => openGatewayPayment(receipt.orderId)}
+                  className={btnOutline}
+                >
+                  Buka Ulang Pembayaran
+                </button>
+              </>
+            ) : null}
             <button type="button" onClick={() => setReceipt(null)} className={btnOutline}>
               Tutup
             </button>

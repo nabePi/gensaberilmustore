@@ -42,6 +42,7 @@ enum PaymentMethod {
   POS_CASH
   POS_TRANSFER
   POS_QRIS
+  POS_GATEWAY
 }
 
 enum OrderSource {
