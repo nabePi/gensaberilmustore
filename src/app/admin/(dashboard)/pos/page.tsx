@@ -287,7 +287,7 @@ export default function AdminPosPage() {
     if (paymentStatus === 'paid') loadHistory();
   }
 
-  async function openGatewayPayment(orderId: string) {
+  async function openGatewayPayment(orderId: string, orderNumber: string) {
     setCheckoutError(null);
 
     const paymentResponse = await fetch('/api/payment/create', {
@@ -299,9 +299,7 @@ export default function AdminPosPage() {
     if (!paymentResponse.ok) {
       const data = await paymentResponse.json().catch(() => null);
       setCheckoutError(data?.error ?? 'Gagal memulai pembayaran gateway');
-      setReceipt((prev) =>
-        prev && prev.orderId === orderId ? { ...prev, paymentStatus: 'awaiting' } : prev,
-      );
+      setReceipt({ orderId, orderNumber, paymentMethod: 'POS_GATEWAY', paymentStatus: 'awaiting' });
       return;
     }
 
@@ -309,17 +307,20 @@ export default function AdminPosPage() {
 
     if (snapFailedRef.current || !window.snap) {
       window.open(redirectUrl, '_blank');
-      setReceipt((prev) =>
-        prev && prev.orderId === orderId ? { ...prev, paymentStatus: 'awaiting' } : prev,
-      );
+      setReceipt({ orderId, orderNumber, paymentMethod: 'POS_GATEWAY', paymentStatus: 'awaiting' });
       return;
     }
 
+    const showReceiptAndRefresh = () => {
+      setReceipt({ orderId, orderNumber, paymentMethod: 'POS_GATEWAY', paymentStatus: 'checking' });
+      refreshPaymentStatus(orderId);
+    };
+
     window.snap.pay(snapToken, {
-      onSuccess: () => refreshPaymentStatus(orderId),
-      onPending: () => refreshPaymentStatus(orderId),
-      onError: () => refreshPaymentStatus(orderId),
-      onClose: () => refreshPaymentStatus(orderId),
+      onSuccess: showReceiptAndRefresh,
+      onPending: showReceiptAndRefresh,
+      onError: showReceiptAndRefresh,
+      onClose: showReceiptAndRefresh,
     });
   }
 
@@ -367,13 +368,7 @@ export default function AdminPosPage() {
       return;
     }
 
-    setReceipt({
-      orderId: data.orderId,
-      orderNumber: data.orderNumber,
-      paymentMethod: 'POS_GATEWAY',
-      paymentStatus: 'checking',
-    });
-    await openGatewayPayment(data.orderId);
+    await openGatewayPayment(data.orderId, data.orderNumber);
     setCheckingOut(false);
   }
 
@@ -709,7 +704,7 @@ export default function AdminPosPage() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => openGatewayPayment(receipt.orderId)}
+                  onClick={() => openGatewayPayment(receipt.orderId, receipt.orderNumber)}
                   className={btnOutline}
                 >
                   Buka Ulang Pembayaran
