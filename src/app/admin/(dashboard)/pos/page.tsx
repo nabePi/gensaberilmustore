@@ -159,15 +159,33 @@ export default function AdminPosPage() {
   const [paymentMethod, setPaymentMethod] = useState<'POS_CASH' | 'POS_GATEWAY'>('POS_CASH');
   const [customerName, setCustomerName] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
+  const [customerEmail, setCustomerEmail] = useState('');
   const [note, setNote] = useState('');
   const [checkingOut, setCheckingOut] = useState(false);
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
   const snapFailedRef = useRef(false);
 
   const [receipt, setReceipt] = useState<PosReceiptState | null>(null);
+  const downloadedReceiptOrderIdRef = useRef<string | null>(null);
 
   const [history, setHistory] = useState<PosOrderSummary[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(true);
+
+  useEffect(() => {
+    if (
+      receipt &&
+      receipt.paymentStatus === 'paid' &&
+      downloadedReceiptOrderIdRef.current !== receipt.orderId
+    ) {
+      downloadedReceiptOrderIdRef.current = receipt.orderId;
+      const link = document.createElement('a');
+      link.href = `/api/admin/pos/receipt/${receipt.orderId}/pdf`;
+      link.rel = 'noopener';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  }, [receipt]);
 
   useEffect(() => {
     fetch('/api/categories')
@@ -337,6 +355,7 @@ export default function AdminPosPage() {
         paymentMethod,
         customerName: customerName.trim() || undefined,
         customerPhone: customerPhone.trim() || undefined,
+        customerEmail: customerEmail.trim() || undefined,
         note: note.trim() || undefined,
       }),
     });
@@ -354,6 +373,7 @@ export default function AdminPosPage() {
     setCart([]);
     setCustomerName('');
     setCustomerPhone('');
+    setCustomerEmail('');
     setNote('');
     loadHistory();
 
@@ -589,6 +609,20 @@ export default function AdminPosPage() {
               placeholder="08xxxxxxxxxx"
               value={customerPhone}
               onChange={(e) => setCustomerPhone(e.target.value)}
+              className={inputBase}
+            />
+          </div>
+
+          <div className="flex flex-col gap-1">
+            <label htmlFor="posCustomerEmail" className="text-xs font-medium text-neutral-600">
+              Email Pelanggan (opsional)
+            </label>
+            <input
+              id="posCustomerEmail"
+              type="email"
+              placeholder="nama@email.com"
+              value={customerEmail}
+              onChange={(e) => setCustomerEmail(e.target.value)}
               className={inputBase}
             />
           </div>

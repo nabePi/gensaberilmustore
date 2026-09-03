@@ -125,7 +125,7 @@ export const POST = withAuth(
             orderNumber,
             receiverName: data.customerName ?? 'Walk-in Customer',
             receiverPhone: data.customerPhone ?? '-',
-            receiverEmail: '-',
+            receiverEmail: data.customerEmail ?? null,
             receiverAddress: '-',
             receiverCity: '-',
             receiverNote: data.note ?? null,

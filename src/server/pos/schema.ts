@@ -14,6 +14,7 @@ export const createPosTransactionSchema = z.object({
   }),
   customerName: z.string().trim().min(1).optional(),
   customerPhone: z.string().trim().min(1).optional(),
+  customerEmail: z.string().trim().email('Email tidak valid').optional(),
   note: z.string().trim().min(1).optional(),
   voucherCode: z
     .string()
