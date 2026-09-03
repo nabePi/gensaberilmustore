@@ -7,6 +7,7 @@ import { generateUniqueOrderNumber } from '@/server/orders/order-number';
 import { orderListInclude, serializeAdminOrderListItem } from '@/server/orders/serialize';
 import { validateVoucherForOrder, VoucherValidationError } from '@/server/orders/voucher';
 import { createPosTransactionSchema, listPosTransactionsQuerySchema } from '@/server/pos/schema';
+import { computeUnitPrice } from '@/server/products/pricing';
 
 class PosTransactionError extends Error {}
 
@@ -42,7 +43,13 @@ export const POST = withAuth(
 
       const subtotal = data.items.reduce((sum, item) => {
         const product = productById.get(item.productId)!;
-        return sum + product.finalPrice * item.quantity;
+        const unitPrice = computeUnitPrice(
+          product.finalPrice,
+          item.quantity,
+          product.wholesalePrice,
+          product.wholesaleMinQty,
+        );
+        return sum + unitPrice * item.quantity;
       }, 0);
 
       if (data.voucherCode) {
@@ -136,13 +143,19 @@ export const POST = withAuth(
             items: {
               create: data.items.map((item) => {
                 const product = productById.get(item.productId)!;
+                const unitPrice = computeUnitPrice(
+                  product.finalPrice,
+                  item.quantity,
+                  product.wholesalePrice,
+                  product.wholesaleMinQty,
+                );
                 return {
                   productId: product.id,
                   titleSnapshot: product.title,
-                  priceSnapshot: product.finalPrice,
+                  priceSnapshot: unitPrice,
                   discountPercentSnapshot: product.discountPercent,
                   quantity: item.quantity,
-                  lineTotal: product.finalPrice * item.quantity,
+                  lineTotal: unitPrice * item.quantity,
                 };
               }),
             },

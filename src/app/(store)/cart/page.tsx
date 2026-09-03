@@ -14,6 +14,9 @@ type CartItem = {
   title: string;
   imageUrl: string | null;
   priceSnapshot: number;
+  normalPrice: number;
+  isWholesale: boolean;
+  wholesaleMinQty: number | null;
   quantity: number;
   lineTotal: number;
   flag: 'out_of_stock' | 'price_changed' | null;
@@ -125,9 +128,25 @@ export default function CartPage() {
                   >
                     {item.title}
                   </Link>
-                  <p className="text-sm font-bold text-brand">
-                    {formatCurrency(item.priceSnapshot)}
-                  </p>
+                  {item.isWholesale ? (
+                    <div className="flex flex-col">
+                      <span className="text-xs text-neutral-400 line-through">
+                        {formatCurrency(item.normalPrice)}
+                      </span>
+                      <div className="flex items-center gap-1.5">
+                        <p className="text-sm font-bold text-brand">
+                          {formatCurrency(item.priceSnapshot)}
+                        </p>
+                        <span className="rounded-sm bg-navy/10 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-navy">
+                          Harga Grosir
+                        </span>
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="text-sm font-bold text-brand">
+                      {formatCurrency(item.priceSnapshot)}
+                    </p>
+                  )}
 
                   <div className="mt-2 flex items-center justify-between">
                     <div className="flex items-center rounded-sm border border-neutral-200">

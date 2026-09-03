@@ -17,6 +17,11 @@ type AdminProductListItem = {
   title: string;
   author: string;
   price: number;
+  costPrice: number | null;
+  preOrderPrice: number | null;
+  isPreOrderActive: boolean;
+  wholesalePrice: number | null;
+  wholesaleMinQty: number | null;
   discountPercent: number;
   finalPrice: number;
   stock: number;
@@ -177,6 +182,9 @@ export default function AdminProdukPage() {
                 <th className="px-4 py-3">Produk</th>
                 <th className="px-4 py-3">Kategori</th>
                 <th className="px-4 py-3 text-right">Harga</th>
+                <th className="px-4 py-3 text-right">HPP</th>
+                <th className="px-4 py-3 text-right">PO</th>
+                <th className="px-4 py-3 text-right">Grosir</th>
                 <th className="px-4 py-3 text-right">Stok</th>
                 <th className="px-4 py-3">Status</th>
                 <th className="px-4 py-3" />
@@ -225,6 +233,39 @@ export default function AdminProdukPage() {
                       <p className="font-medium text-foreground">
                         {formatCurrency(product.finalPrice)}
                       </p>
+                    )}
+                  </td>
+                  <td className="px-4 py-3 text-right text-neutral-600">
+                    {product.costPrice != null ? formatCurrency(product.costPrice) : '-'}
+                  </td>
+                  <td className="px-4 py-3 text-right">
+                    {product.preOrderPrice != null ? (
+                      <>
+                        <p className="text-neutral-600">{formatCurrency(product.preOrderPrice)}</p>
+                        <span
+                          className={`${badgeBase} ${
+                            product.isPreOrderActive
+                              ? 'bg-navy/10 text-navy'
+                              : 'bg-neutral-100 text-neutral-500'
+                          }`}
+                        >
+                          {product.isPreOrderActive ? 'Aktif' : 'Nonaktif'}
+                        </span>
+                      </>
+                    ) : (
+                      <p className="text-neutral-600">-</p>
+                    )}
+                  </td>
+                  <td className="px-4 py-3 text-right text-neutral-600">
+                    {product.wholesalePrice != null && product.wholesaleMinQty != null ? (
+                      <>
+                        <p>{formatCurrency(product.wholesalePrice)}</p>
+                        <p className="text-xs text-neutral-400">
+                          min {product.wholesaleMinQty} pcs
+                        </p>
+                      </>
+                    ) : (
+                      '-'
                     )}
                   </td>
                   <td className="px-4 py-3 text-right text-neutral-600">{product.stock}</td>

@@ -4,7 +4,7 @@ import { z } from 'zod';
 
 import { prisma } from '@/lib/db';
 import { withAuth } from '@/server/auth';
-import { computeFinalPrice } from '@/server/products/pricing';
+import { computeEffectivePrice } from '@/server/products/pricing';
 import { createProductSchema } from '@/server/products/schema';
 import { generateUniqueSlug } from '@/server/products/slug';
 
@@ -67,6 +67,11 @@ export const GET = withAuth(
           title: true,
           author: true,
           price: true,
+          costPrice: true,
+          preOrderPrice: true,
+          isPreOrderActive: true,
+          wholesalePrice: true,
+          wholesaleMinQty: true,
           discountPercent: true,
           finalPrice: true,
           stock: true,
@@ -145,7 +150,12 @@ export const POST = withAuth(
           ...data,
           imprint: publisher,
           slug,
-          finalPrice: computeFinalPrice(data.price, data.discountPercent),
+          finalPrice: computeEffectivePrice(
+            data.price,
+            data.discountPercent,
+            data.isPreOrderActive,
+            data.preOrderPrice,
+          ),
           categories: { create: categoryIds.map((categoryId) => ({ categoryId })) },
           tags: { create: tagIds.map((tagId) => ({ tagId })) },
         },

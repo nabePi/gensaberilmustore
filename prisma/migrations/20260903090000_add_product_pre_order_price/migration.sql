@@ -1,0 +1,4 @@
+-- AlterTable
+ALTER TABLE "Product"
+  ADD COLUMN IF NOT EXISTS "preOrderPrice" INTEGER,
+  ADD COLUMN IF NOT EXISTS "isPreOrderActive" BOOLEAN NOT NULL DEFAULT false;

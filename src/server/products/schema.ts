@@ -15,6 +15,27 @@ const productFields = {
   tocText: z.string().optional(),
   highlightsText: z.string().optional(),
   price: z.number().int('Harga harus bilangan bulat').positive('Harga harus lebih dari 0'),
+  costPrice: z
+    .number()
+    .int('Harga HPP harus bilangan bulat')
+    .min(0, 'Harga HPP tidak boleh negatif')
+    .optional(),
+  preOrderPrice: z
+    .number()
+    .int('Harga PO harus bilangan bulat')
+    .min(0, 'Harga PO tidak boleh negatif')
+    .optional(),
+  isPreOrderActive: z.boolean().default(false),
+  wholesalePrice: z
+    .number()
+    .int('Harga grosir harus bilangan bulat')
+    .min(0, 'Harga grosir tidak boleh negatif')
+    .optional(),
+  wholesaleMinQty: z
+    .number()
+    .int('Minimum pcs grosir harus bilangan bulat')
+    .min(2, 'Minimum pcs grosir minimal 2')
+    .optional(),
   discountPercent: z.number().int().min(0).max(90).default(0),
   stock: z.number().int().min(0, 'Stok tidak boleh negatif'),
   weightGram: z.number().int().positive('Berat harus lebih dari 0'),

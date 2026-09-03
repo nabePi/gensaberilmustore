@@ -9,6 +9,7 @@ import { generateUniqueOrderNumber } from '@/server/orders/order-number';
 import { createOrderSchema, listMemberOrdersQuerySchema } from '@/server/orders/schema';
 import { orderListInclude, serializeOrderListItem } from '@/server/orders/serialize';
 import { validateVoucherForOrder, VoucherValidationError } from '@/server/orders/voucher';
+import { computeUnitPrice } from '@/server/products/pricing';
 
 class OrderCreationError extends Error {}
 
@@ -78,8 +79,20 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    const unitPriceByItemId = new Map(
+      cart.items.map((item) => [
+        item.id,
+        computeUnitPrice(
+          item.product.finalPrice,
+          item.quantity,
+          item.product.wholesalePrice,
+          item.product.wholesaleMinQty,
+        ),
+      ]),
+    );
+
     const subtotal = cart.items.reduce(
-      (sum, item) => sum + item.product.finalPrice * item.quantity,
+      (sum, item) => sum + unitPriceByItemId.get(item.id)! * item.quantity,
       0,
     );
     const shippingCost = city.shippingCost;
@@ -178,14 +191,17 @@ export async function POST(request: NextRequest) {
           voucherDiscount,
           manualDiscount: 0,
           items: {
-            create: cart.items.map((item) => ({
-              productId: item.productId,
-              titleSnapshot: item.product.title,
-              priceSnapshot: item.product.finalPrice,
-              discountPercentSnapshot: item.product.discountPercent,
-              quantity: item.quantity,
-              lineTotal: item.product.finalPrice * item.quantity,
-            })),
+            create: cart.items.map((item) => {
+              const unitPrice = unitPriceByItemId.get(item.id)!;
+              return {
+                productId: item.productId,
+                titleSnapshot: item.product.title,
+                priceSnapshot: unitPrice,
+                discountPercentSnapshot: item.product.discountPercent,
+                quantity: item.quantity,
+                lineTotal: unitPrice * item.quantity,
+              };
+            }),
           },
           history: {
             create: {

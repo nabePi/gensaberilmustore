@@ -152,11 +152,15 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
             <p className="text-sm text-neutral-600">Oleh {product.author}</p>
           ) : null}
 
+          {product.isPreOrderActive ? (
+            <span className={`w-fit ${badgeBase} bg-navy text-white`}>Pre Order</span>
+          ) : null}
+
           <div className="flex items-baseline gap-3">
             <span className="text-2xl font-bold text-brand">
               {formatCurrency(product.finalPrice)}
             </span>
-            {product.discountPercent > 0 ? (
+            {!product.isPreOrderActive && product.discountPercent > 0 ? (
               <>
                 <span className="text-base text-neutral-400 line-through">
                   {formatCurrency(product.price)}
@@ -167,6 +171,13 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
               </>
             ) : null}
           </div>
+
+          {product.wholesalePrice != null && product.wholesaleMinQty != null ? (
+            <p className="w-fit rounded-sm bg-navy/5 px-3 py-2 text-xs font-medium text-navy">
+              Beli minimal {product.wholesaleMinQty} pcs, harga jadi{' '}
+              <strong>{formatCurrency(product.wholesalePrice)}</strong>/pcs (Harga Grosir)
+            </p>
+          ) : null}
 
           <p className="text-sm text-neutral-600">
             {product.stock > 0 ? (

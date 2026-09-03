@@ -9,6 +9,7 @@ import {
   serializeCart,
 } from '@/server/cart/cart';
 import { updateCartItemQuantitySchema } from '@/server/cart/schema';
+import { computeUnitPrice } from '@/server/products/pricing';
 
 export async function PATCH(
   request: NextRequest,
@@ -37,7 +38,11 @@ export async function PATCH(
 
   const item = await prisma.cartItem.findUnique({
     where: { id: itemId },
-    include: { product: { select: { stock: true } } },
+    include: {
+      product: {
+        select: { stock: true, finalPrice: true, wholesalePrice: true, wholesaleMinQty: true },
+      },
+    },
   });
 
   if (!item || item.cartId !== cart.id) {
@@ -55,7 +60,17 @@ export async function PATCH(
     );
   }
 
-  await prisma.cartItem.update({ where: { id: itemId }, data: { quantity: parsed.data.quantity } });
+  const unitPrice = computeUnitPrice(
+    item.product.finalPrice,
+    parsed.data.quantity,
+    item.product.wholesalePrice,
+    item.product.wholesaleMinQty,
+  );
+
+  await prisma.cartItem.update({
+    where: { id: itemId },
+    data: { quantity: parsed.data.quantity, priceSnapshot: unitPrice },
+  });
 
   const updatedCart = await getCartById(cart.id);
   return withGuestCookie(NextResponse.json(serializeCart(updatedCart)));

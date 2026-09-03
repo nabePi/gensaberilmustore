@@ -29,6 +29,11 @@ export type AdminProductDetail = {
   imprint: string | null;
   description: string;
   price: number;
+  costPrice: number | null;
+  preOrderPrice: number | null;
+  isPreOrderActive: boolean;
+  wholesalePrice: number | null;
+  wholesaleMinQty: number | null;
   discountPercent: number;
   stock: number;
   weightGram: number;
@@ -48,6 +53,11 @@ const productFormSchema = z.object({
   publisher: z.string().trim().optional(),
   description: z.string().trim().min(1, 'Deskripsi wajib diisi'),
   price: z.coerce.number().int().positive('Harga harus lebih dari 0'),
+  costPrice: z.coerce.number().int().min(0, 'Harga HPP tidak boleh negatif').optional(),
+  preOrderPrice: z.coerce.number().int().min(0, 'Harga PO tidak boleh negatif').optional(),
+  isPreOrderActive: z.boolean(),
+  wholesalePrice: z.coerce.number().int().min(0, 'Harga grosir tidak boleh negatif').optional(),
+  wholesaleMinQty: z.coerce.number().int().min(2, 'Minimum pcs grosir minimal 2').optional(),
   discountPercent: z.coerce.number().int().min(0).max(90),
   stock: z.coerce.number().int().min(0, 'Stok tidak boleh negatif'),
   weightGram: z.coerce.number().int().positive('Berat harus lebih dari 0'),
@@ -98,6 +108,11 @@ export function ProductFormModal({
           publisher: product.imprint ?? '',
           description: product.description,
           price: product.price,
+          costPrice: product.costPrice ?? undefined,
+          preOrderPrice: product.preOrderPrice ?? undefined,
+          isPreOrderActive: product.isPreOrderActive,
+          wholesalePrice: product.wholesalePrice ?? undefined,
+          wholesaleMinQty: product.wholesaleMinQty ?? undefined,
           discountPercent: product.discountPercent,
           stock: product.stock,
           weightGram: product.weightGram,
@@ -108,6 +123,7 @@ export function ProductFormModal({
         }
       : {
           discountPercent: 0,
+          isPreOrderActive: false,
           coverType: 'SOFTCOVER',
           publishYear: new Date().getFullYear(),
           isActive: true,
@@ -267,6 +283,18 @@ export function ProductFormModal({
           <Field label="Harga (Rp)" error={errors.price?.message}>
             <input type="number" {...register('price')} className={inputBase} />
           </Field>
+          <Field label="Harga HPP (Rp)" error={errors.costPrice?.message}>
+            <input type="number" {...register('costPrice')} className={inputBase} />
+          </Field>
+          <Field label="Harga PO / Pre Order (Rp)" error={errors.preOrderPrice?.message}>
+            <input type="number" {...register('preOrderPrice')} className={inputBase} />
+          </Field>
+          <Field label="Harga Grosir (Rp)" error={errors.wholesalePrice?.message}>
+            <input type="number" {...register('wholesalePrice')} className={inputBase} />
+          </Field>
+          <Field label="Minimum Pcs untuk Harga Grosir" error={errors.wholesaleMinQty?.message}>
+            <input type="number" {...register('wholesaleMinQty')} className={inputBase} />
+          </Field>
           <Field label="Diskon (%)" error={errors.discountPercent?.message}>
             <input type="number" {...register('discountPercent')} className={inputBase} />
           </Field>
@@ -397,6 +425,11 @@ export function ProductFormModal({
             </p>
           </div>
         </Field>
+
+        <label className="flex items-center gap-2 text-sm">
+          <input type="checkbox" {...register('isPreOrderActive')} className="h-4 w-4" />
+          Tampilkan Harga PO ke pembeli (menggantikan harga normal selama pre order aktif)
+        </label>
 
         <label className="flex items-center gap-2 text-sm">
           <input type="checkbox" {...register('isActive')} className="h-4 w-4" />

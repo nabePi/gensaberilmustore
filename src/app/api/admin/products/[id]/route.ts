@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import { prisma } from '@/lib/db';
 import { withAuth } from '@/server/auth';
-import { computeFinalPrice } from '@/server/products/pricing';
+import { computeEffectivePrice } from '@/server/products/pricing';
 import { updateProductSchema } from '@/server/products/schema';
 import { generateUniqueSlug } from '@/server/products/slug';
 
@@ -80,11 +80,16 @@ export const PUT = withAuth<RouteContext>(
     }
 
     const finalPriceUpdate =
-      data.price !== undefined || data.discountPercent !== undefined
+      data.price !== undefined ||
+      data.discountPercent !== undefined ||
+      data.preOrderPrice !== undefined ||
+      data.isPreOrderActive !== undefined
         ? {
-            finalPrice: computeFinalPrice(
+            finalPrice: computeEffectivePrice(
               data.price ?? existing.price,
               data.discountPercent ?? existing.discountPercent,
+              data.isPreOrderActive ?? existing.isPreOrderActive,
+              data.preOrderPrice ?? existing.preOrderPrice,
             ),
           }
         : {};

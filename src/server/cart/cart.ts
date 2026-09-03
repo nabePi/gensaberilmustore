@@ -6,6 +6,7 @@ import type { NextRequest } from 'next/server';
 import { env } from '@/env';
 import { prisma } from '@/lib/db';
 import { getSession } from '@/server/auth';
+import { computeUnitPrice } from '@/server/products/pricing';
 
 export const GUEST_CART_COOKIE_NAME = 'gsb_cart_guest';
 const GUEST_CART_COOKIE_MAX_AGE_SECONDS = 30 * 24 * 60 * 60;
@@ -23,6 +24,8 @@ const cartInclude = {
           stock: true,
           finalPrice: true,
           discountPercent: true,
+          wholesalePrice: true,
+          wholesaleMinQty: true,
           images: {
             orderBy: [{ isPrimary: 'desc' }, { position: 'asc' }],
             take: 1,
@@ -119,10 +122,17 @@ export async function mergeGuestCartIntoUserCart(
         continue;
       }
 
+      const unitPrice = computeUnitPrice(
+        guestItem.product.finalPrice,
+        cappedQuantity,
+        guestItem.product.wholesalePrice,
+        guestItem.product.wholesaleMinQty,
+      );
+
       if (existing) {
         await tx.cartItem.update({
           where: { id: existing.id },
-          data: { quantity: cappedQuantity, priceSnapshot: guestItem.product.finalPrice },
+          data: { quantity: cappedQuantity, priceSnapshot: unitPrice },
         });
       } else {
         await tx.cartItem.create({
@@ -130,7 +140,7 @@ export async function mergeGuestCartIntoUserCart(
             cartId: memberCart.id,
             productId: guestItem.productId,
             quantity: cappedQuantity,
-            priceSnapshot: guestItem.product.finalPrice,
+            priceSnapshot: unitPrice,
           },
         });
       }
@@ -143,10 +153,20 @@ export async function mergeGuestCartIntoUserCart(
 export function serializeCart(cart: CartWithItems) {
   const items = cart.items.map((item) => {
     const { product } = item;
+    const expectedUnitPrice = computeUnitPrice(
+      product.finalPrice,
+      item.quantity,
+      product.wholesalePrice,
+      product.wholesaleMinQty,
+    );
+    const isWholesale =
+      product.wholesalePrice != null &&
+      product.wholesaleMinQty != null &&
+      item.quantity >= product.wholesaleMinQty;
     const flag =
       !product.isActive || product.stock < item.quantity
         ? ('out_of_stock' as const)
-        : product.finalPrice !== item.priceSnapshot
+        : expectedUnitPrice !== item.priceSnapshot
           ? ('price_changed' as const)
           : null;
 
@@ -157,6 +177,9 @@ export function serializeCart(cart: CartWithItems) {
       title: product.title,
       imageUrl: product.images[0]?.url ?? null,
       priceSnapshot: item.priceSnapshot,
+      normalPrice: product.finalPrice,
+      isWholesale,
+      wholesaleMinQty: product.wholesaleMinQty,
       quantity: item.quantity,
       lineTotal: item.priceSnapshot * item.quantity,
       flag,

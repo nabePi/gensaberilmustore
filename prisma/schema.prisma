@@ -199,30 +199,35 @@ model Tag {
 }
 
 model Product {
-  id              String      @id @default(uuid())
-  sku             String      @unique
-  slug            String      @unique
-  title           String
-  subtitle        String
-  author          String
-  imprint         String?
-  description     String
-  tocText         String?
-  highlightsText  String?
-  price           Int
-  discountPercent Int         @default(0)
-  finalPrice      Int
-  stock           Int         @default(0)
-  weightGram      Int
-  coverType       CoverType
-  pageCount       Int
-  publishYear     Int
-  isActive        Boolean     @default(true)
-  position        Int         @default(0)
-  ribbonType      RibbonType?
-  ribbonText      String?
-  createdAt       DateTime    @default(now())
-  updatedAt       DateTime    @updatedAt
+  id               String      @id @default(uuid())
+  sku              String      @unique
+  slug             String      @unique
+  title            String
+  subtitle         String
+  author           String
+  imprint          String?
+  description      String
+  tocText          String?
+  highlightsText   String?
+  price            Int
+  costPrice        Int?
+  preOrderPrice    Int?
+  isPreOrderActive Boolean     @default(false)
+  wholesalePrice   Int?
+  wholesaleMinQty  Int?
+  discountPercent  Int         @default(0)
+  finalPrice       Int
+  stock            Int         @default(0)
+  weightGram       Int
+  coverType        CoverType
+  pageCount        Int
+  publishYear      Int
+  isActive         Boolean     @default(true)
+  position         Int         @default(0)
+  ribbonType       RibbonType?
+  ribbonText       String?
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
 
   images                  ProductImage[]
   tags                    ProductTag[]

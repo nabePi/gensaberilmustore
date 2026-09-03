@@ -9,6 +9,7 @@ import {
   serializeCart,
 } from '@/server/cart/cart';
 import { addCartItemSchema } from '@/server/cart/schema';
+import { computeUnitPrice } from '@/server/products/pricing';
 
 export async function POST(request: NextRequest) {
   const body: unknown = await request.json().catch(() => null);
@@ -23,7 +24,16 @@ export async function POST(request: NextRequest) {
 
   const { productId, quantity } = parsed.data;
 
-  const product = await prisma.product.findUnique({ where: { id: productId } });
+  const product = await prisma.product.findUnique({
+    where: { id: productId },
+    select: {
+      isActive: true,
+      stock: true,
+      finalPrice: true,
+      wholesalePrice: true,
+      wholesaleMinQty: true,
+    },
+  });
   if (!product || !product.isActive) {
     return NextResponse.json({ error: 'Produk tidak ditemukan' }, { status: 404 });
   }
@@ -51,14 +61,21 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  const unitPrice = computeUnitPrice(
+    product.finalPrice,
+    newQuantity,
+    product.wholesalePrice,
+    product.wholesaleMinQty,
+  );
+
   await prisma.cartItem.upsert({
     where: { cartId_productId: { cartId: cart.id, productId } },
-    update: { quantity: newQuantity },
+    update: { quantity: newQuantity, priceSnapshot: unitPrice },
     create: {
       cartId: cart.id,
       productId,
       quantity: newQuantity,
-      priceSnapshot: product.finalPrice,
+      priceSnapshot: unitPrice,
     },
   });
 

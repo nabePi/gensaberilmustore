@@ -14,6 +14,7 @@ export type ProductCardData = {
   price: number;
   finalPrice: number;
   discountPercent?: number;
+  isPreOrderActive?: boolean;
   stock?: number;
   ribbonType?: 'NEW' | 'BEST' | 'DISCOUNT' | null;
   ribbonText?: string | null;
@@ -112,7 +113,11 @@ export function ProductCard({ product }: { product: ProductCardData }) {
         {product.author ? <p className="text-xs text-neutral-500">{product.author}</p> : null}
         <div className="mt-auto flex items-end justify-between gap-1.5 pt-1.5">
           <div className="flex flex-col">
-            {product.discountPercent ? (
+            {product.isPreOrderActive ? (
+              <span className="text-[10px] font-bold uppercase tracking-wide text-navy">
+                Pre Order
+              </span>
+            ) : product.discountPercent ? (
               <span className="text-[11px] text-neutral-400">
                 {formatCurrency(product.price)}
                 <span className="ml-1 font-semibold text-red">-{product.discountPercent}%</span>
