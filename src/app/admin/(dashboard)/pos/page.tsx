@@ -7,6 +7,53 @@ import { formatCurrency } from '@/lib/format';
 import { btnOutline, btnSolid, btnSolidSm, cardBase, inputBase } from '@/lib/styles';
 import { computeUnitPrice } from '@/server/products/pricing';
 
+function QuantityInput({
+  quantity,
+  stock,
+  onChange,
+}: {
+  quantity: number;
+  stock: number;
+  onChange: (quantity: number) => void;
+}) {
+  const [draft, setDraft] = useState(String(quantity));
+  const [prevQuantity, setPrevQuantity] = useState(quantity);
+
+  if (quantity !== prevQuantity) {
+    setPrevQuantity(quantity);
+    setDraft(String(quantity));
+  }
+
+  function commit(value: string) {
+    const parsed = parseInt(value, 10);
+    if (Number.isNaN(parsed) || parsed < 1) {
+      setDraft(String(quantity));
+      return;
+    }
+    const clamped = Math.min(parsed, stock);
+    setDraft(String(clamped));
+    if (clamped !== quantity) onChange(clamped);
+  }
+
+  return (
+    <input
+      type="number"
+      min={1}
+      max={stock}
+      value={draft}
+      onChange={(e) => setDraft(e.target.value)}
+      onBlur={() => commit(draft)}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          e.currentTarget.blur();
+        }
+      }}
+      className="w-14 rounded-sm border border-neutral-200 px-1 py-1 text-center text-sm [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+    />
+  );
+}
+
 type CatalogProduct = {
   id: string;
   sku: string;
@@ -358,7 +405,11 @@ export default function AdminPosPage() {
                     >
                       −
                     </button>
-                    <span className="w-6 text-center text-sm">{line.quantity}</span>
+                    <QuantityInput
+                      quantity={line.quantity}
+                      stock={line.stock}
+                      onChange={(quantity) => updateQuantity(line.productId, quantity)}
+                    />
                     <button
                       type="button"
                       onClick={() => updateQuantity(line.productId, line.quantity + 1)}
