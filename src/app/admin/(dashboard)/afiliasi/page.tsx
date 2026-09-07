@@ -3,8 +3,17 @@
 import { useEffect, useState } from 'react';
 
 import { AdminModal } from '@/components/admin/AdminModal';
+import { Badge } from '@/components/admin/ui/Badge';
+import { PageHeader } from '@/components/admin/ui/PageHeader';
+import { StatCard } from '@/components/admin/ui/StatCard';
+import { Table, Tbody, Td, Th, Thead, Tr } from '@/components/admin/ui/Table';
+import {
+  adminBtnOutline,
+  adminBtnPrimary,
+  adminBtnPrimarySm,
+  adminInputBase,
+} from '@/lib/admin/styles';
 import { formatCurrency } from '@/lib/format';
-import { badgeBase, btnOutline, btnSolid, btnSolidSm, cardBase, inputBase } from '@/lib/styles';
 
 type AffiliateListItem = {
   id: string;
@@ -48,15 +57,6 @@ type CommissionRate = {
 };
 
 type ProductOption = { id: string; title: string; sku: string };
-
-function StatCard({ label, value }: { label: string; value: string }) {
-  return (
-    <div className={`p-4 ${cardBase}`}>
-      <p className="text-xs text-neutral-500">{label}</p>
-      <p className="mt-1 text-xl font-bold text-foreground">{value}</p>
-    </div>
-  );
-}
 
 export default function AdminAfiliasiPage() {
   const [affiliates, setAffiliates] = useState<AffiliateListItem[]>([]);
@@ -180,13 +180,13 @@ export default function AdminAfiliasiPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Kelola Afiliasi</h1>
-          <p className="mt-1 text-sm text-neutral-500">Performa dan komisi afiliasi semua member</p>
-        </div>
-        <span className="text-sm font-medium text-neutral-500">{affiliates.length} afiliasi</span>
-      </div>
+      <PageHeader
+        title="Kelola Afiliasi"
+        description="Performa dan komisi afiliasi semua member"
+        action={
+          <span className="text-sm font-medium text-neutral-500">{affiliates.length} afiliasi</span>
+        }
+      />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard label="Total Afiliasi" value={affiliates.length.toString()} />
@@ -213,72 +213,53 @@ export default function AdminAfiliasiPage() {
             <p className="text-sm text-neutral-500">Belum ada data afiliasi.</p>
           </div>
         ) : (
-          <div className={`overflow-x-auto ${cardBase}`}>
-            <table className="w-full text-left text-sm">
-              <thead className="border-b border-neutral-200 bg-neutral-50 text-xs uppercase text-neutral-500">
-                <tr>
-                  <th className="px-4 py-3">Member</th>
-                  <th className="px-4 py-3">Kode</th>
-                  <th className="px-4 py-3 text-right">Klik</th>
-                  <th className="px-4 py-3 text-right">Konversi</th>
-                  <th className="px-4 py-3 text-right">Komisi Pending</th>
-                  <th className="px-4 py-3 text-right">Komisi Dibayar</th>
-                  <th className="px-4 py-3">Status</th>
-                  <th className="px-4 py-3" />
-                </tr>
-              </thead>
-              <tbody>
-                {affiliates.map((affiliate) => (
-                  <tr
-                    key={affiliate.id}
-                    className="border-b border-neutral-100 last:border-0 hover:bg-neutral-50"
-                  >
-                    <td className="px-4 py-3">
-                      <p className="font-medium text-foreground">
-                        {affiliate.user.name ?? affiliate.user.email}
-                      </p>
-                      <p className="text-xs text-neutral-500">{affiliate.user.email}</p>
-                    </td>
-                    <td className="px-4 py-3 font-mono text-xs text-neutral-600">
-                      {affiliate.code}
-                    </td>
-                    <td className="px-4 py-3 text-right text-neutral-600">
-                      {affiliate.totalClicks}
-                    </td>
-                    <td className="px-4 py-3 text-right text-neutral-600">
-                      {affiliate.totalConversions}
-                    </td>
-                    <td className="px-4 py-3 text-right text-neutral-600">
-                      {formatCurrency(affiliate.commissionPending)}
-                    </td>
-                    <td className="px-4 py-3 text-right text-neutral-600">
-                      {formatCurrency(affiliate.commissionPaid)}
-                    </td>
-                    <td className="px-4 py-3">
-                      <span
-                        className={`${badgeBase} ${
-                          affiliate.isActive
-                            ? 'bg-green/10 text-green'
-                            : 'bg-neutral-100 text-neutral-500'
-                        }`}
-                      >
-                        {affiliate.isActive ? 'Aktif' : 'Nonaktif'}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-right">
-                      <button
-                        type="button"
-                        onClick={() => openDetail(affiliate.id)}
-                        className="text-sm font-medium text-brand hover:underline"
-                      >
-                        Detail
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <Table>
+            <Thead>
+              <Th>Member</Th>
+              <Th>Kode</Th>
+              <Th className="text-right">Klik</Th>
+              <Th className="text-right">Konversi</Th>
+              <Th className="text-right">Komisi Pending</Th>
+              <Th className="text-right">Komisi Dibayar</Th>
+              <Th>Status</Th>
+              <Th />
+            </Thead>
+            <Tbody>
+              {affiliates.map((affiliate) => (
+                <Tr key={affiliate.id}>
+                  <Td>
+                    <p className="font-medium text-foreground">
+                      {affiliate.user.name ?? affiliate.user.email}
+                    </p>
+                    <p className="text-xs text-neutral-500">{affiliate.user.email}</p>
+                  </Td>
+                  <Td className="font-mono text-xs text-neutral-600">{affiliate.code}</Td>
+                  <Td className="text-right text-neutral-600">{affiliate.totalClicks}</Td>
+                  <Td className="text-right text-neutral-600">{affiliate.totalConversions}</Td>
+                  <Td className="text-right text-neutral-600">
+                    {formatCurrency(affiliate.commissionPending)}
+                  </Td>
+                  <Td className="text-right text-neutral-600">
+                    {formatCurrency(affiliate.commissionPaid)}
+                  </Td>
+                  <Td>
+                    <Badge tone={affiliate.isActive ? 'success' : 'neutral'}>
+                      {affiliate.isActive ? 'Aktif' : 'Nonaktif'}
+                    </Badge>
+                  </Td>
+                  <Td className="text-right">
+                    <button
+                      type="button"
+                      onClick={() => openDetail(affiliate.id)}
+                      className="text-sm font-medium text-brand hover:underline"
+                    >
+                      Detail
+                    </button>
+                  </Td>
+                </Tr>
+              ))}
+            </Tbody>
+          </Table>
         )}
       </div>
 
@@ -289,7 +270,7 @@ export default function AdminAfiliasiPage() {
         </p>
         <div className="flex items-center justify-between">
           <span />
-          <button type="button" onClick={openAddRate} className={btnSolidSm}>
+          <button type="button" onClick={openAddRate} className={adminBtnPrimarySm}>
             + Tambah Produk
           </button>
         </div>
@@ -303,49 +284,39 @@ export default function AdminAfiliasiPage() {
             </p>
           </div>
         ) : (
-          <div className={`overflow-x-auto ${cardBase}`}>
-            <table className="w-full text-left text-sm">
-              <thead className="border-b border-neutral-200 bg-neutral-50 text-xs uppercase text-neutral-500">
-                <tr>
-                  <th className="px-4 py-3">Produk</th>
-                  <th className="px-4 py-3 text-right">Komisi</th>
-                  <th className="px-4 py-3">Status</th>
-                  <th className="px-4 py-3" />
-                </tr>
-              </thead>
-              <tbody>
-                {rates.map((rate) => (
-                  <tr key={rate.productId} className="border-b border-neutral-100 last:border-0">
-                    <td className="px-4 py-3">
-                      <p className="font-medium text-foreground">{rate.title}</p>
-                      <p className="text-xs text-neutral-500">{rate.sku}</p>
-                    </td>
-                    <td className="px-4 py-3 text-right text-neutral-600">{rate.percent}%</td>
-                    <td className="px-4 py-3">
-                      <span
-                        className={`${badgeBase} ${
-                          rate.isActive
-                            ? 'bg-green/10 text-green'
-                            : 'bg-neutral-100 text-neutral-500'
-                        }`}
-                      >
-                        {rate.isActive ? 'Aktif' : 'Nonaktif'}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-right">
-                      <button
-                        type="button"
-                        onClick={() => openEditRate(rate)}
-                        className="text-sm font-medium text-brand hover:underline"
-                      >
-                        Edit
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <Table>
+            <Thead>
+              <Th>Produk</Th>
+              <Th className="text-right">Komisi</Th>
+              <Th>Status</Th>
+              <Th />
+            </Thead>
+            <Tbody>
+              {rates.map((rate) => (
+                <Tr key={rate.productId}>
+                  <Td>
+                    <p className="font-medium text-foreground">{rate.title}</p>
+                    <p className="text-xs text-neutral-500">{rate.sku}</p>
+                  </Td>
+                  <Td className="text-right text-neutral-600">{rate.percent}%</Td>
+                  <Td>
+                    <Badge tone={rate.isActive ? 'success' : 'neutral'}>
+                      {rate.isActive ? 'Aktif' : 'Nonaktif'}
+                    </Badge>
+                  </Td>
+                  <Td className="text-right">
+                    <button
+                      type="button"
+                      onClick={() => openEditRate(rate)}
+                      className="text-sm font-medium text-brand hover:underline"
+                    >
+                      Edit
+                    </button>
+                  </Td>
+                </Tr>
+              ))}
+            </Tbody>
+          </Table>
         )}
       </div>
 
@@ -364,7 +335,7 @@ export default function AdminAfiliasiPage() {
                 value={formProductId}
                 onChange={(e) => setFormProductId(e.target.value)}
                 disabled={modalTarget !== 'new'}
-                className={inputBase}
+                className={adminInputBase}
               >
                 <option value="">Pilih produk</option>
                 {(modalTarget === 'new' ? unratedProducts : availableProducts).map((product) => (
@@ -386,7 +357,7 @@ export default function AdminAfiliasiPage() {
                 max={100}
                 value={formPercent}
                 onChange={(e) => setFormPercent(e.target.value)}
-                className={inputBase}
+                className={adminInputBase}
               />
               <p className="text-xs text-neutral-500">
                 Persentase komisi yang diterima affiliate per penjualan (0-100%)
@@ -406,10 +377,15 @@ export default function AdminAfiliasiPage() {
           </div>
 
           <div className="mt-4 flex justify-end gap-2">
-            <button type="button" onClick={() => setModalTarget(null)} className={btnOutline}>
+            <button type="button" onClick={() => setModalTarget(null)} className={adminBtnOutline}>
               Batal
             </button>
-            <button type="button" disabled={saving} onClick={handleSaveRate} className={btnSolid}>
+            <button
+              type="button"
+              disabled={saving}
+              onClick={handleSaveRate}
+              className={adminBtnPrimary}
+            >
               {saving ? 'Menyimpan...' : 'Simpan'}
             </button>
           </div>
@@ -451,7 +427,7 @@ export default function AdminAfiliasiPage() {
               <p className="mb-2 font-semibold text-foreground">Breakdown Komisi</p>
               <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
                 {Object.entries(detail.commissionByStatus).map(([status, amount]) => (
-                  <div key={status} className="rounded-sm border border-neutral-200 p-2">
+                  <div key={status} className="rounded-lg border border-neutral-200 p-2">
                     <p className="text-xs text-neutral-500">{status}</p>
                     <p className="font-medium text-foreground">{formatCurrency(amount)}</p>
                   </div>
@@ -477,7 +453,7 @@ export default function AdminAfiliasiPage() {
               {detail.conversions.length === 0 ? (
                 <p className="text-neutral-500">Belum ada konversi.</p>
               ) : (
-                <div className="overflow-x-auto rounded-sm border border-neutral-200">
+                <div className="overflow-x-auto rounded-lg border border-neutral-200">
                   <table className="w-full text-left text-xs">
                     <thead className="bg-neutral-50 text-neutral-500">
                       <tr>

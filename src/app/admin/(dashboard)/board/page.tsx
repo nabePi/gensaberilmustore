@@ -18,9 +18,10 @@ import {
   formatOrderDate,
   type OrderStatusValue,
 } from '@/components/admin/OrderDetailModal';
+import { PageHeader } from '@/components/admin/ui/PageHeader';
+import { adminCardBase, adminInputBase } from '@/lib/admin/styles';
 import { formatCurrency } from '@/lib/format';
 import { ORDER_STATUS_LABELS } from '@/lib/order-status';
-import { cardBase, inputBase } from '@/lib/styles';
 
 type BoardOrder = {
   id: string;
@@ -68,7 +69,7 @@ function OrderCard({ order }: { order: BoardOrder }) {
       style={style}
       {...listeners}
       {...attributes}
-      className={`cursor-grab rounded-md border border-neutral-200 bg-white p-3 text-sm shadow-sm active:cursor-grabbing ${
+      className={`cursor-grab rounded-lg border border-neutral-200 bg-white p-3 text-sm shadow-theme-xs active:cursor-grabbing ${
         isDragging ? 'opacity-50' : ''
       }`}
     >
@@ -240,32 +241,32 @@ export default function AdminBoardPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Order Board</h1>
-          <p className="mt-1 text-sm text-neutral-500">Papan Kanban untuk mengelola alur pesanan</p>
-        </div>
-        <div className="flex gap-2">
-          <input
-            type="search"
-            placeholder="Cari pesanan..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className={`${inputBase} w-56`}
-          />
-          <select
-            value={source}
-            onChange={(e) => setSource(e.target.value as 'ALL' | 'ONLINE' | 'POS')}
-            className={inputBase}
-          >
-            <option value="ALL">Semua Sumber</option>
-            <option value="ONLINE">Online</option>
-            <option value="POS">POS</option>
-          </select>
-        </div>
-      </div>
+      <PageHeader
+        title="Order Board"
+        description="Papan Kanban untuk mengelola alur pesanan"
+        action={
+          <div className="flex gap-2">
+            <input
+              type="search"
+              placeholder="Cari pesanan..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className={`${adminInputBase} w-56`}
+            />
+            <select
+              value={source}
+              onChange={(e) => setSource(e.target.value as 'ALL' | 'ONLINE' | 'POS')}
+              className={adminInputBase}
+            >
+              <option value="ALL">Semua Sumber</option>
+              <option value="ONLINE">Online</option>
+              <option value="POS">POS</option>
+            </select>
+          </div>
+        }
+      />
 
-      <div className={`p-3 text-sm text-neutral-500 ${cardBase}`}>
+      <div className={`p-3 text-sm text-neutral-500 ${adminCardBase}`}>
         Seret kartu pesanan antar kolom untuk mengubah status, atau klik kartu untuk detail.
       </div>
 

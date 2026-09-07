@@ -3,7 +3,13 @@
 import { useEffect, useRef, useState } from 'react';
 
 import { BannerImageManager, type BannerImageItem } from '@/components/admin/BannerImageManager';
-import { btnSolid, inputBase } from '@/lib/styles';
+import { PageHeader } from '@/components/admin/ui/PageHeader';
+import {
+  adminBtnPrimary,
+  adminCardBase,
+  adminInputBase,
+  adminTextareaBase,
+} from '@/lib/admin/styles';
 
 type KidsForm = {
   heroBadge: string;
@@ -121,14 +127,12 @@ export default function AdminKonfigurasiKidsPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">Konfigurasi Kids</h1>
-        <p className="mt-1 text-sm text-neutral-500">
-          Atur banner, hero, dan promo yang tampil di halaman Buku Anak
-        </p>
-      </div>
+      <PageHeader
+        title="Konfigurasi Kids"
+        description="Atur banner, hero, dan promo yang tampil di halaman Buku Anak"
+      />
 
-      <div className="flex flex-col gap-3 rounded-lg border border-neutral-200 p-4">
+      <div className={`flex flex-col gap-3 p-4 ${adminCardBase}`}>
         <h3 className="font-semibold text-foreground">Hero Buku Anak</h3>
         <div className="flex flex-col gap-1">
           <label htmlFor="kidsHeroBadge" className="text-xs font-medium text-neutral-600">
@@ -140,7 +144,7 @@ export default function AdminKonfigurasiKidsPage() {
             value={kidsForm.heroBadge}
             onChange={(e) => setKidsForm((prev) => ({ ...prev, heroBadge: e.target.value }))}
             placeholder="Selamat Datang, Kecil!"
-            className={inputBase}
+            className={adminInputBase}
           />
         </div>
         <BannerImageManager label="Gambar Hero" images={banners} onChange={setBanners} />
@@ -158,7 +162,7 @@ export default function AdminKonfigurasiKidsPage() {
             value={kidsForm.heroTitle}
             onChange={(e) => setKidsForm((prev) => ({ ...prev, heroTitle: e.target.value }))}
             placeholder="Dunia Buku yang Ceria dan Penuh Warna"
-            className={inputBase}
+            className={adminInputBase}
           />
         </div>
         <div className="flex flex-col gap-1">
@@ -171,12 +175,12 @@ export default function AdminKonfigurasiKidsPage() {
             value={kidsForm.heroDescription}
             onChange={(e) => setKidsForm((prev) => ({ ...prev, heroDescription: e.target.value }))}
             placeholder="Temukan ribuan buku edukatif..."
-            className={inputBase}
+            className={adminTextareaBase}
           />
         </div>
       </div>
 
-      <div className="flex flex-col gap-3 rounded-lg border border-neutral-200 p-4">
+      <div className={`flex flex-col gap-3 p-4 ${adminCardBase}`}>
         <h3 className="font-semibold text-foreground">Promo Buku Anak</h3>
         <div className="grid gap-3 sm:grid-cols-2">
           <div className="flex flex-col gap-1">
@@ -189,7 +193,7 @@ export default function AdminKonfigurasiKidsPage() {
               value={kidsForm.promoBadge}
               onChange={(e) => setKidsForm((prev) => ({ ...prev, promoBadge: e.target.value }))}
               placeholder="Spesial"
-              className={inputBase}
+              className={adminInputBase}
             />
           </div>
           <div className="flex flex-col gap-1">
@@ -202,7 +206,7 @@ export default function AdminKonfigurasiKidsPage() {
               value={kidsForm.promoImageUrl}
               onChange={(e) => setKidsForm((prev) => ({ ...prev, promoImageUrl: e.target.value }))}
               placeholder="https://..."
-              className={inputBase}
+              className={adminInputBase}
             />
           </div>
         </div>
@@ -216,7 +220,7 @@ export default function AdminKonfigurasiKidsPage() {
             value={kidsForm.promoTitle}
             onChange={(e) => setKidsForm((prev) => ({ ...prev, promoTitle: e.target.value }))}
             placeholder="Paket Hadiah Si Kecil"
-            className={inputBase}
+            className={adminInputBase}
           />
         </div>
         <div className="flex flex-col gap-1">
@@ -229,7 +233,7 @@ export default function AdminKonfigurasiKidsPage() {
             value={kidsForm.promoDescription}
             onChange={(e) => setKidsForm((prev) => ({ ...prev, promoDescription: e.target.value }))}
             placeholder="Dapatkan bundling buku anak..."
-            className={inputBase}
+            className={adminTextareaBase}
           />
         </div>
       </div>
@@ -245,13 +249,13 @@ export default function AdminKonfigurasiKidsPage() {
           <p className="text-sm font-medium text-amber-800">
             Ada perubahan belum disimpan. Klik Simpan agar tampil di halaman toko.
           </p>
-          <button type="button" disabled={saving} onClick={handleSave} className={btnSolid}>
+          <button type="button" disabled={saving} onClick={handleSave} className={adminBtnPrimary}>
             {saving ? 'Menyimpan...' : 'Simpan Konfigurasi'}
           </button>
         </div>
       ) : (
         <div className="flex items-center justify-end border-t border-neutral-200 pt-4">
-          <button type="button" disabled={saving} onClick={handleSave} className={btnSolid}>
+          <button type="button" disabled={saving} onClick={handleSave} className={adminBtnPrimary}>
             {saving ? 'Menyimpan...' : 'Simpan Konfigurasi'}
           </button>
         </div>

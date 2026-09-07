@@ -3,9 +3,12 @@
 import type { OrderStatus } from '@prisma/client';
 import { useEffect, useState } from 'react';
 
+import { PageHeader } from '@/components/admin/ui/PageHeader';
+import { StatCard } from '@/components/admin/ui/StatCard';
+import { Table, Tbody, Td, TableEmptyState, Th, Thead, Tr } from '@/components/admin/ui/Table';
+import { adminBadgeBase, adminBtnOutline, adminCardBase, adminInputBase } from '@/lib/admin/styles';
 import { formatCurrency } from '@/lib/format';
 import { ORDER_STATUS_BADGE_CLASSES, ORDER_STATUS_LABELS } from '@/lib/order-status';
-import { badgeBase, btnOutline, cardBase } from '@/lib/styles';
 
 type Period = 'all' | 'today' | 'week' | 'month';
 
@@ -22,15 +25,6 @@ const PERIOD_OPTIONS: { label: string; value: Period }[] = [
   { label: '7 Hari Terakhir', value: 'week' },
   { label: 'Bulan Ini', value: 'month' },
 ];
-
-function StatCard({ label, value }: { label: string; value: string }) {
-  return (
-    <div className={`p-4 ${cardBase}`}>
-      <p className="text-xs text-neutral-500">{label}</p>
-      <p className="mt-1 text-xl font-bold text-foreground">{value}</p>
-    </div>
-  );
-}
 
 function downloadCsv(filename: string, rows: (string | number)[][]) {
   const csv = rows
@@ -67,41 +61,41 @@ export default function AdminLaporanPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Laporan Penjualan</h1>
-          <p className="mt-1 text-sm text-neutral-500">Ringkasan performa toko</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <select
-            value={period}
-            onChange={(e) => setPeriod(e.target.value as Period)}
-            className="rounded-lg border border-neutral-300 px-3 py-2 text-sm"
-          >
-            {PERIOD_OPTIONS.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-          <button
-            type="button"
-            className={btnOutline}
-            onClick={() => {
-              if (!report) return;
-              downloadCsv('laporan-penjualan.csv', [
-                ['Metrik', 'Nilai'],
-                ['Total Pendapatan', report.stats.totalRevenue],
-                ['Total Pesanan', report.stats.totalOrders],
-                ['Rata-rata per Pesanan', report.stats.avgOrder],
-                ['Tingkat Selesai (%)', (report.stats.completedRate * 100).toFixed(1)],
-              ]);
-            }}
-          >
-            Export CSV
-          </button>
-        </div>
-      </div>
+      <PageHeader
+        title="Laporan Penjualan"
+        description="Ringkasan performa toko"
+        action={
+          <div className="flex items-center gap-2">
+            <select
+              value={period}
+              onChange={(e) => setPeriod(e.target.value as Period)}
+              className={adminInputBase}
+            >
+              {PERIOD_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+            <button
+              type="button"
+              className={adminBtnOutline}
+              onClick={() => {
+                if (!report) return;
+                downloadCsv('laporan-penjualan.csv', [
+                  ['Metrik', 'Nilai'],
+                  ['Total Pendapatan', report.stats.totalRevenue],
+                  ['Total Pesanan', report.stats.totalOrders],
+                  ['Rata-rata per Pesanan', report.stats.avgOrder],
+                  ['Tingkat Selesai (%)', (report.stats.completedRate * 100).toFixed(1)],
+                ]);
+              }}
+            >
+              Export CSV
+            </button>
+          </div>
+        }
+      />
 
       {loading || !report ? (
         <p className="text-sm text-neutral-500">Memuat data...</p>
@@ -122,7 +116,7 @@ export default function AdminLaporanPage() {
               <h2 className="text-lg font-semibold text-foreground">Status Pesanan</h2>
               <button
                 type="button"
-                className={btnOutline}
+                className={adminBtnOutline}
                 onClick={() =>
                   downloadCsv('status-pesanan.csv', [
                     ['Status', 'Jumlah'],
@@ -135,8 +129,8 @@ export default function AdminLaporanPage() {
             </div>
             <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-6">
               {report.statusBreakdown.map((item) => (
-                <div key={item.status} className={`flex flex-col gap-2 p-4 ${cardBase}`}>
-                  <span className={`${badgeBase} ${ORDER_STATUS_BADGE_CLASSES[item.status]}`}>
+                <div key={item.status} className={`flex flex-col gap-2 p-4 ${adminCardBase}`}>
+                  <span className={`${adminBadgeBase} ${ORDER_STATUS_BADGE_CLASSES[item.status]}`}>
                     {ORDER_STATUS_LABELS[item.status]}
                   </span>
                   <p className="text-xl font-bold text-foreground">{item.count}</p>
@@ -151,7 +145,7 @@ export default function AdminLaporanPage() {
               <h2 className="text-lg font-semibold text-foreground">Top Produk Terjual</h2>
               <button
                 type="button"
-                className={btnOutline}
+                className={adminBtnOutline}
                 onClick={() =>
                   downloadCsv('top-produk.csv', [
                     ['#', 'Produk', 'Terjual', 'Pendapatan'],
@@ -163,48 +157,37 @@ export default function AdminLaporanPage() {
               </button>
             </div>
             {report.topProducts.length === 0 ? (
-              <div className="flex flex-col items-center gap-2 rounded-lg border border-neutral-200 bg-white py-10 text-center">
-                <p className="text-sm text-neutral-500">Belum ada data penjualan.</p>
-              </div>
+              <TableEmptyState>Belum ada data penjualan.</TableEmptyState>
             ) : (
-              <div className={`overflow-x-auto ${cardBase}`}>
-                <table className="w-full text-left text-sm">
-                  <thead className="border-b border-neutral-200 bg-neutral-50 text-xs uppercase text-neutral-500">
-                    <tr>
-                      <th className="px-4 py-3">#</th>
-                      <th className="px-4 py-3">Produk</th>
-                      <th className="px-4 py-3 text-right">Terjual</th>
-                      <th className="px-4 py-3 text-right">Pendapatan</th>
-                      <th className="px-4 py-3">Proporsi</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {report.topProducts.map((product, index) => (
-                      <tr
-                        key={product.productId ?? product.title}
-                        className="border-b border-neutral-100 last:border-0"
-                      >
-                        <td className="px-4 py-3 font-semibold text-foreground">{index + 1}</td>
-                        <td className="px-4 py-3 font-medium text-foreground">{product.title}</td>
-                        <td className="px-4 py-3 text-right text-neutral-600">
-                          {product.qty} unit
-                        </td>
-                        <td className="px-4 py-3 text-right font-medium text-foreground">
-                          {formatCurrency(product.revenue)}
-                        </td>
-                        <td className="px-4 py-3">
-                          <div className="h-2 w-full rounded-full bg-neutral-100">
-                            <div
-                              className="h-2 rounded-full bg-brand"
-                              style={{ width: `${(product.revenue / maxProductRevenue) * 100}%` }}
-                            />
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <Table>
+                <Thead>
+                  <Th>#</Th>
+                  <Th>Produk</Th>
+                  <Th className="text-right">Terjual</Th>
+                  <Th className="text-right">Pendapatan</Th>
+                  <Th>Proporsi</Th>
+                </Thead>
+                <Tbody>
+                  {report.topProducts.map((product, index) => (
+                    <Tr key={product.productId ?? product.title}>
+                      <Td className="font-semibold text-foreground">{index + 1}</Td>
+                      <Td className="font-medium text-foreground">{product.title}</Td>
+                      <Td className="text-right text-neutral-600">{product.qty} unit</Td>
+                      <Td className="text-right font-medium text-foreground">
+                        {formatCurrency(product.revenue)}
+                      </Td>
+                      <Td>
+                        <div className="h-2 w-full rounded-full bg-neutral-100">
+                          <div
+                            className="h-2 rounded-full bg-brand"
+                            style={{ width: `${(product.revenue / maxProductRevenue) * 100}%` }}
+                          />
+                        </div>
+                      </Td>
+                    </Tr>
+                  ))}
+                </Tbody>
+              </Table>
             )}
           </div>
 
@@ -213,7 +196,7 @@ export default function AdminLaporanPage() {
               <h2 className="text-lg font-semibold text-foreground">Pesanan per Hari</h2>
               <button
                 type="button"
-                className={btnOutline}
+                className={adminBtnOutline}
                 onClick={() =>
                   downloadCsv('pesanan-per-hari.csv', [
                     ['Tanggal', 'Jumlah Pesanan'],
@@ -225,11 +208,9 @@ export default function AdminLaporanPage() {
               </button>
             </div>
             {report.salesByDay.length === 0 ? (
-              <div className="flex flex-col items-center gap-2 rounded-lg border border-neutral-200 bg-white py-10 text-center">
-                <p className="text-sm text-neutral-500">Belum ada data harian.</p>
-              </div>
+              <TableEmptyState>Belum ada data harian.</TableEmptyState>
             ) : (
-              <div className={`flex items-end gap-2 overflow-x-auto p-4 ${cardBase}`}>
+              <div className={`flex items-end gap-2 overflow-x-auto p-4 ${adminCardBase}`}>
                 {report.salesByDay.map((day) => (
                   <div
                     key={day.date}

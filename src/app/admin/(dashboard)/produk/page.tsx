@@ -1,15 +1,22 @@
 'use client';
 
+import Link from 'next/link';
 import { useEffect, useState } from 'react';
 
 import { AdminModal } from '@/components/admin/AdminModal';
+import { Badge } from '@/components/admin/ui/Badge';
+import { PageHeader } from '@/components/admin/ui/PageHeader';
+import { Table, Tbody, Td, TableEmptyState, Th, Thead, Tr } from '@/components/admin/ui/Table';
+import { flattenCategories, type CategoryNode } from '@/lib/admin/categories';
 import {
-  ProductFormModal,
-  type AdminCategoryOption,
-  type AdminProductDetail,
-} from '@/components/admin/ProductFormModal';
+  adminBtnOutline,
+  adminBtnPrimary,
+  adminBtnPrimarySm,
+  adminInputBase,
+} from '@/lib/admin/styles';
 import { formatCurrency } from '@/lib/format';
-import { badgeBase, btnOutline, btnSolid, btnSolidSm, cardBase, inputBase } from '@/lib/styles';
+
+type AdminCategoryOption = { id: string; name: string; depth: number };
 
 type AdminProductListItem = {
   id: string;
@@ -30,15 +37,6 @@ type AdminProductListItem = {
   categories: { id: string; name: string }[];
 };
 
-type CategoryNode = { id: string; name: string; children: CategoryNode[] };
-
-function flattenCategories(nodes: CategoryNode[], depth = 0): AdminCategoryOption[] {
-  return nodes.flatMap((node) => [
-    { id: node.id, name: node.name, depth },
-    ...flattenCategories(node.children, depth + 1),
-  ]);
-}
-
 export default function AdminProdukPage() {
   const [products, setProducts] = useState<AdminProductListItem[]>([]);
   const [categories, setCategories] = useState<AdminCategoryOption[]>([]);
@@ -48,7 +46,6 @@ export default function AdminProdukPage() {
   const [categoryId, setCategoryId] = useState('');
   const [stock, setStock] = useState('');
   const [page, setPage] = useState(1);
-  const [formTarget, setFormTarget] = useState<AdminProductDetail | 'new' | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<AdminProductListItem | null>(null);
   const [deleting, setDeleting] = useState(false);
   const limit = 20;
@@ -97,13 +94,6 @@ export default function AdminProdukPage() {
     load();
   }, [q, categoryId, stock, page]);
 
-  async function openEdit(product: AdminProductListItem) {
-    const response = await fetch(`/api/admin/products/${product.id}`);
-    if (response.ok) {
-      setFormTarget(await response.json());
-    }
-  }
-
   async function handleDelete() {
     if (!deleteTarget) return;
     setDeleting(true);
@@ -117,15 +107,15 @@ export default function AdminProdukPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Kelola Produk</h1>
-          <p className="mt-1 text-sm text-neutral-500">{total} produk ditemukan</p>
-        </div>
-        <button type="button" onClick={() => setFormTarget('new')} className={btnSolid}>
-          + Tambah Produk
-        </button>
-      </div>
+      <PageHeader
+        title="Kelola Produk"
+        description={`${total} produk ditemukan`}
+        action={
+          <Link href="/admin/produk/baru" className={adminBtnPrimary}>
+            + Tambah Produk
+          </Link>
+        }
+      />
 
       <div className="grid gap-3 sm:grid-cols-3">
         <input
@@ -136,7 +126,7 @@ export default function AdminProdukPage() {
             setQ(e.target.value);
             setPage(1);
           }}
-          className={inputBase}
+          className={adminInputBase}
         />
         <select
           value={categoryId}
@@ -144,7 +134,7 @@ export default function AdminProdukPage() {
             setCategoryId(e.target.value);
             setPage(1);
           }}
-          className={inputBase}
+          className={adminInputBase}
         >
           <option value="">Semua Kategori</option>
           {categories.map((category) => (
@@ -159,7 +149,7 @@ export default function AdminProdukPage() {
             setStock(e.target.value);
             setPage(1);
           }}
-          className={inputBase}
+          className={adminInputBase}
         >
           <option value="">Semua Stok</option>
           <option value="instock">Stok Aman</option>
@@ -171,129 +161,106 @@ export default function AdminProdukPage() {
       {loading ? (
         <p className="text-sm text-neutral-500">Memuat produk...</p>
       ) : products.length === 0 ? (
-        <div className="flex flex-col items-center gap-3 rounded-lg border border-neutral-200 bg-white py-16 text-center">
-          <p className="text-sm text-neutral-500">Tidak ada produk ditemukan.</p>
-        </div>
+        <TableEmptyState>Tidak ada produk ditemukan.</TableEmptyState>
       ) : (
-        <div className={`overflow-x-auto ${cardBase}`}>
-          <table className="w-full text-left text-sm">
-            <thead className="border-b border-neutral-200 bg-neutral-50 text-xs uppercase text-neutral-500">
-              <tr>
-                <th className="px-4 py-3">Produk</th>
-                <th className="px-4 py-3">Kategori</th>
-                <th className="px-4 py-3 text-right">Harga</th>
-                <th className="px-4 py-3 text-right">HPP</th>
-                <th className="px-4 py-3 text-right">PO</th>
-                <th className="px-4 py-3 text-right">Grosir</th>
-                <th className="px-4 py-3 text-right">Stok</th>
-                <th className="px-4 py-3">Status</th>
-                <th className="px-4 py-3" />
-              </tr>
-            </thead>
-            <tbody>
-              {products.map((product) => (
-                <tr
-                  key={product.id}
-                  className="border-b border-neutral-100 last:border-0 hover:bg-neutral-50"
-                >
-                  <td className="cursor-pointer px-4 py-3" onClick={() => openEdit(product)}>
-                    <div className="flex items-center gap-2">
-                      {product.primaryImageUrl ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
-                          src={product.primaryImageUrl}
-                          alt=""
-                          className="h-12 w-9 object-cover"
-                        />
-                      ) : (
-                        <div className="h-12 w-9 bg-neutral-100" />
-                      )}
-                      <div>
-                        <p className="font-medium text-foreground">{product.title}</p>
-                        <p className="text-xs text-neutral-500">
-                          {product.author} · {product.sku}
-                        </p>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-4 py-3 text-neutral-600">
-                    {product.categories.map((c) => c.name).join(', ') || '-'}
-                  </td>
-                  <td className="px-4 py-3 text-right">
-                    {product.discountPercent > 0 ? (
-                      <>
-                        <p className="text-xs text-neutral-400 line-through">
-                          {formatCurrency(product.price)}
-                        </p>
-                        <p className="font-medium text-foreground">
-                          {formatCurrency(product.finalPrice)}
-                        </p>
-                      </>
+        <Table>
+          <Thead>
+            <Th>Produk</Th>
+            <Th>Kategori</Th>
+            <Th className="text-right">Harga</Th>
+            <Th className="text-right">HPP</Th>
+            <Th className="text-right">PO</Th>
+            <Th className="text-right">Grosir</Th>
+            <Th className="text-right">Stok</Th>
+            <Th>Status</Th>
+            <Th />
+          </Thead>
+          <Tbody>
+            {products.map((product) => (
+              <Tr key={product.id}>
+                <Td>
+                  <Link href={`/admin/produk/${product.id}`} className="flex items-center gap-2">
+                    {product.primaryImageUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={product.primaryImageUrl}
+                        alt=""
+                        className="h-12 w-9 rounded object-cover"
+                      />
                     ) : (
+                      <div className="h-12 w-9 rounded bg-neutral-100" />
+                    )}
+                    <div>
+                      <p className="font-medium text-foreground">{product.title}</p>
+                      <p className="text-xs text-neutral-500">
+                        {product.author} · {product.sku}
+                      </p>
+                    </div>
+                  </Link>
+                </Td>
+                <Td className="text-neutral-600">
+                  {product.categories.map((c) => c.name).join(', ') || '-'}
+                </Td>
+                <Td className="text-right">
+                  {product.discountPercent > 0 ? (
+                    <>
+                      <p className="text-xs text-neutral-400 line-through">
+                        {formatCurrency(product.price)}
+                      </p>
                       <p className="font-medium text-foreground">
                         {formatCurrency(product.finalPrice)}
                       </p>
-                    )}
-                  </td>
-                  <td className="px-4 py-3 text-right text-neutral-600">
-                    {product.costPrice != null ? formatCurrency(product.costPrice) : '-'}
-                  </td>
-                  <td className="px-4 py-3 text-right">
-                    {product.preOrderPrice != null ? (
-                      <>
-                        <p className="text-neutral-600">{formatCurrency(product.preOrderPrice)}</p>
-                        <span
-                          className={`${badgeBase} ${
-                            product.isPreOrderActive
-                              ? 'bg-navy/10 text-navy'
-                              : 'bg-neutral-100 text-neutral-500'
-                          }`}
-                        >
-                          {product.isPreOrderActive ? 'Aktif' : 'Nonaktif'}
-                        </span>
-                      </>
-                    ) : (
-                      <p className="text-neutral-600">-</p>
-                    )}
-                  </td>
-                  <td className="px-4 py-3 text-right text-neutral-600">
-                    {product.wholesalePrice != null && product.wholesaleMinQty != null ? (
-                      <>
-                        <p>{formatCurrency(product.wholesalePrice)}</p>
-                        <p className="text-xs text-neutral-400">
-                          min {product.wholesaleMinQty} pcs
-                        </p>
-                      </>
-                    ) : (
-                      '-'
-                    )}
-                  </td>
-                  <td className="px-4 py-3 text-right text-neutral-600">{product.stock}</td>
-                  <td className="px-4 py-3">
-                    <span
-                      className={`${badgeBase} ${
-                        product.isActive
-                          ? 'bg-green/10 text-green'
-                          : 'bg-neutral-100 text-neutral-500'
-                      }`}
-                    >
-                      {product.isActive ? 'Aktif' : 'Nonaktif'}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-right">
-                    <button
-                      type="button"
-                      onClick={() => setDeleteTarget(product)}
-                      className="text-sm font-medium text-red hover:underline"
-                    >
-                      Hapus
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+                    </>
+                  ) : (
+                    <p className="font-medium text-foreground">
+                      {formatCurrency(product.finalPrice)}
+                    </p>
+                  )}
+                </Td>
+                <Td className="text-right text-neutral-600">
+                  {product.costPrice != null ? formatCurrency(product.costPrice) : '-'}
+                </Td>
+                <Td className="text-right">
+                  {product.preOrderPrice != null ? (
+                    <>
+                      <p className="text-neutral-600">{formatCurrency(product.preOrderPrice)}</p>
+                      <Badge tone={product.isPreOrderActive ? 'info' : 'neutral'}>
+                        {product.isPreOrderActive ? 'Aktif' : 'Nonaktif'}
+                      </Badge>
+                    </>
+                  ) : (
+                    <p className="text-neutral-600">-</p>
+                  )}
+                </Td>
+                <Td className="text-right text-neutral-600">
+                  {product.wholesalePrice != null && product.wholesaleMinQty != null ? (
+                    <>
+                      <p>{formatCurrency(product.wholesalePrice)}</p>
+                      <p className="text-xs text-neutral-400">min {product.wholesaleMinQty} pcs</p>
+                    </>
+                  ) : (
+                    '-'
+                  )}
+                </Td>
+                <Td className="text-right text-neutral-600">{product.stock}</Td>
+                <Td>
+                  <Badge tone={product.isActive ? 'success' : 'neutral'}>
+                    {product.isActive ? 'Aktif' : 'Nonaktif'}
+                  </Badge>
+                </Td>
+                <Td className="text-right">
+                  <button
+                    type="button"
+                    onClick={() => setDeleteTarget(product)}
+                    className="text-sm font-medium text-red hover:underline"
+                  >
+                    Hapus
+                  </button>
+                </Td>
+              </Tr>
+            ))}
+          </Tbody>
+        </Table>
       )}
 
       {totalPages > 1 ? (
@@ -302,7 +269,7 @@ export default function AdminProdukPage() {
             type="button"
             disabled={page <= 1}
             onClick={() => setPage((p) => p - 1)}
-            className={btnOutline}
+            className={adminBtnOutline}
           >
             Sebelumnya
           </button>
@@ -313,23 +280,11 @@ export default function AdminProdukPage() {
             type="button"
             disabled={page >= totalPages}
             onClick={() => setPage((p) => p + 1)}
-            className={btnSolid}
+            className={adminBtnPrimary}
           >
             Selanjutnya
           </button>
         </div>
-      ) : null}
-
-      {formTarget ? (
-        <ProductFormModal
-          product={formTarget === 'new' ? null : formTarget}
-          categories={categories}
-          onClose={() => setFormTarget(null)}
-          onSaved={() => {
-            setFormTarget(null);
-            loadProducts();
-          }}
-        />
       ) : null}
 
       {deleteTarget ? (
@@ -339,10 +294,15 @@ export default function AdminProdukPage() {
             dan tidak tampil di toko.
           </p>
           <div className="mt-4 flex justify-end gap-2">
-            <button type="button" onClick={() => setDeleteTarget(null)} className={btnOutline}>
+            <button type="button" onClick={() => setDeleteTarget(null)} className={adminBtnOutline}>
               Batal
             </button>
-            <button type="button" disabled={deleting} onClick={handleDelete} className={btnSolidSm}>
+            <button
+              type="button"
+              disabled={deleting}
+              onClick={handleDelete}
+              className={adminBtnPrimarySm}
+            >
               {deleting ? 'Menghapus...' : 'Hapus'}
             </button>
           </div>

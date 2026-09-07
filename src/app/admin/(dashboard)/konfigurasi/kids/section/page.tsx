@@ -4,7 +4,13 @@ import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 
 import { ProductPicker, type ProductOption } from '@/components/admin/ProductPicker';
-import { btnOutline, btnSolid, inputBase } from '@/lib/styles';
+import { PageHeader } from '@/components/admin/ui/PageHeader';
+import {
+  adminBtnOutline,
+  adminBtnPrimary,
+  adminCardBase,
+  adminInputBase,
+} from '@/lib/admin/styles';
 
 type KidsSectionForm = {
   id?: string;
@@ -169,23 +175,21 @@ export default function AdminKonfigurasiKidsSectionPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Kelola Kids Section</h1>
-          <p className="text-sm text-neutral-500">
-            Buat section baru dan pilih buku yang tampil di setiap section halaman Buku Anak.
-          </p>
-        </div>
-        <Link href="/admin/konfigurasi/kids" className={btnOutline}>
-          Kembali ke Kids
-        </Link>
-      </div>
+      <PageHeader
+        title="Kelola Kids Section"
+        description="Buat section baru dan pilih buku yang tampil di setiap section halaman Buku Anak."
+        action={
+          <Link href="/admin/konfigurasi/kids" className={adminBtnOutline}>
+            Kembali ke Kids
+          </Link>
+        }
+      />
 
       <div className="flex flex-col gap-4">
         {sections.map((section, index) => (
           <div
             key={section.id ?? `new-${index}`}
-            className="flex flex-col gap-3 rounded-lg border border-neutral-200 bg-white p-4"
+            className={`flex flex-col gap-3 p-4 ${adminCardBase}`}
           >
             <div className="flex items-start justify-between gap-3">
               <div className="flex flex-1 flex-col gap-2">
@@ -197,7 +201,7 @@ export default function AdminKonfigurasiKidsSectionPage() {
                       value={section.title}
                       onChange={(e) => updateSection(index, { title: e.target.value })}
                       placeholder="Contoh: Buku Populer Anak"
-                      className={inputBase}
+                      className={adminInputBase}
                     />
                   </div>
                   <div className="flex flex-col gap-1">
@@ -207,7 +211,7 @@ export default function AdminKonfigurasiKidsSectionPage() {
                       value={section.badge}
                       onChange={(e) => updateSection(index, { badge: e.target.value })}
                       placeholder="Contoh: Paling Disukai"
-                      className={inputBase}
+                      className={adminInputBase}
                     />
                   </div>
                 </div>
@@ -219,7 +223,7 @@ export default function AdminKonfigurasiKidsSectionPage() {
                       value={section.subtitle}
                       onChange={(e) => updateSection(index, { subtitle: e.target.value })}
                       placeholder="Deskripsi singkat section"
-                      className={inputBase}
+                      className={adminInputBase}
                     />
                   </div>
                   <div className="flex flex-col gap-1">
@@ -231,7 +235,7 @@ export default function AdminKonfigurasiKidsSectionPage() {
                           theme: e.target.value as KidsSectionForm['theme'],
                         })
                       }
-                      className={inputBase}
+                      className={adminInputBase}
                     >
                       {THEME_OPTIONS.map((option) => (
                         <option key={option.value} value={option.value}>
@@ -257,7 +261,7 @@ export default function AdminKonfigurasiKidsSectionPage() {
                   type="button"
                   onClick={() => moveSection(index, -1)}
                   disabled={index === 0}
-                  className="rounded-sm border border-neutral-200 px-2 py-1 text-xs disabled:opacity-40"
+                  className="rounded-lg px-2 py-1 text-xs text-neutral-600 transition hover:bg-neutral-100 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent"
                 >
                   ↑
                 </button>
@@ -265,14 +269,14 @@ export default function AdminKonfigurasiKidsSectionPage() {
                   type="button"
                   onClick={() => moveSection(index, 1)}
                   disabled={index === sections.length - 1}
-                  className="rounded-sm border border-neutral-200 px-2 py-1 text-xs disabled:opacity-40"
+                  className="rounded-lg px-2 py-1 text-xs text-neutral-600 transition hover:bg-neutral-100 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent"
                 >
                   ↓
                 </button>
                 <button
                   type="button"
                   onClick={() => removeSection(index)}
-                  className="rounded-sm border border-red px-2 py-1 text-xs text-red"
+                  className="rounded-lg px-2 py-1 text-xs text-red transition hover:bg-red/10"
                 >
                   Hapus
                 </button>
@@ -289,7 +293,7 @@ export default function AdminKonfigurasiKidsSectionPage() {
         ))}
       </div>
 
-      <button type="button" onClick={addSection} className={btnOutline}>
+      <button type="button" onClick={addSection} className={adminBtnOutline}>
         + Tambah Section
       </button>
 
@@ -304,13 +308,13 @@ export default function AdminKonfigurasiKidsSectionPage() {
           <p className="text-sm font-medium text-amber-800">
             Ada perubahan belum disimpan. Klik Simpan agar section tampil di halaman Buku Anak.
           </p>
-          <button type="button" disabled={saving} onClick={handleSave} className={btnSolid}>
+          <button type="button" disabled={saving} onClick={handleSave} className={adminBtnPrimary}>
             {saving ? 'Menyimpan...' : 'Simpan Section'}
           </button>
         </div>
       ) : (
         <div className="flex items-center justify-end border-t border-neutral-200 pt-4">
-          <button type="button" disabled={saving} onClick={handleSave} className={btnSolid}>
+          <button type="button" disabled={saving} onClick={handleSave} className={adminBtnPrimary}>
             {saving ? 'Menyimpan...' : 'Simpan Section'}
           </button>
         </div>

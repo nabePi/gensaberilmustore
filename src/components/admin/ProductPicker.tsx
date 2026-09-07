@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 
-import { inputBase } from '@/lib/styles';
+import { adminCardBase, adminInputBase } from '@/lib/admin/styles';
 
 export type ProductOption = { id: string; title: string; sku: string };
 
@@ -23,16 +23,16 @@ export function ProductPicker({
   );
 
   return (
-    <div className="flex flex-col gap-2 rounded-lg border border-neutral-200 p-4">
+    <div className={`flex flex-col gap-2 p-4 ${adminCardBase}`}>
       <p className="text-sm font-semibold text-foreground">{label}</p>
       <input
         type="text"
         value={search}
         onChange={(e) => setSearch(e.target.value)}
         placeholder="Cari produk..."
-        className={inputBase}
+        className={adminInputBase}
       />
-      <div className="max-h-48 overflow-y-auto rounded-md border border-neutral-100">
+      <div className="max-h-48 overflow-y-auto rounded-lg border border-neutral-100">
         {filtered.map((product) => (
           <label
             key={product.id}

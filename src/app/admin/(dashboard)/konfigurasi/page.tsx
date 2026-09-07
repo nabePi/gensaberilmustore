@@ -3,7 +3,8 @@
 import { useEffect, useRef, useState } from 'react';
 
 import { BannerImageManager, type BannerImageItem } from '@/components/admin/BannerImageManager';
-import { btnSolid } from '@/lib/styles';
+import { PageHeader } from '@/components/admin/ui/PageHeader';
+import { adminBtnPrimary, adminCardBase } from '@/lib/admin/styles';
 
 type BannerSlot = 'HERO_MAIN' | 'HERO_SIDE_1' | 'HERO_SIDE_2';
 
@@ -95,15 +96,13 @@ export default function AdminKonfigurasiPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">Banner Hero Beranda</h1>
-        <p className="mt-1 text-sm text-neutral-500">
-          Atur banner hero yang tampil di bagian atas halaman Beranda
-        </p>
-      </div>
+      <PageHeader
+        title="Banner Hero Beranda"
+        description="Atur banner hero yang tampil di bagian atas halaman Beranda"
+      />
 
       <div className="flex flex-col gap-6">
-        <div className="flex flex-col gap-3 rounded-lg border border-neutral-200 p-4">
+        <div className={`flex flex-col gap-3 p-4 ${adminCardBase}`}>
           <h3 className="font-semibold text-foreground">Banner Hero Beranda</h3>
           <BannerImageManager
             label="Gambar Banner Utama"
@@ -113,14 +112,14 @@ export default function AdminKonfigurasiPage() {
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2">
-          <div className="flex flex-col gap-3 rounded-lg border border-neutral-200 p-4">
+          <div className={`flex flex-col gap-3 p-4 ${adminCardBase}`}>
             <BannerImageManager
               label="Gambar Banner Samping 1"
               images={banners.HERO_SIDE_1}
               onChange={(images) => setBanners((prev) => ({ ...prev, HERO_SIDE_1: images }))}
             />
           </div>
-          <div className="flex flex-col gap-3 rounded-lg border border-neutral-200 p-4">
+          <div className={`flex flex-col gap-3 p-4 ${adminCardBase}`}>
             <BannerImageManager
               label="Gambar Banner Samping 2"
               images={banners.HERO_SIDE_2}
@@ -141,13 +140,13 @@ export default function AdminKonfigurasiPage() {
           <p className="text-sm font-medium text-amber-800">
             Ada perubahan belum disimpan. Klik Simpan agar tampil di halaman toko.
           </p>
-          <button type="button" disabled={saving} onClick={handleSave} className={btnSolid}>
+          <button type="button" disabled={saving} onClick={handleSave} className={adminBtnPrimary}>
             {saving ? 'Menyimpan...' : 'Simpan Banner'}
           </button>
         </div>
       ) : (
         <div className="flex items-center justify-end border-t border-neutral-200 pt-4">
-          <button type="button" disabled={saving} onClick={handleSave} className={btnSolid}>
+          <button type="button" disabled={saving} onClick={handleSave} className={adminBtnPrimary}>
             {saving ? 'Menyimpan...' : 'Simpan Banner'}
           </button>
         </div>

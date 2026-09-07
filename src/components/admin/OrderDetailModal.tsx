@@ -3,9 +3,14 @@
 import { useEffect, useState } from 'react';
 
 import { AdminModal } from '@/components/admin/AdminModal';
+import {
+  adminBadgeBase,
+  adminBtnOutlineSm,
+  adminBtnPrimarySm,
+  adminInputBase,
+} from '@/lib/admin/styles';
 import { formatCurrency } from '@/lib/format';
 import { ORDER_STATUS_BADGE_CLASSES, ORDER_STATUS_LABELS } from '@/lib/order-status';
-import { badgeBase, btnOutlineSm, btnSolidSm, inputBase } from '@/lib/styles';
 
 export type OrderStatusValue = keyof typeof ORDER_STATUS_LABELS;
 
@@ -149,7 +154,7 @@ export function OrderDetailModal({
                 {formatOrderDate(order.createdAt)} · {order.source === 'ONLINE' ? 'Online' : 'POS'}
               </p>
             </div>
-            <span className={`${badgeBase} ${ORDER_STATUS_BADGE_CLASSES[order.status]}`}>
+            <span className={`${adminBadgeBase} ${ORDER_STATUS_BADGE_CLASSES[order.status]}`}>
               {ORDER_STATUS_LABELS[order.status]}
             </span>
           </div>
@@ -278,14 +283,14 @@ export function OrderDetailModal({
                     type="button"
                     disabled={updating}
                     onClick={() => handleNextStatusClick(next)}
-                    className={btnSolidSm}
+                    className={adminBtnPrimarySm}
                   >
                     Tandai {ORDER_STATUS_LABELS[next]}
                   </button>
                 ))}
               </div>
               {resiInputOpen ? (
-                <div className="mt-3 flex flex-col gap-2 rounded-sm border border-neutral-200 bg-neutral-50 p-3">
+                <div className="mt-3 flex flex-col gap-2 rounded-lg border border-neutral-200 bg-neutral-50 p-3">
                   <label className="text-xs font-medium text-neutral-600">
                     Nomor Resi / Tracking Number (opsional)
                   </label>
@@ -294,7 +299,7 @@ export function OrderDetailModal({
                     value={trackingNumber}
                     onChange={(event) => setTrackingNumber(event.target.value)}
                     placeholder="Contoh: JNE123456789"
-                    className={inputBase}
+                    className={adminInputBase}
                     autoFocus
                   />
                   <div className="flex gap-2">
@@ -302,7 +307,7 @@ export function OrderDetailModal({
                       type="button"
                       disabled={updating}
                       onClick={() => handleStatusChange('SHIPPED', trackingNumber)}
-                      className={btnSolidSm}
+                      className={adminBtnPrimarySm}
                     >
                       {updating ? 'Memproses...' : 'Konfirmasi & Tandai Dikirim'}
                     </button>
@@ -313,7 +318,7 @@ export function OrderDetailModal({
                         setResiInputOpen(false);
                         setTrackingNumber('');
                       }}
-                      className={btnOutlineSm}
+                      className={adminBtnOutlineSm}
                     >
                       Batal
                     </button>

@@ -7,9 +7,16 @@ import {
   formatOrderDate,
   type OrderStatusValue,
 } from '@/components/admin/OrderDetailModal';
+import { PageHeader } from '@/components/admin/ui/PageHeader';
+import { Table, Tbody, Td, TableEmptyState, Th, Thead, Tr } from '@/components/admin/ui/Table';
+import {
+  adminBadgeBase,
+  adminBtnOutline,
+  adminBtnPrimarySm,
+  adminInputBase,
+} from '@/lib/admin/styles';
 import { formatCurrency } from '@/lib/format';
 import { ORDER_STATUS_BADGE_CLASSES, ORDER_STATUS_LABELS } from '@/lib/order-status';
-import { badgeBase, btnOutline, btnSolidSm, cardBase, inputBase } from '@/lib/styles';
 
 type FulfillmentOrder = {
   id: string;
@@ -132,15 +139,11 @@ export default function AdminFulfillmentPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Pusat Fulfillment</h1>
-          <p className="mt-1 text-sm text-neutral-500">
-            Proses banyak pesanan sekaligus dengan cepat
-          </p>
-        </div>
-        <span className="text-sm text-neutral-500">{orders.length} pesanan</span>
-      </div>
+      <PageHeader
+        title="Pusat Fulfillment"
+        description="Proses banyak pesanan sekaligus dengan cepat"
+        action={<span className="text-sm text-neutral-500">{orders.length} pesanan</span>}
+      />
 
       <div className="flex flex-wrap gap-3">
         <input
@@ -148,12 +151,12 @@ export default function AdminFulfillmentPage() {
           placeholder="Cari ID, nama, atau telepon..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className={`${inputBase} sm:w-64`}
+          className={`${adminInputBase} sm:w-64`}
         />
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
-          className={inputBase}
+          className={adminInputBase}
         >
           {STATUS_FILTER_OPTIONS.map((option) => (
             <option key={option.label} value={option.value}>
@@ -164,7 +167,7 @@ export default function AdminFulfillmentPage() {
         <select
           value={sourceFilter}
           onChange={(e) => setSourceFilter(e.target.value as 'ALL' | 'ONLINE' | 'POS')}
-          className={inputBase}
+          className={adminInputBase}
         >
           <option value="ALL">Semua Sumber</option>
           <option value="ONLINE">Online</option>
@@ -172,7 +175,7 @@ export default function AdminFulfillmentPage() {
         </select>
       </div>
 
-      <div className="sticky top-0 z-10 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-neutral-200 bg-white p-3 shadow-sm">
+      <div className="sticky top-0 z-10 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-neutral-200 bg-white p-3 shadow-sm">
         <div className="flex items-center gap-2">
           <input
             type="checkbox"
@@ -189,7 +192,7 @@ export default function AdminFulfillmentPage() {
             type="button"
             disabled={selected.size === 0 || processing}
             onClick={() => handleBulkStatus('PACKED')}
-            className={btnOutline}
+            className={adminBtnOutline}
           >
             Tandai Dikemas
           </button>
@@ -197,7 +200,7 @@ export default function AdminFulfillmentPage() {
             type="button"
             disabled={selected.size === 0 || processing}
             onClick={() => handleBulkStatus('SHIPPED')}
-            className={btnOutline}
+            className={adminBtnOutline}
           >
             Tandai Dikirim
           </button>
@@ -205,7 +208,7 @@ export default function AdminFulfillmentPage() {
             type="button"
             disabled={selected.size === 0}
             onClick={handlePrint}
-            className={btnSolidSm}
+            className={adminBtnPrimarySm}
           >
             Cetak Packing List
           </button>
@@ -217,65 +220,54 @@ export default function AdminFulfillmentPage() {
       {loading ? (
         <p className="text-sm text-neutral-500">Memuat pesanan...</p>
       ) : orders.length === 0 ? (
-        <div className="flex flex-col items-center gap-3 rounded-lg border border-neutral-200 bg-white py-16 text-center">
-          <p className="text-sm text-neutral-500">Tidak ada pesanan ditemukan.</p>
-        </div>
+        <TableEmptyState>Tidak ada pesanan ditemukan.</TableEmptyState>
       ) : (
-        <div className={`overflow-x-auto ${cardBase}`}>
-          <table className="w-full text-left text-sm">
-            <thead className="border-b border-neutral-200 bg-neutral-50 text-xs uppercase text-neutral-500">
-              <tr>
-                <th className="px-4 py-3" />
-                <th className="px-4 py-3">No. Pesanan</th>
-                <th className="px-4 py-3">Penerima</th>
-                <th className="px-4 py-3">Tanggal</th>
-                <th className="px-4 py-3">Sumber</th>
-                <th className="px-4 py-3">Status</th>
-                <th className="px-4 py-3 text-right">Total</th>
-              </tr>
-            </thead>
-            <tbody>
-              {orders.map((order) => (
-                <tr
-                  key={order.id}
-                  className="border-b border-neutral-100 last:border-0 hover:bg-neutral-50"
+        <Table>
+          <Thead>
+            <Th />
+            <Th>No. Pesanan</Th>
+            <Th>Penerima</Th>
+            <Th>Tanggal</Th>
+            <Th>Sumber</Th>
+            <Th>Status</Th>
+            <Th className="text-right">Total</Th>
+          </Thead>
+          <Tbody>
+            {orders.map((order) => (
+              <Tr key={order.id}>
+                <Td>
+                  <input
+                    type="checkbox"
+                    checked={selected.has(order.id)}
+                    onChange={() => toggleSelected(order.id)}
+                    className="h-4 w-4"
+                  />
+                </Td>
+                <Td
+                  className="cursor-pointer font-medium text-foreground"
+                  onClick={() => setOpenOrderId(order.id)}
                 >
-                  <td className="px-4 py-3">
-                    <input
-                      type="checkbox"
-                      checked={selected.has(order.id)}
-                      onChange={() => toggleSelected(order.id)}
-                      className="h-4 w-4"
-                    />
-                  </td>
-                  <td
-                    className="cursor-pointer px-4 py-3 font-medium text-foreground"
-                    onClick={() => setOpenOrderId(order.id)}
-                  >
-                    {order.orderNumber}
-                  </td>
-                  <td className="px-4 py-3 text-neutral-600">
-                    {order.receiverName}
-                    <br />
-                    <span className="text-xs text-neutral-400">{order.receiverPhone}</span>
-                  </td>
-                  <td className="px-4 py-3 text-neutral-600">{formatOrderDate(order.createdAt)}</td>
-                  <td className="px-4 py-3 text-neutral-600">
-                    {order.source === 'ONLINE' ? 'Online' : 'POS'}
-                  </td>
-                  <td className="px-4 py-3">
-                    <span className={`${badgeBase} ${ORDER_STATUS_BADGE_CLASSES[order.status]}`}>
-                      {ORDER_STATUS_LABELS[order.status]}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-right font-medium text-foreground">
-                    {formatCurrency(order.total)}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+                  {order.orderNumber}
+                </Td>
+                <Td className="text-neutral-600">
+                  {order.receiverName}
+                  <br />
+                  <span className="text-xs text-neutral-400">{order.receiverPhone}</span>
+                </Td>
+                <Td className="text-neutral-600">{formatOrderDate(order.createdAt)}</Td>
+                <Td className="text-neutral-600">{order.source === 'ONLINE' ? 'Online' : 'POS'}</Td>
+                <Td>
+                  <span className={`${adminBadgeBase} ${ORDER_STATUS_BADGE_CLASSES[order.status]}`}>
+                    {ORDER_STATUS_LABELS[order.status]}
+                  </span>
+                </Td>
+                <Td className="text-right font-medium text-foreground">
+                  {formatCurrency(order.total)}
+                </Td>
+              </Tr>
+            ))}
+          </Tbody>
+        </Table>
       )}
 
       {openOrderId ? (

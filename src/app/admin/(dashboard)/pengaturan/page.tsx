@@ -2,7 +2,13 @@
 
 import { useEffect, useState } from 'react';
 
-import { btnOutline, btnSolid, inputBase } from '@/lib/styles';
+import { PageHeader } from '@/components/admin/ui/PageHeader';
+import {
+  adminBtnOutline,
+  adminBtnPrimary,
+  adminCardBase,
+  adminInputBase,
+} from '@/lib/admin/styles';
 
 type StoreSettingForm = {
   name: string;
@@ -138,12 +144,9 @@ export default function AdminPengaturanPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">Pengaturan Toko</h1>
-        <p className="mt-1 text-sm text-neutral-500">Konfigurasi data toko dan pembayaran</p>
-      </div>
+      <PageHeader title="Pengaturan Toko" description="Konfigurasi data toko dan pembayaran" />
 
-      <div className="flex flex-col gap-3 rounded-lg border border-neutral-200 p-4">
+      <div className={`flex flex-col gap-3 p-4 ${adminCardBase}`}>
         <h3 className="font-semibold text-foreground">Informasi Toko</h3>
         <div className="grid gap-3 sm:grid-cols-2">
           <div className="flex flex-col gap-1">
@@ -155,7 +158,7 @@ export default function AdminPengaturanPage() {
               type="text"
               value={form.name}
               onChange={(e) => updateField('name', e.target.value)}
-              className={inputBase}
+              className={adminInputBase}
             />
           </div>
           <div className="flex flex-col gap-1">
@@ -167,7 +170,7 @@ export default function AdminPengaturanPage() {
               type="email"
               value={form.email}
               onChange={(e) => updateField('email', e.target.value)}
-              className={inputBase}
+              className={adminInputBase}
             />
           </div>
           <div className="flex flex-col gap-1">
@@ -179,7 +182,7 @@ export default function AdminPengaturanPage() {
               type="text"
               value={form.phone}
               onChange={(e) => updateField('phone', e.target.value)}
-              className={inputBase}
+              className={adminInputBase}
             />
           </div>
           <div className="flex flex-col gap-1">
@@ -191,13 +194,13 @@ export default function AdminPengaturanPage() {
               type="text"
               value={form.address}
               onChange={(e) => updateField('address', e.target.value)}
-              className={inputBase}
+              className={adminInputBase}
             />
           </div>
         </div>
       </div>
 
-      <div className="flex flex-col gap-3 rounded-lg border border-neutral-200 p-4">
+      <div className={`flex flex-col gap-3 p-4 ${adminCardBase}`}>
         <h3 className="font-semibold text-foreground">Rekening Bank</h3>
         <div className="grid gap-3 sm:grid-cols-3">
           <div className="flex flex-col gap-1">
@@ -209,7 +212,7 @@ export default function AdminPengaturanPage() {
               type="text"
               value={form.bank1Name}
               onChange={(e) => updateField('bank1Name', e.target.value)}
-              className={inputBase}
+              className={adminInputBase}
             />
           </div>
           <div className="flex flex-col gap-1">
@@ -221,7 +224,7 @@ export default function AdminPengaturanPage() {
               type="text"
               value={form.bank1Number}
               onChange={(e) => updateField('bank1Number', e.target.value)}
-              className={inputBase}
+              className={adminInputBase}
             />
           </div>
           <div className="flex flex-col gap-1">
@@ -233,7 +236,7 @@ export default function AdminPengaturanPage() {
               type="text"
               value={form.bank1Holder}
               onChange={(e) => updateField('bank1Holder', e.target.value)}
-              className={inputBase}
+              className={adminInputBase}
             />
           </div>
           <div className="flex flex-col gap-1">
@@ -245,7 +248,7 @@ export default function AdminPengaturanPage() {
               type="text"
               value={form.bank2Name}
               onChange={(e) => updateField('bank2Name', e.target.value)}
-              className={inputBase}
+              className={adminInputBase}
             />
           </div>
           <div className="flex flex-col gap-1">
@@ -257,7 +260,7 @@ export default function AdminPengaturanPage() {
               type="text"
               value={form.bank2Number}
               onChange={(e) => updateField('bank2Number', e.target.value)}
-              className={inputBase}
+              className={adminInputBase}
             />
           </div>
           <div className="flex flex-col gap-1">
@@ -269,13 +272,13 @@ export default function AdminPengaturanPage() {
               type="text"
               value={form.bank2Holder}
               onChange={(e) => updateField('bank2Holder', e.target.value)}
-              className={inputBase}
+              className={adminInputBase}
             />
           </div>
         </div>
       </div>
 
-      <div className="flex flex-col gap-3 rounded-lg border border-neutral-200 p-4">
+      <div className={`flex flex-col gap-3 p-4 ${adminCardBase}`}>
         <h3 className="font-semibold text-foreground">Pengiriman</h3>
         <div className="grid gap-3 sm:grid-cols-2">
           <div className="flex flex-col gap-1">
@@ -288,7 +291,7 @@ export default function AdminPengaturanPage() {
               min={0}
               value={form.defaultShippingCost}
               onChange={(e) => updateField('defaultShippingCost', e.target.value)}
-              className={inputBase}
+              className={adminInputBase}
             />
           </div>
           <div className="flex flex-col gap-1">
@@ -301,13 +304,13 @@ export default function AdminPengaturanPage() {
               min={0}
               value={form.freeShippingMinTotal}
               onChange={(e) => updateField('freeShippingMinTotal', e.target.value)}
-              className={inputBase}
+              className={adminInputBase}
             />
           </div>
         </div>
       </div>
 
-      <div className="flex flex-col gap-3 rounded-lg border border-neutral-200 p-4">
+      <div className={`flex flex-col gap-3 p-4 ${adminCardBase}`}>
         <h3 className="font-semibold text-foreground">Data Admin</h3>
         <div className="grid gap-3 sm:grid-cols-2">
           <div className="flex flex-col gap-1">
@@ -319,7 +322,7 @@ export default function AdminPengaturanPage() {
               type="text"
               value={admin?.name ?? ''}
               readOnly
-              className={`${inputBase} bg-neutral-50 text-neutral-500`}
+              className={`${adminInputBase} bg-neutral-50 text-neutral-500`}
             />
           </div>
           <div className="flex flex-col gap-1">
@@ -331,7 +334,7 @@ export default function AdminPengaturanPage() {
               type="email"
               value={admin?.email ?? ''}
               readOnly
-              className={`${inputBase} bg-neutral-50 text-neutral-500`}
+              className={`${adminInputBase} bg-neutral-50 text-neutral-500`}
             />
           </div>
         </div>
@@ -339,27 +342,27 @@ export default function AdminPengaturanPage() {
 
       <div className="flex items-center justify-end gap-3">
         {saveMessage ? <p className="text-sm text-neutral-600">{saveMessage}</p> : null}
-        <button type="button" disabled={saving} onClick={handleSave} className={btnSolid}>
+        <button type="button" disabled={saving} onClick={handleSave} className={adminBtnPrimary}>
           {saving ? 'Menyimpan...' : 'Simpan Pengaturan'}
         </button>
       </div>
 
-      <div className="mt-4 flex flex-col gap-3 rounded-lg border border-neutral-200 p-4">
+      <div className={`mt-4 flex flex-col gap-3 p-4 ${adminCardBase}`}>
         <h3 className="font-semibold text-foreground">Data Storage</h3>
         <p className="text-xs text-neutral-500">
           Ringkasan jumlah data yang tersimpan di database.
         </p>
         {storage ? (
           <div className="grid gap-3 sm:grid-cols-3">
-            <div className="rounded-md border border-neutral-100 p-3">
+            <div className="rounded-lg border border-neutral-100 p-3">
               <p className="text-xs text-neutral-500">Pesanan</p>
               <p className="text-lg font-bold text-foreground">{storage.orderCount}</p>
             </div>
-            <div className="rounded-md border border-neutral-100 p-3">
+            <div className="rounded-lg border border-neutral-100 p-3">
               <p className="text-xs text-neutral-500">Produk</p>
               <p className="text-lg font-bold text-foreground">{storage.productCount}</p>
             </div>
-            <div className="rounded-md border border-neutral-100 p-3">
+            <div className="rounded-lg border border-neutral-100 p-3">
               <p className="text-xs text-neutral-500">Member</p>
               <p className="text-lg font-bold text-foreground">{storage.memberCount}</p>
             </div>
@@ -372,14 +375,14 @@ export default function AdminPengaturanPage() {
               <button
                 type="button"
                 onClick={() => setResetStep(1)}
-                className={`${btnOutline} w-fit border-red text-red hover:bg-red/5`}
+                className={`${adminBtnOutline} w-fit ring-red text-red hover:bg-red/5`}
               >
                 Reset Semua Pesanan
               </button>
             ) : null}
 
             {resetStep === 1 ? (
-              <div className="flex flex-col gap-2 rounded-md border border-red/30 bg-red/5 p-3">
+              <div className="flex flex-col gap-2 rounded-lg border border-red/30 bg-red/5 p-3">
                 <p className="text-sm font-medium text-red">
                   Tindakan ini akan menghapus seluruh data pesanan secara permanen. Yakin ingin
                   melanjutkan?
@@ -388,11 +391,11 @@ export default function AdminPengaturanPage() {
                   <button
                     type="button"
                     onClick={() => setResetStep(2)}
-                    className={`${btnOutline} border-red text-red hover:bg-red/10`}
+                    className={`${adminBtnOutline} ring-red text-red hover:bg-red/10`}
                   >
                     Ya, Lanjutkan
                   </button>
-                  <button type="button" onClick={() => setResetStep(0)} className={btnOutline}>
+                  <button type="button" onClick={() => setResetStep(0)} className={adminBtnOutline}>
                     Batal
                   </button>
                 </div>
@@ -400,7 +403,7 @@ export default function AdminPengaturanPage() {
             ) : null}
 
             {resetStep === 2 ? (
-              <div className="flex flex-col gap-2 rounded-md border border-red/30 bg-red/5 p-3">
+              <div className="flex flex-col gap-2 rounded-lg border border-red/30 bg-red/5 p-3">
                 <p className="text-sm font-medium text-red">
                   Ketik &quot;{RESET_CONFIRM_PHRASE}&quot; untuk mengonfirmasi.
                 </p>
@@ -408,14 +411,14 @@ export default function AdminPengaturanPage() {
                   type="text"
                   value={resetInput}
                   onChange={(e) => setResetInput(e.target.value)}
-                  className={inputBase}
+                  className={adminInputBase}
                 />
                 <div className="flex gap-2">
                   <button
                     type="button"
                     disabled={resetInput !== RESET_CONFIRM_PHRASE || resetting}
                     onClick={handleConfirmReset}
-                    className={`${btnOutline} border-red text-red hover:bg-red/10 disabled:cursor-not-allowed disabled:opacity-50`}
+                    className={`${adminBtnOutline} ring-red text-red hover:bg-red/10 disabled:cursor-not-allowed disabled:opacity-50`}
                   >
                     {resetting ? 'Mereset...' : 'Reset Sekarang'}
                   </button>
@@ -425,7 +428,7 @@ export default function AdminPengaturanPage() {
                       setResetStep(0);
                       setResetInput('');
                     }}
-                    className={btnOutline}
+                    className={adminBtnOutline}
                   >
                     Batal
                   </button>

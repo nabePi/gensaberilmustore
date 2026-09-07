@@ -2,7 +2,7 @@
 
 import { useRef, useState } from 'react';
 
-import { btnOutline } from '@/lib/styles';
+import { adminBtnOutline } from '@/lib/admin/styles';
 
 export function SingleImageUpload({
   label,
@@ -62,14 +62,14 @@ export function SingleImageUpload({
           type="button"
           onClick={() => fileInputRef.current?.click()}
           disabled={uploading}
-          className={btnOutline}
+          className={adminBtnOutline}
         >
           {uploading ? 'Mengunggah...' : imageUrl ? 'Ganti Gambar' : 'Upload Gambar'}
         </button>
       </div>
       {error ? <p className="text-sm text-red">{error}</p> : null}
       {imageUrl ? (
-        <div className="h-32 w-full overflow-hidden rounded-md border border-neutral-200 bg-neutral-100">
+        <div className="h-32 w-full overflow-hidden rounded-lg border border-neutral-200 bg-neutral-100">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={imageUrl} alt={label} className="h-full w-full object-contain" />
         </div>

@@ -2,7 +2,7 @@
 
 import { useRef, useState } from 'react';
 
-import { btnOutline } from '@/lib/styles';
+import { adminBtnOutline, adminInputBase } from '@/lib/admin/styles';
 
 export type BannerImageItem = {
   id?: string;
@@ -97,7 +97,7 @@ export function BannerImageManager({
           type="button"
           onClick={() => fileInputRef.current?.click()}
           disabled={uploading}
-          className={btnOutline}
+          className={adminBtnOutline}
         >
           {uploading ? 'Mengunggah...' : 'Tambah Gambar'}
         </button>
@@ -114,10 +114,10 @@ export function BannerImageManager({
       {images.map((image, index) => (
         <div
           key={image.id ?? index}
-          className="flex flex-col gap-2 rounded-md border border-neutral-200 p-3"
+          className="flex flex-col gap-2 rounded-lg border border-neutral-200 p-3"
         >
           <div className="flex items-start gap-3">
-            <div className="h-20 w-20 shrink-0 overflow-hidden rounded-md bg-neutral-100">
+            <div className="h-20 w-20 shrink-0 overflow-hidden rounded-lg bg-neutral-100">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={image.imageUrl}
@@ -131,7 +131,7 @@ export function BannerImageManager({
                 value={image.linkUrl ?? ''}
                 onChange={(e) => updateLinkUrl(index, e.target.value)}
                 placeholder="URL tujuan klik (opsional)"
-                className="w-full rounded-sm border border-neutral-200 px-3 py-2 text-sm focus:border-brand focus:outline-none"
+                className={adminInputBase}
               />
               <p className="mt-1 text-xs text-neutral-500">
                 Kosongkan jika gambar tidak bisa diklik.
@@ -142,7 +142,7 @@ export function BannerImageManager({
                 type="button"
                 onClick={() => moveImage(index, -1)}
                 disabled={index === 0}
-                className="rounded-sm border border-neutral-200 px-2 py-1 text-xs disabled:opacity-40"
+                className="rounded-lg px-2 py-1 text-xs text-neutral-600 transition hover:bg-neutral-100 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent"
               >
                 ↑
               </button>
@@ -150,14 +150,14 @@ export function BannerImageManager({
                 type="button"
                 onClick={() => moveImage(index, 1)}
                 disabled={index === images.length - 1}
-                className="rounded-sm border border-neutral-200 px-2 py-1 text-xs disabled:opacity-40"
+                className="rounded-lg px-2 py-1 text-xs text-neutral-600 transition hover:bg-neutral-100 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent"
               >
                 ↓
               </button>
               <button
                 type="button"
                 onClick={() => removeImage(index)}
-                className="rounded-sm border border-red px-2 py-1 text-xs text-red"
+                className="rounded-lg px-2 py-1 text-xs text-red transition hover:bg-red/10"
               >
                 Hapus
               </button>

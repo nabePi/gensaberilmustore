@@ -6,7 +6,7 @@ import StarterKit from '@tiptap/starter-kit';
 import { useRef, useState } from 'react';
 
 const toolbarButtonBase =
-  'inline-flex items-center justify-center rounded-sm px-2 py-1 text-xs font-semibold transition-colors disabled:opacity-40 disabled:cursor-not-allowed';
+  'inline-flex items-center justify-center rounded-lg px-2 py-1 text-xs font-semibold transition-colors disabled:opacity-40 disabled:cursor-not-allowed';
 const toolbarButtonIdle = 'text-neutral-600 hover:bg-neutral-100';
 const toolbarButtonActive = 'bg-brand-50 text-brand';
 
@@ -60,7 +60,7 @@ export function RichTextEditor({
     editorProps: {
       attributes: {
         class:
-          'min-h-[240px] px-3.5 py-2.5 text-sm text-foreground outline-none [&_h2]:mt-4 [&_h2]:mb-2 [&_h2]:text-lg [&_h2]:font-bold [&_h3]:mt-3 [&_h3]:mb-1.5 [&_h3]:text-base [&_h3]:font-bold [&_p]:my-2 [&_ul]:my-2 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:my-2 [&_ol]:list-decimal [&_ol]:pl-5 [&_blockquote]:my-2 [&_blockquote]:border-l-4 [&_blockquote]:border-neutral-200 [&_blockquote]:pl-3 [&_blockquote]:italic [&_a]:text-brand [&_a]:underline [&_img]:my-3 [&_img]:rounded-md',
+          'min-h-[240px] px-3.5 py-2.5 text-sm text-foreground outline-none [&_h2]:mt-4 [&_h2]:mb-2 [&_h2]:text-lg [&_h2]:font-bold [&_h3]:mt-3 [&_h3]:mb-1.5 [&_h3]:text-base [&_h3]:font-bold [&_p]:my-2 [&_ul]:my-2 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:my-2 [&_ol]:list-decimal [&_ol]:pl-5 [&_blockquote]:my-2 [&_blockquote]:border-l-4 [&_blockquote]:border-neutral-200 [&_blockquote]:pl-3 [&_blockquote]:italic [&_a]:text-brand [&_a]:underline [&_img]:my-3 [&_img]:rounded-lg',
       },
     },
   });
@@ -127,7 +127,7 @@ export function RichTextEditor({
 
   return (
     <div className="flex flex-col gap-2">
-      <div className="rounded-sm border border-neutral-200 bg-white focus-within:border-brand">
+      <div className="rounded-lg border border-neutral-200 bg-white shadow-theme-xs focus-within:border-brand-300 focus-within:ring-3 focus-within:ring-brand-500/10">
         <div className="flex flex-wrap items-center gap-1 border-b border-neutral-200 px-2 py-1.5">
           <ToolbarButton
             label="B"

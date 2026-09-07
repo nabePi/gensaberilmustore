@@ -3,9 +3,17 @@
 import { useEffect, useState } from 'react';
 
 import { AdminModal } from '@/components/admin/AdminModal';
+import { Badge } from '@/components/admin/ui/Badge';
+import { PageHeader } from '@/components/admin/ui/PageHeader';
+import { Table, Tbody, Td, TableEmptyState, Th, Thead, Tr } from '@/components/admin/ui/Table';
+import {
+  adminBadgeBase,
+  adminBtnOutline,
+  adminBtnPrimarySm,
+  adminInputBase,
+} from '@/lib/admin/styles';
 import { formatCurrency } from '@/lib/format';
 import { ORDER_STATUS_BADGE_CLASSES, ORDER_STATUS_LABELS } from '@/lib/order-status';
-import { badgeBase, btnOutline, btnSolidSm, cardBase, inputBase } from '@/lib/styles';
 
 type MemberRole = 'BUYER' | 'AFFILIATE';
 
@@ -132,13 +140,13 @@ function MemberDetailModal({
 
           <div className="flex flex-wrap items-center gap-2 border-y border-neutral-200 py-3">
             <span className="text-sm font-medium text-neutral-600">Role saat ini:</span>
-            <span className={`${badgeBase} bg-brand-50 text-brand`}>{member.role}</span>
+            <span className={`${adminBadgeBase} bg-brand-50 text-brand`}>{member.role}</span>
             {member.role === 'BUYER' ? (
               <button
                 type="button"
                 disabled={updatingRole}
                 onClick={() => handleRoleChange('AFFILIATE')}
-                className={btnSolidSm}
+                className={adminBtnPrimarySm}
               >
                 Jadikan Afiliasi
               </button>
@@ -147,7 +155,7 @@ function MemberDetailModal({
                 type="button"
                 disabled={updatingRole}
                 onClick={() => handleRoleChange('BUYER')}
-                className={btnSolidSm}
+                className={adminBtnPrimarySm}
               >
                 Jadikan Buyer
               </button>
@@ -156,7 +164,7 @@ function MemberDetailModal({
               type="button"
               disabled={resettingPassword}
               onClick={handleResetPassword}
-              className={btnOutline}
+              className={adminBtnOutline}
             >
               {resettingPassword ? 'Mengirim...' : 'Reset Password'}
             </button>
@@ -178,7 +186,9 @@ function MemberDetailModal({
                       <p className="text-xs text-neutral-400">{formatDate(order.createdAt)}</p>
                     </div>
                     <div className="flex items-center gap-3">
-                      <span className={`${badgeBase} ${ORDER_STATUS_BADGE_CLASSES[order.status]}`}>
+                      <span
+                        className={`${adminBadgeBase} ${ORDER_STATUS_BADGE_CLASSES[order.status]}`}
+                      >
                         {ORDER_STATUS_LABELS[order.status]}
                       </span>
                       <span className="font-medium text-foreground">
@@ -241,10 +251,7 @@ export default function AdminMemberPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">Kelola Member</h1>
-        <p className="mt-1 text-sm text-neutral-500">{total} member ditemukan</p>
-      </div>
+      <PageHeader title="Kelola Member" description={`${total} member ditemukan`} />
 
       <input
         type="search"
@@ -254,53 +261,47 @@ export default function AdminMemberPage() {
           setQ(e.target.value);
           setPage(1);
         }}
-        className={`${inputBase} sm:w-80`}
+        className={`${adminInputBase} sm:w-80`}
       />
 
       {loading ? (
         <p className="text-sm text-neutral-500">Memuat member...</p>
       ) : members.length === 0 ? (
-        <div className="flex flex-col items-center gap-3 rounded-lg border border-neutral-200 bg-white py-16 text-center">
-          <p className="text-sm text-neutral-500">Tidak ada member ditemukan.</p>
-        </div>
+        <TableEmptyState>Tidak ada member ditemukan.</TableEmptyState>
       ) : (
-        <div className={`overflow-x-auto ${cardBase}`}>
-          <table className="w-full text-left text-sm">
-            <thead className="border-b border-neutral-200 bg-neutral-50 text-xs uppercase text-neutral-500">
-              <tr>
-                <th className="px-4 py-3">Nama</th>
-                <th className="px-4 py-3">Telepon</th>
-                <th className="px-4 py-3">Role</th>
-                <th className="px-4 py-3 text-right">Jumlah Order</th>
-                <th className="px-4 py-3 text-right">Total Belanja</th>
-                <th className="px-4 py-3">Bergabung</th>
-              </tr>
-            </thead>
-            <tbody>
-              {members.map((member) => (
-                <tr
-                  key={member.id}
-                  onClick={() => setOpenMemberId(member.id)}
-                  className="cursor-pointer border-b border-neutral-100 last:border-0 hover:bg-neutral-50"
-                >
-                  <td className="px-4 py-3">
-                    <p className="font-medium text-foreground">{member.name ?? '-'}</p>
-                    <p className="text-xs text-neutral-400">{member.email}</p>
-                  </td>
-                  <td className="px-4 py-3 text-neutral-600">{member.phone ?? '-'}</td>
-                  <td className="px-4 py-3">
-                    <span className={`${badgeBase} bg-brand-50 text-brand`}>{member.role}</span>
-                  </td>
-                  <td className="px-4 py-3 text-right text-neutral-600">{member.orderCount}</td>
-                  <td className="px-4 py-3 text-right font-medium text-foreground">
-                    {formatCurrency(member.totalSpend)}
-                  </td>
-                  <td className="px-4 py-3 text-neutral-600">{formatDate(member.createdAt)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <Table>
+          <Thead>
+            <Th>Nama</Th>
+            <Th>Telepon</Th>
+            <Th>Role</Th>
+            <Th className="text-right">Jumlah Order</Th>
+            <Th className="text-right">Total Belanja</Th>
+            <Th>Bergabung</Th>
+          </Thead>
+          <Tbody>
+            {members.map((member) => (
+              <Tr
+                key={member.id}
+                onClick={() => setOpenMemberId(member.id)}
+                className="cursor-pointer"
+              >
+                <Td>
+                  <p className="font-medium text-foreground">{member.name ?? '-'}</p>
+                  <p className="text-xs text-neutral-400">{member.email}</p>
+                </Td>
+                <Td className="text-neutral-600">{member.phone ?? '-'}</Td>
+                <Td>
+                  <Badge tone="brand">{member.role}</Badge>
+                </Td>
+                <Td className="text-right text-neutral-600">{member.orderCount}</Td>
+                <Td className="text-right font-medium text-foreground">
+                  {formatCurrency(member.totalSpend)}
+                </Td>
+                <Td className="text-neutral-600">{formatDate(member.createdAt)}</Td>
+              </Tr>
+            ))}
+          </Tbody>
+        </Table>
       )}
 
       {totalPages > 1 ? (
@@ -309,7 +310,7 @@ export default function AdminMemberPage() {
             type="button"
             disabled={page <= 1}
             onClick={() => setPage((p) => p - 1)}
-            className={btnOutline}
+            className={adminBtnOutline}
           >
             Sebelumnya
           </button>
@@ -320,7 +321,7 @@ export default function AdminMemberPage() {
             type="button"
             disabled={page >= totalPages}
             onClick={() => setPage((p) => p + 1)}
-            className={btnSolidSm}
+            className={adminBtnPrimarySm}
           >
             Selanjutnya
           </button>

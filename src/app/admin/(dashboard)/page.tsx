@@ -1,26 +1,22 @@
 import Link from 'next/link';
 
+import { Badge } from '@/components/admin/ui/Badge';
+import { BarChartIcon, BoxIcon, ReceiptIcon, UsersIcon } from '@/components/admin/ui/icons';
+import { PageHeader } from '@/components/admin/ui/PageHeader';
+import { StatCard } from '@/components/admin/ui/StatCard';
+import { ORDER_STATUS_BADGE_TONE } from '@/lib/admin/order-status';
+import { adminCardBase } from '@/lib/admin/styles';
 import { prisma } from '@/lib/db';
 import { formatCurrency } from '@/lib/format';
-import { ORDER_STATUS_BADGE_CLASSES, ORDER_STATUS_LABELS } from '@/lib/order-status';
-import { badgeBase, cardBase } from '@/lib/styles';
+import { ORDER_STATUS_LABELS } from '@/lib/order-status';
 import { orderListInclude, serializeAdminOrderListItem } from '@/server/orders/serialize';
 import { getAdminSummary } from '@/server/reports/summary';
-
-function StatCard({ label, value }: { label: string; value: string }) {
-  return (
-    <div className={`p-4 ${cardBase}`}>
-      <p className="text-xs text-neutral-500">{label}</p>
-      <p className="mt-1 text-xl font-bold text-foreground">{value}</p>
-    </div>
-  );
-}
 
 function QuickCard({ href, label }: { href: string; label: string }) {
   return (
     <Link
       href={href}
-      className={`flex items-center justify-center p-6 text-center text-sm font-semibold text-foreground hover:border-brand hover:text-brand ${cardBase}`}
+      className={`flex items-center justify-center p-6 text-center text-sm font-semibold text-foreground transition-colors hover:border-brand hover:text-brand ${adminCardBase}`}
     >
       {label}
     </Link>
@@ -39,16 +35,29 @@ export default async function AdminDashboardPage() {
 
   return (
     <div className="flex flex-col gap-8">
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">Dashboard Admin</h1>
-        <p className="mt-1 text-sm text-neutral-500">Selamat datang di panel manajemen</p>
-      </div>
+      <PageHeader title="Dashboard Admin" description="Selamat datang di panel manajemen" />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard label="Total Pesanan" value={summary.totalOrders.toString()} />
-        <StatCard label="Pendapatan" value={formatCurrency(summary.revenue)} />
-        <StatCard label="Total Member" value={summary.totalMembers.toString()} />
-        <StatCard label="Total Produk" value={summary.totalProducts.toString()} />
+        <StatCard
+          label="Total Pesanan"
+          value={summary.totalOrders.toString()}
+          icon={<ReceiptIcon className="h-5 w-5" />}
+        />
+        <StatCard
+          label="Pendapatan"
+          value={formatCurrency(summary.revenue)}
+          icon={<BarChartIcon className="h-5 w-5" />}
+        />
+        <StatCard
+          label="Total Member"
+          value={summary.totalMembers.toString()}
+          icon={<UsersIcon className="h-5 w-5" />}
+        />
+        <StatCard
+          label="Total Produk"
+          value={summary.totalProducts.toString()}
+          icon={<BoxIcon className="h-5 w-5" />}
+        />
       </div>
 
       <div>
@@ -60,7 +69,7 @@ export default async function AdminDashboardPage() {
         </div>
 
         {recentOrders.length === 0 ? (
-          <div className="flex flex-col items-center gap-3 rounded-lg border border-neutral-200 bg-white py-12 text-center">
+          <div className="flex flex-col items-center gap-3 rounded-xl border border-neutral-200 bg-white py-12 text-center shadow-sm">
             <p className="text-sm text-neutral-500">Belum ada pesanan masuk.</p>
           </div>
         ) : (
@@ -71,7 +80,7 @@ export default async function AdminDashboardPage() {
                 <Link
                   key={item.id}
                   href={`/admin/pesanan?openOrder=${item.id}`}
-                  className={`flex items-center justify-between gap-4 p-4 ${cardBase} hover:border-brand`}
+                  className={`flex items-center justify-between gap-4 p-4 transition-colors hover:border-brand ${adminCardBase}`}
                 >
                   <div>
                     <p className="text-sm font-semibold text-foreground">{item.orderNumber}</p>
@@ -85,9 +94,9 @@ export default async function AdminDashboardPage() {
                     </p>
                   </div>
                   <div className="flex items-center gap-4">
-                    <span className={`${badgeBase} ${ORDER_STATUS_BADGE_CLASSES[item.status]}`}>
+                    <Badge tone={ORDER_STATUS_BADGE_TONE[item.status]}>
                       {ORDER_STATUS_LABELS[item.status]}
-                    </span>
+                    </Badge>
                     <span className="text-sm font-semibold text-foreground">
                       {formatCurrency(item.total)}
                     </span>

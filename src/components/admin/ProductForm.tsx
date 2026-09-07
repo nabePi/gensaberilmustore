@@ -6,8 +6,16 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
-import { AdminModal } from '@/components/admin/AdminModal';
-import { btnOutline, btnSolid, inputBase } from '@/lib/styles';
+import { Card } from '@/components/admin/ui/Card';
+import {
+  adminBtnOutline,
+  adminBtnPrimary,
+  adminErrorText,
+  adminHelpText,
+  adminInputBase,
+  adminLabelBase,
+  adminTextareaBase,
+} from '@/lib/admin/styles';
 import { COVER_TYPES } from '@/server/products/schema';
 
 export type AdminCategoryOption = { id: string; name: string; depth: number };
@@ -69,15 +77,15 @@ const productFormSchema = z.object({
 
 type ProductFormValues = z.infer<typeof productFormSchema>;
 
-export function ProductFormModal({
+export function ProductForm({
   product,
   categories,
-  onClose,
+  onCancel,
   onSaved,
 }: {
   product: AdminProductDetail | null;
   categories: AdminCategoryOption[];
-  onClose: () => void;
+  onCancel: () => void;
   onSaved: () => void;
 }) {
   const [categoryIds, setCategoryIds] = useState<string[]>(
@@ -249,30 +257,26 @@ export function ProductFormModal({
   }
 
   return (
-    <AdminModal
-      title={product ? 'Edit Produk' : 'Tambah Produk'}
-      onClose={onClose}
-      widthClassName="max-w-3xl"
-    >
-      <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
+    <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6">
+      <Card title="Informasi Dasar">
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="SKU" error={errors.sku?.message}>
-            <input {...register('sku')} className={inputBase} />
+            <input {...register('sku')} className={adminInputBase} />
           </Field>
           <Field label="Judul" error={errors.title?.message}>
-            <input {...register('title')} className={inputBase} />
+            <input {...register('title')} className={adminInputBase} />
           </Field>
           <Field label="Subjudul" error={errors.subtitle?.message}>
-            <input {...register('subtitle')} className={inputBase} />
+            <input {...register('subtitle')} className={adminInputBase} />
           </Field>
           <Field label="Penulis" error={errors.author?.message}>
-            <input {...register('author')} className={inputBase} />
+            <input {...register('author')} className={adminInputBase} />
           </Field>
           <Field label="Penerbit" error={errors.publisher?.message}>
-            <input {...register('publisher')} className={inputBase} />
+            <input {...register('publisher')} className={adminInputBase} />
           </Field>
           <Field label="Tipe Cover" error={errors.coverType?.message}>
-            <select {...register('coverType')} className={inputBase}>
+            <select {...register('coverType')} className={adminInputBase}>
               {COVER_TYPES.map((type) => (
                 <option key={type} value={type}>
                   {type}
@@ -280,183 +284,190 @@ export function ProductFormModal({
               ))}
             </select>
           </Field>
-          <Field label="Harga (Rp)" error={errors.price?.message}>
-            <input type="number" {...register('price')} className={inputBase} />
-          </Field>
-          <Field label="Harga HPP (Rp)" error={errors.costPrice?.message}>
-            <input type="number" {...register('costPrice')} className={inputBase} />
-          </Field>
-          <Field label="Harga PO / Pre Order (Rp)" error={errors.preOrderPrice?.message}>
-            <input type="number" {...register('preOrderPrice')} className={inputBase} />
-          </Field>
-          <Field label="Harga Grosir (Rp)" error={errors.wholesalePrice?.message}>
-            <input type="number" {...register('wholesalePrice')} className={inputBase} />
-          </Field>
-          <Field label="Minimum Pcs untuk Harga Grosir" error={errors.wholesaleMinQty?.message}>
-            <input type="number" {...register('wholesaleMinQty')} className={inputBase} />
-          </Field>
-          <Field label="Diskon (%)" error={errors.discountPercent?.message}>
-            <input type="number" {...register('discountPercent')} className={inputBase} />
-          </Field>
-          <Field label="Stok" error={errors.stock?.message}>
-            <input type="number" {...register('stock')} className={inputBase} />
-          </Field>
-          <Field label="Berat (gram)" error={errors.weightGram?.message}>
-            <input type="number" {...register('weightGram')} className={inputBase} />
-          </Field>
           <Field label="Jumlah Halaman" error={errors.pageCount?.message}>
-            <input type="number" {...register('pageCount')} className={inputBase} />
+            <input type="number" {...register('pageCount')} className={adminInputBase} />
           </Field>
           <Field label="Tahun Terbit" error={errors.publishYear?.message}>
-            <input type="number" {...register('publishYear')} className={inputBase} />
+            <input type="number" {...register('publishYear')} className={adminInputBase} />
           </Field>
         </div>
 
-        <Field label="Deskripsi" error={errors.description?.message}>
-          <textarea rows={4} {...register('description')} className={inputBase} />
-        </Field>
+        <div className="mt-4">
+          <Field label="Deskripsi" error={errors.description?.message}>
+            <textarea rows={4} {...register('description')} className={adminTextareaBase} />
+          </Field>
+        </div>
+      </Card>
 
-        <Field label="Kategori">
-          <div className="flex max-h-40 flex-col gap-1.5 overflow-y-auto rounded-sm border border-neutral-200 p-3">
-            {categories.map((category) => (
-              <label key={category.id} className="flex items-center gap-2 text-sm">
-                <input
-                  type="checkbox"
-                  checked={categoryIds.includes(category.id)}
-                  onChange={() => toggleCategory(category.id)}
-                  className="h-4 w-4"
-                />
-                <span style={{ paddingLeft: category.depth * 12 }}>{category.name}</span>
-              </label>
-            ))}
-          </div>
-        </Field>
+      <Card title="Harga &amp; Stok">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <Field label="Harga (Rp)" error={errors.price?.message}>
+            <input type="number" {...register('price')} className={adminInputBase} />
+          </Field>
+          <Field label="Harga HPP (Rp)" error={errors.costPrice?.message}>
+            <input type="number" {...register('costPrice')} className={adminInputBase} />
+          </Field>
+          <Field label="Diskon (%)" error={errors.discountPercent?.message}>
+            <input type="number" {...register('discountPercent')} className={adminInputBase} />
+          </Field>
+          <Field label="Harga PO / Pre Order (Rp)" error={errors.preOrderPrice?.message}>
+            <input type="number" {...register('preOrderPrice')} className={adminInputBase} />
+          </Field>
+          <Field label="Harga Grosir (Rp)" error={errors.wholesalePrice?.message}>
+            <input type="number" {...register('wholesalePrice')} className={adminInputBase} />
+          </Field>
+          <Field label="Minimum Pcs untuk Harga Grosir" error={errors.wholesaleMinQty?.message}>
+            <input type="number" {...register('wholesaleMinQty')} className={adminInputBase} />
+          </Field>
+          <Field label="Stok" error={errors.stock?.message}>
+            <input type="number" {...register('stock')} className={adminInputBase} />
+          </Field>
+          <Field label="Berat (gram)" error={errors.weightGram?.message}>
+            <input type="number" {...register('weightGram')} className={adminInputBase} />
+          </Field>
+        </div>
+      </Card>
 
-        <Field label="Gambar Produk (bisa lebih dari satu)">
-          <div className="flex flex-col gap-3">
-            {existingImages.length > 0 ? (
-              <div className="flex flex-wrap gap-3">
-                {existingImages.map((image) => (
-                  <div
-                    key={image.id}
-                    className={`relative w-24 overflow-hidden rounded-sm border-2 ${
-                      image.isPrimary ? 'border-brand' : 'border-neutral-200'
-                    }`}
-                  >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={image.url}
-                      alt={image.altText ?? 'Gambar produk'}
-                      className="aspect-[3/4] w-full object-cover"
-                    />
-                    {image.isPrimary ? (
-                      <span className="absolute left-0 top-0 bg-brand px-1.5 py-0.5 text-[10px] font-semibold text-white">
-                        Utama
-                      </span>
-                    ) : null}
-                    <div className="flex flex-col gap-1 p-1.5">
-                      {!image.isPrimary ? (
-                        <button
-                          type="button"
-                          disabled={imageBusy}
-                          onClick={() => handleSetPrimary(image)}
-                          className="text-[11px] font-medium text-brand hover:underline"
-                        >
-                          Jadikan Utama
-                        </button>
-                      ) : null}
+      <Card title="Kategori">
+        <div className="flex max-h-40 flex-col gap-1.5 overflow-y-auto rounded-lg border border-neutral-200 p-3">
+          {categories.map((category) => (
+            <label key={category.id} className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={categoryIds.includes(category.id)}
+                onChange={() => toggleCategory(category.id)}
+                className="h-4 w-4"
+              />
+              <span style={{ paddingLeft: category.depth * 12 }}>{category.name}</span>
+            </label>
+          ))}
+        </div>
+      </Card>
+
+      <Card title="Gambar Produk">
+        <div className="flex flex-col gap-3">
+          {existingImages.length > 0 ? (
+            <div className="flex flex-wrap gap-3">
+              {existingImages.map((image) => (
+                <div
+                  key={image.id}
+                  className={`relative w-24 overflow-hidden rounded-lg border-2 ${
+                    image.isPrimary ? 'border-brand' : 'border-neutral-200'
+                  }`}
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={image.url}
+                    alt={image.altText ?? 'Gambar produk'}
+                    className="aspect-[3/4] w-full object-cover"
+                  />
+                  {image.isPrimary ? (
+                    <span className="absolute left-0 top-0 rounded-br-lg bg-brand px-1.5 py-0.5 text-[10px] font-semibold text-white">
+                      Utama
+                    </span>
+                  ) : null}
+                  <div className="flex flex-col gap-1 p-1.5">
+                    {!image.isPrimary ? (
                       <button
                         type="button"
                         disabled={imageBusy}
-                        onClick={() => handleDeleteImage(image)}
-                        className="text-[11px] font-medium text-red hover:underline"
+                        onClick={() => handleSetPrimary(image)}
+                        className="text-[11px] font-medium text-brand hover:underline"
                       >
-                        Hapus
+                        Jadikan Utama
                       </button>
-                    </div>
+                    ) : null}
+                    <button
+                      type="button"
+                      disabled={imageBusy}
+                      onClick={() => handleDeleteImage(image)}
+                      className="text-[11px] font-medium text-red hover:underline"
+                    >
+                      Hapus
+                    </button>
                   </div>
-                ))}
-              </div>
-            ) : null}
+                </div>
+              ))}
+            </div>
+          ) : null}
 
-            {newFiles.length > 0 ? (
-              <div className="flex flex-wrap gap-3">
-                {newFiles.map(({ file, preview }, index) => (
-                  <div
-                    key={`${file.name}-${index}`}
-                    className="relative w-24 overflow-hidden rounded-sm border-2 border-dashed border-neutral-300"
-                  >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={preview}
-                      alt={file.name}
-                      className="aspect-[3/4] w-full object-cover"
-                    />
-                    <span className="absolute left-0 top-0 bg-neutral-700 px-1.5 py-0.5 text-[10px] font-semibold text-white">
-                      Baru
-                    </span>
-                    <div className="p-1.5">
-                      <button
-                        type="button"
-                        onClick={() => removeNewFile(index)}
-                        className="text-[11px] font-medium text-red hover:underline"
-                      >
-                        Batal
-                      </button>
-                    </div>
+          {newFiles.length > 0 ? (
+            <div className="flex flex-wrap gap-3">
+              {newFiles.map(({ file, preview }, index) => (
+                <div
+                  key={`${file.name}-${index}`}
+                  className="relative w-24 overflow-hidden rounded-lg border-2 border-dashed border-neutral-300"
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={preview} alt={file.name} className="aspect-[3/4] w-full object-cover" />
+                  <span className="absolute left-0 top-0 rounded-br-lg bg-neutral-700 px-1.5 py-0.5 text-[10px] font-semibold text-white">
+                    Baru
+                  </span>
+                  <div className="p-1.5">
+                    <button
+                      type="button"
+                      onClick={() => removeNewFile(index)}
+                      className="text-[11px] font-medium text-red hover:underline"
+                    >
+                      Batal
+                    </button>
                   </div>
-                ))}
-              </div>
-            ) : null}
+                </div>
+              ))}
+            </div>
+          ) : null}
 
-            <input
-              type="file"
-              accept="image/png,image/jpeg,image/webp"
-              multiple
-              onChange={(e) => {
-                addFiles(e.target.files);
-                e.target.value = '';
-              }}
-              className="text-sm"
-            />
-            <p className="text-xs text-neutral-500">
-              Gambar pertama (utama) dipakai di semua halaman; seluruh gambar tampil sebagai
-              carousel di halaman detail produk. Maksimal 8 gambar, 5MB per file.
-            </p>
-          </div>
-        </Field>
-
-        <label className="flex items-center gap-2 text-sm">
-          <input type="checkbox" {...register('isPreOrderActive')} className="h-4 w-4" />
-          Tampilkan Harga PO ke pembeli (menggantikan harga normal selama pre order aktif)
-        </label>
-
-        <label className="flex items-center gap-2 text-sm">
-          <input type="checkbox" {...register('isActive')} className="h-4 w-4" />
-          Aktif (ditampilkan di toko)
-        </label>
-
-        {apiError ? <p className="text-sm text-red">{apiError}</p> : null}
-
-        <div className="flex justify-end gap-2 border-t border-neutral-200 pt-4">
-          <button type="button" onClick={onClose} className={btnOutline}>
-            Batal
-          </button>
-          <button type="submit" disabled={submitting} className={btnSolid}>
-            {submitting ? 'Menyimpan...' : 'Simpan'}
-          </button>
+          <input
+            type="file"
+            accept="image/png,image/jpeg,image/webp"
+            multiple
+            onChange={(e) => {
+              addFiles(e.target.files);
+              e.target.value = '';
+            }}
+            className="text-sm"
+          />
+          <p className={adminHelpText}>
+            Gambar pertama (utama) dipakai di semua halaman; seluruh gambar tampil sebagai carousel
+            di halaman detail produk. Maksimal 8 gambar, 5MB per file.
+          </p>
         </div>
-      </form>
-    </AdminModal>
+      </Card>
+
+      <Card>
+        <div className="flex flex-col gap-3">
+          <label className="flex items-center gap-2 text-sm">
+            <input type="checkbox" {...register('isPreOrderActive')} className="h-4 w-4" />
+            Tampilkan Harga PO ke pembeli (menggantikan harga normal selama pre order aktif)
+          </label>
+
+          <label className="flex items-center gap-2 text-sm">
+            <input type="checkbox" {...register('isActive')} className="h-4 w-4" />
+            Aktif (ditampilkan di toko)
+          </label>
+
+          {apiError ? <p className="text-sm text-red">{apiError}</p> : null}
+
+          <div className="flex justify-end gap-2 border-t border-neutral-200 pt-4">
+            <button type="button" onClick={onCancel} className={adminBtnOutline}>
+              Batal
+            </button>
+            <button type="submit" disabled={submitting} className={adminBtnPrimary}>
+              {submitting ? 'Menyimpan...' : 'Simpan'}
+            </button>
+          </div>
+        </div>
+      </Card>
+    </form>
   );
 }
 
 function Field({ label, error, children }: { label: string; error?: string; children: ReactNode }) {
   return (
     <div className="flex flex-col gap-1">
-      <label className="text-sm font-medium text-neutral-600">{label}</label>
+      <label className={adminLabelBase}>{label}</label>
       {children}
-      {error ? <p className="text-xs text-red">{error}</p> : null}
+      {error ? <p className={adminErrorText}>{error}</p> : null}
     </div>
   );
 }

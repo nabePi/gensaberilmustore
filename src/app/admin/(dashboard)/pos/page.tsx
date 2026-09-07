@@ -4,8 +4,17 @@ import Script from 'next/script';
 import { useEffect, useRef, useState } from 'react';
 
 import { AdminModal } from '@/components/admin/AdminModal';
+import { PageHeader } from '@/components/admin/ui/PageHeader';
+import { Table, Tbody, Td, TableEmptyState, Th, Thead, Tr } from '@/components/admin/ui/Table';
+import {
+  adminBtnOutline,
+  adminBtnPrimary,
+  adminBtnPrimarySm,
+  adminCardBase,
+  adminInputBase,
+  adminTextareaBase,
+} from '@/lib/admin/styles';
 import { formatCurrency } from '@/lib/format';
-import { btnOutline, btnSolid, btnSolidSm, cardBase, inputBase } from '@/lib/styles';
 import { computeUnitPrice } from '@/server/products/pricing';
 
 declare global {
@@ -72,7 +81,7 @@ function QuantityInput({
           e.currentTarget.blur();
         }
       }}
-      className="w-14 rounded-sm border border-neutral-200 px-1 py-1 text-center text-sm [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+      className="w-14 rounded-lg border border-neutral-300 px-1 py-1 text-center text-sm [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
     />
   );
 }
@@ -428,13 +437,11 @@ export default function AdminPosPage() {
           }}
         />
       ) : null}
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Point of Sale</h1>
-          <p className="mt-1 text-sm text-neutral-500">Penjualan cepat untuk event pameran buku</p>
-        </div>
-        <span className="text-sm font-medium text-neutral-500">{cartCount} item</span>
-      </div>
+      <PageHeader
+        title="Point of Sale"
+        description="Penjualan cepat untuk event pameran buku"
+        action={<span className="text-sm font-medium text-neutral-500">{cartCount} item</span>}
+      />
 
       <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
         <div className="flex flex-col gap-3">
@@ -444,12 +451,12 @@ export default function AdminPosPage() {
               placeholder="Cari produk..."
               value={q}
               onChange={(e) => setQ(e.target.value)}
-              className={inputBase}
+              className={adminInputBase}
             />
             <select
               value={categoryId}
               onChange={(e) => setCategoryId(e.target.value)}
-              className={inputBase}
+              className={adminInputBase}
             >
               <option value="">Semua Kategori</option>
               {categories.map((category) => (
@@ -463,9 +470,7 @@ export default function AdminPosPage() {
           {loadingCatalog ? (
             <p className="text-sm text-neutral-500">Memuat produk...</p>
           ) : products.length === 0 ? (
-            <div className="flex flex-col items-center gap-2 rounded-lg border border-neutral-200 bg-white py-16 text-center">
-              <p className="text-sm text-neutral-500">Produk tidak ditemukan.</p>
-            </div>
+            <TableEmptyState>Produk tidak ditemukan.</TableEmptyState>
           ) : (
             <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
               {products.map((product) => (
@@ -473,7 +478,7 @@ export default function AdminPosPage() {
                   key={product.id}
                   type="button"
                   onClick={() => addToCart(product)}
-                  className={`flex flex-col gap-2 p-3 text-left transition-colors hover:border-brand ${cardBase}`}
+                  className={`flex flex-col gap-2 p-3 text-left transition-colors hover:border-brand ${adminCardBase}`}
                 >
                   {product.primaryImageUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
@@ -509,7 +514,7 @@ export default function AdminPosPage() {
           )}
         </div>
 
-        <div className={`flex h-fit flex-col gap-4 p-4 ${cardBase}`}>
+        <div className={`flex h-fit flex-col gap-4 p-4 ${adminCardBase}`}>
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold text-foreground">Pesanan</h2>
             {cart.length > 0 ? (
@@ -543,7 +548,7 @@ export default function AdminPosPage() {
                         <span className="text-xs font-semibold text-brand">
                           {formatCurrency(unitPriceOf(line))}
                         </span>
-                        <span className="rounded-sm bg-navy/10 px-1 py-0.5 text-[9px] font-bold uppercase tracking-wide text-navy">
+                        <span className="rounded-full bg-navy/10 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-navy">
                           Grosir
                         </span>
                       </div>
@@ -557,7 +562,7 @@ export default function AdminPosPage() {
                     <button
                       type="button"
                       onClick={() => updateQuantity(line.productId, line.quantity - 1)}
-                      className="h-7 w-7 rounded-sm border border-neutral-200 text-sm hover:bg-neutral-50"
+                      className="h-7 w-7 rounded-lg text-sm text-neutral-600 ring-1 ring-inset ring-neutral-300 transition hover:bg-neutral-50"
                     >
                       −
                     </button>
@@ -570,7 +575,7 @@ export default function AdminPosPage() {
                       type="button"
                       onClick={() => updateQuantity(line.productId, line.quantity + 1)}
                       disabled={line.quantity >= line.stock}
-                      className="h-7 w-7 rounded-sm border border-neutral-200 text-sm hover:bg-neutral-50 disabled:opacity-40"
+                      className="h-7 w-7 rounded-lg text-sm text-neutral-600 ring-1 ring-inset ring-neutral-300 transition hover:bg-neutral-50 disabled:cursor-not-allowed disabled:opacity-40"
                     >
                       +
                     </button>
@@ -601,7 +606,7 @@ export default function AdminPosPage() {
               id="posPaymentMethod"
               value={paymentMethod}
               onChange={(e) => setPaymentMethod(e.target.value as typeof paymentMethod)}
-              className={inputBase}
+              className={adminInputBase}
             >
               {PAYMENT_METHOD_OPTIONS.map((option) => (
                 <option key={option.value} value={option.value}>
@@ -621,7 +626,7 @@ export default function AdminPosPage() {
               placeholder="Nama pembeli"
               value={customerName}
               onChange={(e) => setCustomerName(e.target.value)}
-              className={inputBase}
+              className={adminInputBase}
             />
           </div>
 
@@ -635,7 +640,7 @@ export default function AdminPosPage() {
               placeholder="08xxxxxxxxxx"
               value={customerPhone}
               onChange={(e) => setCustomerPhone(e.target.value)}
-              className={inputBase}
+              className={adminInputBase}
             />
           </div>
 
@@ -649,7 +654,7 @@ export default function AdminPosPage() {
               placeholder="nama@email.com"
               value={customerEmail}
               onChange={(e) => setCustomerEmail(e.target.value)}
-              className={inputBase}
+              className={adminInputBase}
             />
           </div>
 
@@ -663,7 +668,7 @@ export default function AdminPosPage() {
               placeholder="Catatan untuk transaksi ini"
               value={note}
               onChange={(e) => setNote(e.target.value)}
-              className={inputBase}
+              className={adminTextareaBase}
             />
           </div>
 
@@ -673,7 +678,7 @@ export default function AdminPosPage() {
             type="button"
             disabled={cart.length === 0 || checkingOut}
             onClick={handleCheckout}
-            className={btnSolid}
+            className={adminBtnPrimary}
           >
             {checkingOut ? 'Memproses...' : 'Checkout'}
           </button>
@@ -688,57 +693,49 @@ export default function AdminPosPage() {
         {loadingHistory ? (
           <p className="text-sm text-neutral-500">Memuat riwayat...</p>
         ) : history.length === 0 ? (
-          <div className="flex flex-col items-center gap-2 rounded-lg border border-neutral-200 bg-white py-10 text-center">
-            <p className="text-sm text-neutral-500">Belum ada transaksi POS.</p>
-          </div>
+          <TableEmptyState>Belum ada transaksi POS.</TableEmptyState>
         ) : (
-          <div className={`overflow-x-auto ${cardBase}`}>
-            <table className="w-full text-left text-sm">
-              <thead className="border-b border-neutral-200 bg-neutral-50 text-xs uppercase text-neutral-500">
-                <tr>
-                  <th className="px-4 py-3">No. Transaksi</th>
-                  <th className="px-4 py-3">Pelanggan</th>
-                  <th className="px-4 py-3 text-right">Total</th>
-                  <th className="px-4 py-3">Waktu</th>
-                  <th className="px-4 py-3" />
-                </tr>
-              </thead>
-              <tbody>
-                {history.map((order) => (
-                  <tr key={order.id} className="border-b border-neutral-100 last:border-0">
-                    <td className="px-4 py-3 font-medium text-foreground">{order.orderNumber}</td>
-                    <td className="px-4 py-3 text-neutral-600">{order.receiverName}</td>
-                    <td className="px-4 py-3 text-right text-neutral-600">
-                      {formatCurrency(
-                        order.manualPaymentCode !== null
-                          ? order.total + order.manualPaymentCode
-                          : order.total,
-                      )}
-                      {order.manualPaymentCode !== null ? (
-                        <span className="block text-xs text-neutral-400">
-                          (+kode unik {order.manualPaymentCode.toString().padStart(3, '0')})
-                        </span>
-                      ) : null}
-                    </td>
-                    <td className="px-4 py-3 text-neutral-500">
-                      {new Date(order.createdAt).toLocaleString('id-ID')}
-                    </td>
-                    <td className="px-4 py-3 text-right">
-                      <button
-                        type="button"
-                        onClick={() =>
-                          window.open(`/admin/pos/receipt/${order.id}/print`, '_blank')
-                        }
-                        className="text-sm font-medium text-brand hover:underline"
-                      >
-                        Cetak
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <Table>
+            <Thead>
+              <Th>No. Transaksi</Th>
+              <Th>Pelanggan</Th>
+              <Th className="text-right">Total</Th>
+              <Th>Waktu</Th>
+              <Th />
+            </Thead>
+            <Tbody>
+              {history.map((order) => (
+                <Tr key={order.id}>
+                  <Td className="font-medium text-foreground">{order.orderNumber}</Td>
+                  <Td className="text-neutral-600">{order.receiverName}</Td>
+                  <Td className="text-right text-neutral-600">
+                    {formatCurrency(
+                      order.manualPaymentCode !== null
+                        ? order.total + order.manualPaymentCode
+                        : order.total,
+                    )}
+                    {order.manualPaymentCode !== null ? (
+                      <span className="block text-xs text-neutral-400">
+                        (+kode unik {order.manualPaymentCode.toString().padStart(3, '0')})
+                      </span>
+                    ) : null}
+                  </Td>
+                  <Td className="text-neutral-500">
+                    {new Date(order.createdAt).toLocaleString('id-ID')}
+                  </Td>
+                  <Td className="text-right">
+                    <button
+                      type="button"
+                      onClick={() => window.open(`/admin/pos/receipt/${order.id}/print`, '_blank')}
+                      className="text-sm font-medium text-brand hover:underline"
+                    >
+                      Cetak
+                    </button>
+                  </Td>
+                </Tr>
+              ))}
+            </Tbody>
+          </Table>
         )}
       </div>
 
@@ -781,26 +778,26 @@ export default function AdminPosPage() {
                 <button
                   type="button"
                   onClick={() => refreshPaymentStatus(receipt.orderId)}
-                  className={btnOutline}
+                  className={adminBtnOutline}
                 >
                   Cek Status
                 </button>
                 <button
                   type="button"
                   onClick={() => openGatewayPayment(receipt.orderId, receipt.orderNumber)}
-                  className={btnOutline}
+                  className={adminBtnOutline}
                 >
                   Buka Ulang Pembayaran
                 </button>
               </>
             ) : null}
-            <button type="button" onClick={() => setReceipt(null)} className={btnOutline}>
+            <button type="button" onClick={() => setReceipt(null)} className={adminBtnOutline}>
               Tutup
             </button>
             <button
               type="button"
               onClick={() => window.open(`/admin/pos/receipt/${receipt.orderId}/print`, '_blank')}
-              className={btnSolidSm}
+              className={adminBtnPrimarySm}
             >
               Cetak
             </button>

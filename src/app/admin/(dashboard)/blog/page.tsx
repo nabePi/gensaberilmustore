@@ -1,10 +1,19 @@
 'use client';
 
+import Link from 'next/link';
 import { useEffect, useState } from 'react';
 
 import { AdminModal } from '@/components/admin/AdminModal';
-import { BlogFormModal, type BlogPostFormTarget } from '@/components/admin/BlogFormModal';
-import { badgeBase, btnOutline, btnSolid, btnSolidSm, cardBase, inputBase } from '@/lib/styles';
+import type { BlogPostFormTarget } from '@/components/admin/BlogForm';
+import { Badge } from '@/components/admin/ui/Badge';
+import { PageHeader } from '@/components/admin/ui/PageHeader';
+import { Table, Tbody, Td, TableEmptyState, Th, Thead, Tr } from '@/components/admin/ui/Table';
+import {
+  adminBtnOutline,
+  adminBtnPrimary,
+  adminBtnPrimarySm,
+  adminInputBase,
+} from '@/lib/admin/styles';
 
 type BlogPostListItem = BlogPostFormTarget & {
   publishedAt: string | null;
@@ -27,7 +36,6 @@ export default function AdminBlogPage() {
   const [q, setQ] = useState('');
   const [status, setStatus] = useState<'ALL' | 'DRAFT' | 'PUBLISHED'>('ALL');
   const [page, setPage] = useState(1);
-  const [formTarget, setFormTarget] = useState<BlogPostListItem | 'new' | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<BlogPostListItem | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
@@ -68,13 +76,6 @@ export default function AdminBlogPage() {
     load();
   }, [page, q, status]);
 
-  async function openEdit(post: BlogPostListItem) {
-    const response = await fetch(`/api/admin/blog/${post.id}`);
-    if (response.ok) {
-      setFormTarget(await response.json());
-    }
-  }
-
   async function handleDelete() {
     if (!deleteTarget) return;
     setDeleting(true);
@@ -98,15 +99,15 @@ export default function AdminBlogPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Kelola Blog</h1>
-          <p className="mt-1 text-sm text-neutral-500">{total} artikel</p>
-        </div>
-        <button type="button" onClick={() => setFormTarget('new')} className={btnSolid}>
-          + Tambah Artikel
-        </button>
-      </div>
+      <PageHeader
+        title="Kelola Blog"
+        description={`${total} artikel`}
+        action={
+          <Link href="/admin/blog/baru" className={adminBtnPrimary}>
+            + Tambah Artikel
+          </Link>
+        }
+      />
 
       <div className="flex flex-wrap items-center gap-3">
         <input
@@ -117,7 +118,7 @@ export default function AdminBlogPage() {
             setPage(1);
           }}
           placeholder="Cari judul..."
-          className={`${inputBase} max-w-xs`}
+          className={`${adminInputBase} max-w-xs`}
         />
         <select
           value={status}
@@ -125,7 +126,7 @@ export default function AdminBlogPage() {
             setStatus(event.target.value as typeof status);
             setPage(1);
           }}
-          className={`${inputBase} max-w-[180px]`}
+          className={`${adminInputBase} max-w-[180px]`}
         >
           <option value="ALL">Semua Status</option>
           <option value="PUBLISHED">Terbit</option>
@@ -136,82 +137,66 @@ export default function AdminBlogPage() {
       {loading ? (
         <p className="text-sm text-neutral-500">Memuat artikel...</p>
       ) : items.length === 0 ? (
-        <div className="flex flex-col items-center gap-3 rounded-lg border border-neutral-200 bg-white py-16 text-center">
-          <p className="text-sm text-neutral-500">Belum ada artikel.</p>
-        </div>
+        <TableEmptyState>Belum ada artikel.</TableEmptyState>
       ) : (
-        <div className={`overflow-x-auto ${cardBase}`}>
-          <table className="w-full text-left text-sm">
-            <thead className="border-b border-neutral-200 bg-neutral-50 text-xs uppercase text-neutral-500">
-              <tr>
-                <th className="px-4 py-3">Cover</th>
-                <th className="px-4 py-3">Judul</th>
-                <th className="px-4 py-3">Penulis</th>
-                <th className="px-4 py-3">Terbit</th>
-                <th className="px-4 py-3">Status</th>
-                <th className="px-4 py-3" />
-              </tr>
-            </thead>
-            <tbody>
-              {items.map((post) => (
-                <tr
-                  key={post.id}
-                  className="border-b border-neutral-100 last:border-0 hover:bg-neutral-50"
-                >
-                  <td className="px-4 py-3">
-                    {post.coverImageUrl ? (
-                      <div className="h-12 w-16 overflow-hidden rounded-sm border border-neutral-200 bg-neutral-100">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
-                          src={post.coverImageUrl}
-                          alt={post.title}
-                          className="h-full w-full object-cover"
-                        />
-                      </div>
-                    ) : (
-                      <div className="h-12 w-16 rounded-sm bg-neutral-100" />
-                    )}
-                  </td>
-                  <td className="max-w-[320px] px-4 py-3">
-                    <button
-                      type="button"
-                      onClick={() => openEdit(post)}
-                      className="line-clamp-2 text-left font-medium text-foreground hover:text-brand"
-                    >
-                      {post.title}
-                    </button>
-                    <p className="mt-0.5 truncate text-xs text-neutral-400">/blog/{post.slug}</p>
-                  </td>
-                  <td className="px-4 py-3 text-neutral-600">{post.author}</td>
-                  <td className="px-4 py-3 text-neutral-600">{formatDate(post.publishedAt)}</td>
-                  <td className="px-4 py-3">
-                    <span
-                      className={`${badgeBase} ${
-                        post.status === 'PUBLISHED'
-                          ? 'bg-green/10 text-green'
-                          : 'bg-neutral-100 text-neutral-500'
-                      }`}
-                    >
-                      {post.status === 'PUBLISHED' ? 'Terbit' : 'Draft'}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-right">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setDeleteError(null);
-                        setDeleteTarget(post);
-                      }}
-                      className="text-sm font-medium text-red hover:underline"
-                    >
-                      Hapus
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <Table>
+          <Thead>
+            <Th>Cover</Th>
+            <Th>Judul</Th>
+            <Th>Penulis</Th>
+            <Th>Terbit</Th>
+            <Th>Status</Th>
+            <Th />
+          </Thead>
+          <Tbody>
+            {items.map((post) => (
+              <Tr key={post.id}>
+                <Td>
+                  {post.coverImageUrl ? (
+                    <div className="h-12 w-16 overflow-hidden rounded-lg border border-neutral-200 bg-neutral-100">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={post.coverImageUrl}
+                        alt={post.title}
+                        className="h-full w-full object-cover"
+                      />
+                    </div>
+                  ) : (
+                    <div className="h-12 w-16 rounded-lg bg-neutral-100" />
+                  )}
+                </Td>
+                <Td className="max-w-[320px]">
+                  <Link
+                    href={`/admin/blog/${post.id}`}
+                    className="line-clamp-2 font-medium text-foreground hover:text-brand"
+                  >
+                    {post.title}
+                  </Link>
+                  <p className="mt-0.5 truncate text-xs text-neutral-400">/blog/{post.slug}</p>
+                </Td>
+                <Td className="text-neutral-600">{post.author}</Td>
+                <Td className="text-neutral-600">{formatDate(post.publishedAt)}</Td>
+                <Td>
+                  <Badge tone={post.status === 'PUBLISHED' ? 'success' : 'neutral'}>
+                    {post.status === 'PUBLISHED' ? 'Terbit' : 'Draft'}
+                  </Badge>
+                </Td>
+                <Td className="text-right">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setDeleteError(null);
+                      setDeleteTarget(post);
+                    }}
+                    className="text-sm font-medium text-red hover:underline"
+                  >
+                    Hapus
+                  </button>
+                </Td>
+              </Tr>
+            ))}
+          </Tbody>
+        </Table>
       )}
 
       {total > limit ? (
@@ -224,7 +209,7 @@ export default function AdminBlogPage() {
               type="button"
               disabled={page <= 1}
               onClick={() => setPage((prev) => prev - 1)}
-              className={btnOutline}
+              className={adminBtnOutline}
             >
               Sebelumnya
             </button>
@@ -232,23 +217,12 @@ export default function AdminBlogPage() {
               type="button"
               disabled={page >= totalPages}
               onClick={() => setPage((prev) => prev + 1)}
-              className={btnSolidSm}
+              className={adminBtnPrimarySm}
             >
               Selanjutnya
             </button>
           </div>
         </div>
-      ) : null}
-
-      {formTarget ? (
-        <BlogFormModal
-          post={formTarget === 'new' ? null : formTarget}
-          onClose={() => setFormTarget(null)}
-          onSaved={() => {
-            setFormTarget(null);
-            loadPosts();
-          }}
-        />
       ) : null}
 
       {deleteTarget ? (
@@ -258,10 +232,15 @@ export default function AdminBlogPage() {
           </p>
           {deleteError ? <p className="mt-2 text-sm text-red">{deleteError}</p> : null}
           <div className="mt-4 flex justify-end gap-2">
-            <button type="button" onClick={() => setDeleteTarget(null)} className={btnOutline}>
+            <button type="button" onClick={() => setDeleteTarget(null)} className={adminBtnOutline}>
               Batal
             </button>
-            <button type="button" disabled={deleting} onClick={handleDelete} className={btnSolidSm}>
+            <button
+              type="button"
+              disabled={deleting}
+              onClick={handleDelete}
+              className={adminBtnPrimarySm}
+            >
               {deleting ? 'Menghapus...' : 'Hapus'}
             </button>
           </div>
