@@ -364,6 +364,7 @@ model Order {
   shippingCost         Int
   discount             Int
   total                Int
+  manualPaymentCode    Int?
   paymentMethod        PaymentMethod
   source               OrderSource
   status               OrderStatus   @default(AWAITING_PAYMENT)

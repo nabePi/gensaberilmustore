@@ -26,6 +26,10 @@ const envSchema = z.object({
     .enum(['true', 'false'])
     .optional()
     .transform((value) => value === 'true'),
+  NEXT_PUBLIC_MIDTRANS_SNAP_ENABLED: z
+    .enum(['true', 'false'])
+    .optional()
+    .transform((value) => value === 'true'),
 
   // Notification placeholders
   FONNTE_TOKEN: z.string().optional(),
@@ -132,6 +136,7 @@ export const env = {
   midtransServerKey: rawEnv.MIDTRANS_SERVER_KEY,
   midtransClientKey: rawEnv.MIDTRANS_CLIENT_KEY,
   midtransIsProduction: rawEnv.MIDTRANS_IS_PRODUCTION ?? false,
+  midtransSnapEnabled: rawEnv.NEXT_PUBLIC_MIDTRANS_SNAP_ENABLED ?? false,
 
   fonnteToken: rawEnv.FONNTE_TOKEN,
   resendApiKey: rawEnv.RESEND_API_KEY,

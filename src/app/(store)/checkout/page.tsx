@@ -9,6 +9,7 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
 import { CitySelect } from '@/components/ui/CitySelect';
+import { dispatchCartUpdated } from '@/lib/cart-events';
 import { formatCurrency } from '@/lib/format';
 import { btnOutline, btnSolid, inputBase } from '@/lib/styles';
 
@@ -28,6 +29,7 @@ declare global {
   }
 }
 
+const SNAP_ENABLED = process.env.NEXT_PUBLIC_MIDTRANS_SNAP_ENABLED === 'true';
 const SNAP_SCRIPT_URL =
   process.env.NEXT_PUBLIC_MIDTRANS_IS_PRODUCTION === 'true'
     ? 'https://app.midtrans.com/snap/snap.js'
@@ -305,7 +307,13 @@ export default function CheckoutPage() {
       }
 
       const { orderId } = orderData;
+      dispatchCartUpdated();
       const redirectToSuccess = () => router.push(`/payment/success?orderId=${orderId}`);
+
+      if (!SNAP_ENABLED) {
+        redirectToSuccess();
+        return;
+      }
 
       const paymentResponse = await fetch('/api/payment/create', {
         method: 'POST',
@@ -353,14 +361,16 @@ export default function CheckoutPage() {
 
   return (
     <div className="container-prototype py-8">
-      <Script
-        src={SNAP_SCRIPT_URL}
-        data-client-key={process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY}
-        strategy="afterInteractive"
-        onError={() => {
-          snapFailedRef.current = true;
-        }}
-      />
+      {SNAP_ENABLED ? (
+        <Script
+          src={SNAP_SCRIPT_URL}
+          data-client-key={process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY}
+          strategy="afterInteractive"
+          onError={() => {
+            snapFailedRef.current = true;
+          }}
+        />
+      ) : null}
       <h1 className="mb-6 text-2xl font-bold text-foreground">Checkout</h1>
 
       <form onSubmit={handleSubmit(onSubmit)} className="grid gap-8 lg:grid-cols-[1fr_320px]">

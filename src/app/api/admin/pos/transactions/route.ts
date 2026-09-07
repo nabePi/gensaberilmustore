@@ -118,7 +118,13 @@ export const POST = withAuth(
           ),
         );
 
-        const initialStatus = data.paymentMethod === 'POS_GATEWAY' ? 'AWAITING_PAYMENT' : 'PAID';
+        // POS_QRIS is verified on the spot by the cashier (they see the payment succeed
+        // right in front of them), so unlike online orders it doesn't need a unique
+        // payment code to disambiguate — it's marked PAID immediately, like cash.
+        const initialStatus =
+          data.paymentMethod === 'POS_CASH' || data.paymentMethod === 'POS_QRIS'
+            ? 'PAID'
+            : 'AWAITING_PAYMENT';
 
         const createdOrder = await tx.order.create({
           data: {
@@ -190,7 +196,12 @@ export const POST = withAuth(
       });
 
       return NextResponse.json(
-        { orderId: order.id, orderNumber: order.orderNumber },
+        {
+          orderId: order.id,
+          orderNumber: order.orderNumber,
+          total: order.total,
+          manualPaymentCode: order.manualPaymentCode,
+        },
         {
           status: 201,
         },

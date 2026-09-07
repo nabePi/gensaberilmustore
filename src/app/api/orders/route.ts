@@ -1,6 +1,7 @@
 import type { Prisma } from '@prisma/client';
 import { NextRequest, NextResponse } from 'next/server';
 
+import { env } from '@/env';
 import { prisma } from '@/lib/db';
 import { getSession, withAuth } from '@/server/auth';
 import { GUEST_CART_COOKIE_NAME, guestCartCookieOptions, resolveCart } from '@/server/cart/cart';
@@ -9,6 +10,7 @@ import { generateUniqueOrderNumber } from '@/server/orders/order-number';
 import { createOrderSchema, listMemberOrdersQuerySchema } from '@/server/orders/schema';
 import { orderListInclude, serializeOrderListItem } from '@/server/orders/serialize';
 import { validateVoucherForOrder, VoucherValidationError } from '@/server/orders/voucher';
+import { generateUniqueManualPaymentCode } from '@/server/payment/manual-qris';
 import { computeUnitPrice } from '@/server/products/pricing';
 
 class OrderCreationError extends Error {}
@@ -168,6 +170,10 @@ export async function POST(request: NextRequest) {
         ),
       );
 
+      const manualPaymentCode = env.midtransSnapEnabled
+        ? null
+        : await generateUniqueManualPaymentCode(tx);
+
       const createdOrder = await tx.order.create({
         data: {
           orderNumber,
@@ -182,7 +188,8 @@ export async function POST(request: NextRequest) {
           shippingCost,
           discount,
           total,
-          paymentMethod: data.paymentMethod,
+          manualPaymentCode,
+          paymentMethod: manualPaymentCode !== null ? 'QRIS' : data.paymentMethod,
           source: 'ONLINE',
           affiliateUserId,
           affiliateCode,

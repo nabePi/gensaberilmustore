@@ -32,7 +32,7 @@ export type OrderDetail = {
     discount: number;
     total: number;
   };
-  payment: { method: string };
+  payment: { method: string; manualPaymentCode: number | null };
   voucher: { code: string; discount: number } | null;
   affiliate: { code: string; user: { id: string; name: string | null } | null } | null;
   member: { id: string; name: string | null; email: string } | null;
@@ -173,6 +173,20 @@ export function OrderDetailModal({
             <div>
               <h3 className="mb-1 text-sm font-semibold text-foreground">Pembayaran</h3>
               <p className="text-sm text-neutral-600">Metode: {order.payment.method}</p>
+              {order.payment.manualPaymentCode !== null ? (
+                <>
+                  <p className="text-sm text-neutral-600">
+                    Kode Unik:{' '}
+                    <span className="font-medium text-foreground">
+                      {order.payment.manualPaymentCode.toString().padStart(3, '0')}
+                    </span>
+                  </p>
+                  <p className="text-sm font-semibold text-foreground">
+                    Total + Kode Unik:{' '}
+                    {formatCurrency(order.pricing.total + order.payment.manualPaymentCode)}
+                  </p>
+                </>
+              ) : null}
               {order.member ? (
                 <p className="text-sm text-neutral-600">
                   Member: {order.member.name ?? order.member.email}

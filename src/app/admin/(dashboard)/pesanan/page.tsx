@@ -21,6 +21,7 @@ type AdminOrderListItem = {
   orderNumber: string;
   status: OrderStatusValue;
   total: number;
+  manualPaymentCode: number | null;
   itemCount: number;
   thumbnailUrl: string | null;
   createdAt: string;
@@ -199,7 +200,16 @@ export default function AdminPesananPage() {
                     </span>
                   </td>
                   <td className="px-4 py-3 text-right font-medium text-foreground">
-                    {formatCurrency(order.total)}
+                    {formatCurrency(
+                      order.manualPaymentCode !== null
+                        ? order.total + order.manualPaymentCode
+                        : order.total,
+                    )}
+                    {order.manualPaymentCode !== null ? (
+                      <span className="block text-xs font-normal text-neutral-400">
+                        (+kode unik {order.manualPaymentCode.toString().padStart(3, '0')})
+                      </span>
+                    ) : null}
                   </td>
                 </tr>
               ))}

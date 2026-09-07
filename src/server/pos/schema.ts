@@ -9,7 +9,7 @@ export const createPosTransactionSchema = z.object({
       }),
     )
     .min(1, 'Minimal 1 produk'),
-  paymentMethod: z.enum(['POS_CASH', 'POS_GATEWAY'], {
+  paymentMethod: z.enum(['POS_CASH', 'POS_GATEWAY', 'POS_QRIS'], {
     required_error: 'Metode pembayaran wajib diisi',
   }),
   customerName: z.string().trim().min(1).optional(),

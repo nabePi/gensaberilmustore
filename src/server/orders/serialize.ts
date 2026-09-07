@@ -26,6 +26,7 @@ export function serializeOrderListItem(order: OrderListItem) {
     orderNumber: order.orderNumber,
     status: order.status,
     total: order.total,
+    manualPaymentCode: order.manualPaymentCode,
     itemCount,
     thumbnailUrl,
     createdAt: order.createdAt,
@@ -99,6 +100,7 @@ export function serializeOrderDetail(order: OrderDetail) {
     },
     payment: {
       method: order.paymentMethod,
+      manualPaymentCode: order.manualPaymentCode,
     },
     voucher: order.voucherCode
       ? { code: order.voucherCode, discount: order.voucherDiscount }

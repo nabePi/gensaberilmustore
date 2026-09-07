@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
+import { env } from '@/env';
 import { prisma } from '@/lib/db';
 import { getSession } from '@/server/auth';
 import { createSnapTransaction } from '@/server/payment/midtrans';
@@ -9,6 +10,10 @@ import { createPaymentSchema } from '@/server/payment/schema';
 const SNAP_TOKEN_VALIDITY_MS = 24 * 60 * 60 * 1000;
 
 export async function POST(request: NextRequest) {
+  if (!env.midtransSnapEnabled) {
+    return NextResponse.json({ error: 'Midtrans Snap sedang dinonaktifkan' }, { status: 403 });
+  }
+
   const body: unknown = await request.json().catch(() => null);
   const parsed = createPaymentSchema.safeParse(body);
 

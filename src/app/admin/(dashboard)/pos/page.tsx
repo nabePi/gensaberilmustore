@@ -24,6 +24,7 @@ declare global {
   }
 }
 
+const SNAP_ENABLED = process.env.NEXT_PUBLIC_MIDTRANS_SNAP_ENABLED === 'true';
 const SNAP_SCRIPT_URL =
   process.env.NEXT_PUBLIC_MIDTRANS_IS_PRODUCTION === 'true'
     ? 'https://app.midtrans.com/snap/snap.js'
@@ -122,20 +123,29 @@ type PosOrderSummary = {
   id: string;
   orderNumber: string;
   total: number;
+  manualPaymentCode: number | null;
   createdAt: string;
   receiverName: string;
 };
 
-const PAYMENT_METHOD_OPTIONS: { value: 'POS_CASH' | 'POS_GATEWAY'; label: string }[] = [
-  { value: 'POS_CASH', label: 'Tunai' },
-  { value: 'POS_GATEWAY', label: 'Payment Gateway' },
-];
+type PosPaymentMethod = 'POS_CASH' | 'POS_GATEWAY' | 'POS_QRIS';
+
+const PAYMENT_METHOD_OPTIONS: { value: PosPaymentMethod; label: string }[] = SNAP_ENABLED
+  ? [
+      { value: 'POS_CASH', label: 'Tunai' },
+      { value: 'POS_GATEWAY', label: 'Payment Gateway' },
+    ]
+  : [
+      { value: 'POS_CASH', label: 'Tunai' },
+      { value: 'POS_QRIS', label: 'QRIS' },
+    ];
 
 type PosReceiptState = {
   orderId: string;
   orderNumber: string;
-  paymentMethod: 'POS_CASH' | 'POS_GATEWAY';
+  paymentMethod: PosPaymentMethod;
   paymentStatus: 'paid' | 'checking' | 'awaiting' | 'cancelled';
+  total?: number;
 };
 
 function flattenCategories(
@@ -156,7 +166,7 @@ export default function AdminPosPage() {
   const [loadingCatalog, setLoadingCatalog] = useState(true);
 
   const [cart, setCart] = useState<CartLine[]>([]);
-  const [paymentMethod, setPaymentMethod] = useState<'POS_CASH' | 'POS_GATEWAY'>('POS_CASH');
+  const [paymentMethod, setPaymentMethod] = useState<PosPaymentMethod>('POS_CASH');
   const [customerName, setCustomerName] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
   const [customerEmail, setCustomerEmail] = useState('');
@@ -367,7 +377,7 @@ export default function AdminPosPage() {
       return;
     }
 
-    const data: { orderId: string; orderNumber: string } = await response.json();
+    const data: { orderId: string; orderNumber: string; total: number } = await response.json();
     const currentPaymentMethod = paymentMethod;
 
     setCart([]);
@@ -388,20 +398,36 @@ export default function AdminPosPage() {
       return;
     }
 
+    if (currentPaymentMethod === 'POS_QRIS') {
+      // Cashier verifies the QRIS payment on the spot, so it's marked paid
+      // immediately, like cash — no unique code needed.
+      setReceipt({
+        orderId: data.orderId,
+        orderNumber: data.orderNumber,
+        paymentMethod: 'POS_QRIS',
+        paymentStatus: 'paid',
+        total: data.total,
+      });
+      setCheckingOut(false);
+      return;
+    }
+
     await openGatewayPayment(data.orderId, data.orderNumber);
     setCheckingOut(false);
   }
 
   return (
     <div className="flex flex-col gap-6">
-      <Script
-        src={SNAP_SCRIPT_URL}
-        data-client-key={process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY}
-        strategy="afterInteractive"
-        onError={() => {
-          snapFailedRef.current = true;
-        }}
-      />
+      {SNAP_ENABLED ? (
+        <Script
+          src={SNAP_SCRIPT_URL}
+          data-client-key={process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY}
+          strategy="afterInteractive"
+          onError={() => {
+            snapFailedRef.current = true;
+          }}
+        />
+      ) : null}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Point of Sale</h1>
@@ -683,7 +709,16 @@ export default function AdminPosPage() {
                     <td className="px-4 py-3 font-medium text-foreground">{order.orderNumber}</td>
                     <td className="px-4 py-3 text-neutral-600">{order.receiverName}</td>
                     <td className="px-4 py-3 text-right text-neutral-600">
-                      {formatCurrency(order.total)}
+                      {formatCurrency(
+                        order.manualPaymentCode !== null
+                          ? order.total + order.manualPaymentCode
+                          : order.total,
+                      )}
+                      {order.manualPaymentCode !== null ? (
+                        <span className="block text-xs text-neutral-400">
+                          (+kode unik {order.manualPaymentCode.toString().padStart(3, '0')})
+                        </span>
+                      ) : null}
                     </td>
                     <td className="px-4 py-3 text-neutral-500">
                       {new Date(order.createdAt).toLocaleString('id-ID')}
@@ -721,6 +756,20 @@ export default function AdminPosPage() {
             )}
             <p className="text-lg font-bold text-foreground">{receipt.orderNumber}</p>
           </div>
+
+          {receipt.paymentMethod === 'POS_QRIS' ? (
+            <div className="mb-4 flex flex-col items-center gap-2 text-center">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/qris.jpeg" alt="QRIS Berilmu Bookstore" className="w-56 max-w-full" />
+              <p className="text-lg font-bold text-foreground">
+                {formatCurrency(receipt.total ?? 0)}
+              </p>
+              <p className="max-w-xs text-xs text-neutral-500">
+                Minta pelanggan scan QRIS di atas sejumlah total tersebut. Kasir memverifikasi
+                pembayaran langsung di tempat.
+              </p>
+            </div>
+          ) : null}
 
           {checkoutError ? (
             <p className="mb-2 text-center text-sm text-red">{checkoutError}</p>
