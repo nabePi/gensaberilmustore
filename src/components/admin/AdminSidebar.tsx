@@ -66,8 +66,6 @@ const NAV_GROUPS: NavGroup[] = [
         children: [
           { href: '/admin/konfigurasi', label: 'Umum' },
           { href: '/admin/konfigurasi/section', label: 'Section' },
-          { href: '/admin/konfigurasi/kids', label: 'Kids' },
-          { href: '/admin/konfigurasi/kids/section', label: 'Kids Section' },
         ],
       },
       { href: '/admin/pengaturan', label: 'Pengaturan', icon: SettingsIcon },
