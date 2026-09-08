@@ -15,6 +15,7 @@ import {
   adminTextareaBase,
 } from '@/lib/admin/styles';
 import { formatCurrency } from '@/lib/format';
+import { handleImageError } from '@/lib/image';
 import { computeUnitPrice } from '@/server/products/pricing';
 
 declare global {
@@ -175,6 +176,10 @@ export default function AdminPosPage() {
   const [loadingCatalog, setLoadingCatalog] = useState(true);
 
   const [cart, setCart] = useState<CartLine[]>([]);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [toastVisible, setToastVisible] = useState(false);
+  const toastHideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const toastRemoveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [paymentMethod, setPaymentMethod] = useState<PosPaymentMethod>('POS_CASH');
   const [customerName, setCustomerName] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
@@ -256,11 +261,29 @@ export default function AdminPosPage() {
     load();
   }, []);
 
+  useEffect(() => {
+    return () => {
+      if (toastHideTimerRef.current) clearTimeout(toastHideTimerRef.current);
+      if (toastRemoveTimerRef.current) clearTimeout(toastRemoveTimerRef.current);
+    };
+  }, []);
+
+  function showToast(message: string) {
+    if (toastHideTimerRef.current) clearTimeout(toastHideTimerRef.current);
+    if (toastRemoveTimerRef.current) clearTimeout(toastRemoveTimerRef.current);
+    setToastMessage(message);
+    setToastVisible(true);
+    toastHideTimerRef.current = setTimeout(() => setToastVisible(false), 1000);
+    toastRemoveTimerRef.current = setTimeout(() => setToastMessage(null), 1300);
+  }
+
   function addToCart(product: CatalogProduct) {
+    const existing = cart.find((line) => line.productId === product.id);
+    if (existing && existing.quantity >= product.stock) return;
+
     setCart((prev) => {
-      const existing = prev.find((line) => line.productId === product.id);
-      if (existing) {
-        if (existing.quantity >= product.stock) return prev;
+      const existingLine = prev.find((line) => line.productId === product.id);
+      if (existingLine) {
         return prev.map((line) =>
           line.productId === product.id ? { ...line, quantity: line.quantity + 1 } : line,
         );
@@ -278,6 +301,7 @@ export default function AdminPosPage() {
         },
       ];
     });
+    showToast(`"${product.title}" ditambahkan ke Pesanan`);
   }
 
   function updateQuantity(productId: string, quantity: number) {
@@ -427,6 +451,18 @@ export default function AdminPosPage() {
 
   return (
     <div className="flex flex-col gap-6">
+      {toastMessage ? (
+        <div className="pointer-events-none fixed inset-x-0 top-4 z-[70] flex justify-center px-4">
+          <div
+            className={`rounded-full bg-brand px-4 py-2 text-center text-sm font-medium text-white shadow-lg transition-opacity duration-300 ${
+              toastVisible ? 'opacity-100' : 'opacity-0'
+            }`}
+          >
+            {toastMessage}
+          </div>
+        </div>
+      ) : null}
+
       {SNAP_ENABLED ? (
         <Script
           src={SNAP_SCRIPT_URL}
@@ -440,10 +476,14 @@ export default function AdminPosPage() {
       <PageHeader
         title="Point of Sale"
         description="Penjualan cepat untuk event pameran buku"
-        action={<span className="text-sm font-medium text-neutral-500">{cartCount} item</span>}
+        action={
+          <span className="inline-flex items-center rounded-full bg-brand px-4 py-1.5 text-base font-bold text-white shadow-sm">
+            {cartCount} item
+          </span>
+        }
       />
 
-      <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
+      <div className="grid gap-6 lg:grid-cols-[1fr_440px]">
         <div className="flex flex-col gap-3">
           <div className="grid gap-3 sm:grid-cols-[1fr_220px]">
             <input
@@ -472,38 +512,39 @@ export default function AdminPosPage() {
           ) : products.length === 0 ? (
             <TableEmptyState>Produk tidak ditemukan.</TableEmptyState>
           ) : (
-            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            <div className="grid gap-2.5 sm:grid-cols-3 xl:grid-cols-4">
               {products.map((product) => (
                 <button
                   key={product.id}
                   type="button"
                   onClick={() => addToCart(product)}
-                  className={`flex flex-col gap-2 p-3 text-left transition-colors hover:border-brand ${adminCardBase}`}
+                  className={`flex flex-col gap-1.5 p-2 text-left transition-colors hover:border-brand ${adminCardBase}`}
                 >
                   {product.primaryImageUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
                       src={product.primaryImageUrl}
                       alt=""
-                      className="h-32 w-full object-cover"
+                      className="aspect-square w-full rounded-sm object-cover"
+                      onError={handleImageError}
                     />
                   ) : (
-                    <div className="h-32 w-full bg-neutral-100" />
+                    <div className="aspect-square w-full rounded-sm bg-neutral-100" />
                   )}
                   <div>
-                    <p className="line-clamp-2 text-sm font-medium text-foreground">
+                    <p className="line-clamp-2 text-xs font-medium text-foreground">
                       {product.title}
                     </p>
-                    <p className="text-xs text-neutral-500">{product.author}</p>
+                    <p className="text-[11px] text-neutral-500">{product.author}</p>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-sm font-bold text-brand">
+                    <span className="text-xs font-bold text-brand">
                       {formatCurrency(product.finalPrice)}
                     </span>
-                    <span className="text-xs text-neutral-500">Stok {product.stock}</span>
+                    <span className="text-[11px] text-neutral-500">Stok {product.stock}</span>
                   </div>
                   {product.wholesalePrice != null && product.wholesaleMinQty != null ? (
-                    <p className="text-[11px] text-navy">
+                    <p className="text-[10px] text-navy">
                       Grosir {product.wholesaleMinQty}+ pcs:{' '}
                       {formatCurrency(product.wholesalePrice)}
                     </p>
