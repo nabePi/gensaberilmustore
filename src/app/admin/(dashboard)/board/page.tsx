@@ -53,6 +53,27 @@ const VALID_TRANSITIONS: Record<OrderStatusValue, OrderStatusValue[]> = {
   CANCELLED: [],
 };
 
+const COLUMN_COLORS: Record<OrderStatusValue, { bg: string; border: string; badge: string }> = {
+  AWAITING_PAYMENT: {
+    bg: 'bg-amber-50',
+    border: 'border-amber-200',
+    badge: 'bg-amber-100 text-amber-700',
+  },
+  PAID: { bg: 'bg-blue-50', border: 'border-blue-200', badge: 'bg-blue-100 text-blue-700' },
+  PACKED: {
+    bg: 'bg-purple-50',
+    border: 'border-purple-200',
+    badge: 'bg-purple-100 text-purple-700',
+  },
+  SHIPPED: { bg: 'bg-sky-50', border: 'border-sky-200', badge: 'bg-sky-100 text-sky-700' },
+  COMPLETED: {
+    bg: 'bg-green-50',
+    border: 'border-green-200',
+    badge: 'bg-green-100 text-green-700',
+  },
+  CANCELLED: { bg: 'bg-red-50', border: 'border-red-200', badge: 'bg-red-100 text-red-700' },
+};
+
 function OrderCard({ order }: { order: BoardOrder }) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: order.id,
@@ -96,17 +117,18 @@ function BoardColumn({
   onCardClick: (id: string) => void;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: status });
+  const colors = COLUMN_COLORS[status];
 
   return (
     <div
       ref={setNodeRef}
       className={`flex w-72 shrink-0 flex-col gap-3 rounded-lg border p-3 ${
-        isOver ? 'border-brand bg-brand-50' : 'border-neutral-200 bg-neutral-50'
+        isOver ? 'border-brand bg-brand-50' : `${colors.border} ${colors.bg}`
       }`}
     >
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-bold text-foreground">{ORDER_STATUS_LABELS[status]}</h3>
-        <span className="rounded-full bg-white px-2 py-0.5 text-xs font-medium text-neutral-500">
+        <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${colors.badge}`}>
           {orders.length}
         </span>
       </div>
