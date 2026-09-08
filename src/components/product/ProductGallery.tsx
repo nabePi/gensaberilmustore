@@ -2,6 +2,8 @@
 
 import { useCallback, useRef, useState } from 'react';
 
+import { handleImageError } from '@/lib/image';
+
 export type GalleryImage = { id: string; url: string; altText: string | null };
 
 const DRAG_THRESHOLD = 10;
@@ -93,6 +95,7 @@ export function ProductGallery({ images, title }: { images: GalleryImage[]; titl
                 alt={image.altText ?? title}
                 className="h-full w-full shrink-0 object-cover"
                 draggable={false}
+                onError={handleImageError}
               />
             ))}
           </div>
@@ -179,6 +182,7 @@ export function ProductGallery({ images, title }: { images: GalleryImage[]; titl
                 src={image.url}
                 alt={image.altText ?? title}
                 className="h-full w-full object-cover"
+                onError={handleImageError}
               />
             </button>
           ))}

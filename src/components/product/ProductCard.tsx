@@ -5,6 +5,7 @@ import { useRef, useState } from 'react';
 
 import { dispatchCartItemAdded } from '@/lib/cart-events';
 import { formatCurrency } from '@/lib/format';
+import { handleImageError } from '@/lib/image';
 
 export type ProductCardData = {
   id: string;
@@ -95,6 +96,7 @@ export function ProductCard({ product }: { product: ProductCardData }) {
               src={product.primaryImageUrl}
               alt={product.title}
               className="h-full w-full object-cover"
+              onError={handleImageError}
             />
           ) : (
             <div className="flex h-full items-center justify-center text-xs text-neutral-400">
