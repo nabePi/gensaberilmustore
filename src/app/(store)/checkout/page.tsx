@@ -516,6 +516,14 @@ export default function CheckoutPage() {
             ))}
           </div>
 
+          <div className="mb-4 flex items-center gap-3 rounded-sm border border-neutral-200 bg-neutral-50 p-3">
+            <img src="/jne.png" alt="JNE" className="h-8 w-auto shrink-0 object-contain" />
+            <p className="text-xs text-neutral-600">
+              Buku akan dikirim menggunakan jasa pengiriman{' '}
+              <span className="font-semibold">JNE</span>.
+            </p>
+          </div>
+
           <div className="mb-4 flex flex-col gap-2">
             <div className="flex items-center gap-2">
               <input
