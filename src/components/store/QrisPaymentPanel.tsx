@@ -61,16 +61,15 @@ export function QrisPaymentPanel({
       <p className="max-w-md text-xs text-neutral-500">
         Kode unik ini menjadi milik GenSa Berilmu dan tidak dapat dikembalikan/direfund.
       </p>
-      <div className="w-full max-w-sm rounded-lg border border-neutral-200 bg-neutral-50 px-4 py-3 text-left text-xs text-neutral-500">
-        Status pesanan masih <strong>&quot;Menunggu Pembayaran&quot;</strong> karena setiap transfer
-        diperiksa manual oleh admin kami (maksimal 1x24 jam), belum otomatis. Sudah transfer? Tekan
-        tombol di bawah ini agar admin segera memeriksa pembayaran Anda.
-      </div>
       <ClaimPaymentButton
         orderId={orderId}
         initialClaimedAt={initialClaimedAt}
         onClaimed={setClaimedAt}
       />
+      <div className="w-full max-w-sm rounded-lg border border-neutral-200 bg-neutral-50 px-4 py-3 text-left text-xs text-neutral-500">
+        Status pesanan masih <strong>&quot;Menunggu Pembayaran&quot;</strong> karena setiap transfer
+        diperiksa manual oleh admin kami (maksimal 1x24 jam), belum otomatis.
+      </div>
       <div className="flex gap-3">
         <Link href="/" className={btnSolid}>
           Kembali ke Beranda

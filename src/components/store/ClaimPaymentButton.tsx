@@ -61,7 +61,12 @@ export function ClaimPaymentButton({
         nominal yang tertera. Setelah dikonfirmasi, QRIS tidak akan tampil lagi dan admin kami akan
         memeriksa pembayaran Anda.
       </div>
-      <button type="button" onClick={handleClaim} disabled={submitting} className={btnSolid}>
+      <button
+        type="button"
+        onClick={handleClaim}
+        disabled={submitting}
+        className={`${btnSolid} w-full py-3 text-base`}
+      >
         {submitting ? 'Mengirim...' : 'Saya Sudah Transfer'}
       </button>
       {error ? <p className="text-xs text-red">{error}</p> : null}
