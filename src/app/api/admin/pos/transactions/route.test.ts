@@ -88,6 +88,7 @@ describe('POST /api/admin/pos/transactions', () => {
           items: [{ productId: product.id, quantity: 2 }],
           paymentMethod: 'POS_CASH',
           customerName: 'Budi',
+          customerPhone: '081234567890',
         },
         cookie,
       ),
@@ -117,6 +118,7 @@ describe('POST /api/admin/pos/transactions', () => {
         {
           items: [{ productId: product.id, quantity: 1 }],
           paymentMethod: 'POS_CASH',
+          customerPhone: '081234567890',
           manualDiscount: 20000,
           manualDiscountReason: 'Diskon pameran',
         },
@@ -139,7 +141,26 @@ describe('POST /api/admin/pos/transactions', () => {
     const response = await POST(
       buildRequest(
         'POST',
-        { items: [{ productId: product.id, quantity: 5 }], paymentMethod: 'POS_CASH' },
+        {
+          items: [{ productId: product.id, quantity: 5 }],
+          paymentMethod: 'POS_CASH',
+          customerPhone: '081234567890',
+        },
+        cookie,
+      ),
+    );
+
+    expect(response.status).toBe(400);
+  });
+
+  it('rejects when customerPhone is missing', async () => {
+    const { cookie } = await createAdminCookie();
+    const product = await createProduct({ stock: 5 });
+
+    const response = await POST(
+      buildRequest(
+        'POST',
+        { items: [{ productId: product.id, quantity: 1 }], paymentMethod: 'POS_CASH' },
         cookie,
       ),
     );
@@ -170,6 +191,7 @@ describe('POST /api/admin/pos/transactions', () => {
         {
           items: [{ productId: product.id, quantity: 1 }],
           paymentMethod: 'POS_QRIS',
+          customerPhone: '081234567890',
           voucherCode: code,
         },
         cookie,
@@ -198,7 +220,11 @@ describe('GET /api/admin/pos/transactions', () => {
     const created = await POST(
       buildRequest(
         'POST',
-        { items: [{ productId: product.id, quantity: 1 }], paymentMethod: 'POS_CASH' },
+        {
+          items: [{ productId: product.id, quantity: 1 }],
+          paymentMethod: 'POS_CASH',
+          customerPhone: '081234567890',
+        },
         cookie,
       ),
     );

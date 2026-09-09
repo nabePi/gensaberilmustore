@@ -13,7 +13,14 @@ export const createPosTransactionSchema = z.object({
     required_error: 'Metode pembayaran wajib diisi',
   }),
   customerName: z.string().trim().min(1).optional(),
-  customerPhone: z.string().trim().min(1).optional(),
+  customerPhone: z
+    .string()
+    .trim()
+    .min(1, 'Nomor telepon wajib diisi')
+    .refine((value) => {
+      const digits = value.replace(/\D/g, '').replace(/^0+/, '');
+      return digits.length >= 8 && digits.length <= 13;
+    }, 'Nomor telepon tidak valid'),
   customerEmail: z.string().trim().email('Email tidak valid').optional(),
   note: z.string().trim().min(1).optional(),
   voucherCode: z

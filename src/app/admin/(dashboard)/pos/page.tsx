@@ -387,6 +387,11 @@ export default function AdminPosPage() {
 
   async function handleCheckout() {
     if (cart.length === 0) return;
+    const phoneDigits = customerPhone.trim().replace(/\D/g, '').replace(/^0+/, '');
+    if (phoneDigits.length < 8 || phoneDigits.length > 13) {
+      setCheckoutError('Nomor telepon/WhatsApp pelanggan wajib diisi dengan benar');
+      return;
+    }
     setCheckingOut(true);
     setCheckoutError(null);
 
@@ -673,7 +678,7 @@ export default function AdminPosPage() {
 
           <div className="flex flex-col gap-1">
             <label htmlFor="posCustomerPhone" className="text-xs font-medium text-neutral-600">
-              Telepon (opsional)
+              Telepon / WhatsApp <span className="text-red">*</span>
             </label>
             <input
               id="posCustomerPhone"
