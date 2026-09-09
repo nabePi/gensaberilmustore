@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useRef, useState } from 'react';
 
+import { useWishlist } from '@/components/product/WishlistContext';
 import { dispatchCartItemAdded } from '@/lib/cart-events';
 import { formatCurrency } from '@/lib/format';
 import { handleImageError } from '@/lib/image';
@@ -30,7 +31,8 @@ const RIBBON_STYLES: Record<string, string> = {
 
 export function ProductCard({ product }: { product: ProductCardData }) {
   const [status, setStatus] = useState<'idle' | 'loading' | 'added' | 'error'>('idle');
-  const [wishlisted, setWishlisted] = useState(false);
+  const { isWishlisted, toggle } = useWishlist();
+  const wishlisted = isWishlisted(product.id);
   const imageContainerRef = useRef<HTMLDivElement>(null);
   const outOfStock = product.stock !== undefined && product.stock <= 0;
 
@@ -77,7 +79,7 @@ export function ProductCard({ product }: { product: ProductCardData }) {
           type="button"
           onClick={(event) => {
             event.preventDefault();
-            setWishlisted((current) => !current);
+            toggle(product);
           }}
           aria-label="Wishlist"
           className="absolute right-2 top-2 z-10 flex h-[26px] w-[26px] items-center justify-center rounded-full bg-white/90"

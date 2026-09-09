@@ -147,6 +147,7 @@ model User {
   notifications         Notification[]
   createdVouchers       Voucher[]
   voucherRedemptions    VoucherRedemption[]
+  wishlistItems         WishlistItem[]
 
   @@index([email])
   @@index([role])
@@ -253,6 +254,7 @@ model Product {
   affiliateClicks         AffiliateClick[]
   homepageSectionProducts HomepageSectionProduct[]
   kidsSectionItems        KidsSectionItem[]
+  wishlistItems           WishlistItem[]
 
   @@index([slug])
   @@index([sku])
@@ -361,6 +363,20 @@ model Receiver {
 
   @@index([userId, isDefault])
   @@index([cityId])
+}
+
+model WishlistItem {
+  id        String   @id @default(uuid())
+  userId    String
+  productId String
+  createdAt DateTime @default(now())
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, productId])
+  @@index([userId])
+  @@index([productId])
 }
 
 model Order {

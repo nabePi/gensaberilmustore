@@ -10,6 +10,7 @@ const NAV_ITEMS = [
   { href: '/member/dashboard', label: 'Dashboard' },
   { href: '/member/profil', label: 'Profil Saya' },
   { href: '/member/transaksi', label: 'Riwayat Transaksi' },
+  { href: '/member/wishlist', label: 'Wishlist' },
   { href: '/member/afiliasi', label: 'Afiliasi' },
   { href: '/member/penerima', label: 'Penerima' },
 ];
