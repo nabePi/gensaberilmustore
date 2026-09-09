@@ -16,9 +16,11 @@ function formatClaimedAt(value: string): string {
 export function ClaimPaymentButton({
   orderId,
   initialClaimedAt,
+  onClaimed,
 }: {
   orderId: string;
   initialClaimedAt: string | null;
+  onClaimed?: (claimedAt: string) => void;
 }) {
   const [claimedAt, setClaimedAt] = useState(initialClaimedAt);
   const [submitting, setSubmitting] = useState(false);
@@ -35,6 +37,7 @@ export function ClaimPaymentButton({
         return;
       }
       setClaimedAt(data.paymentClaimedAt);
+      onClaimed?.(data.paymentClaimedAt);
     } catch {
       setError('Gagal mengirim konfirmasi. Silakan coba lagi.');
     } finally {
