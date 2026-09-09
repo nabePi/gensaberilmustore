@@ -6,5 +6,8 @@ const currencyFormatter = new Intl.NumberFormat('id-ID', {
 });
 
 export function formatCurrency(amount: number): string {
-  return currencyFormatter.format(amount);
+  // Some ICU versions insert a non-breaking space between "Rp" and the
+  // amount and some don't; strip all whitespace so server and client
+  // render identically regardless of the runtime's ICU data.
+  return currencyFormatter.format(amount).replace(/\s/g, '');
 }
