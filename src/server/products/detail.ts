@@ -8,7 +8,7 @@ const RELATED_PRODUCTS_TAKE = 8;
 
 export const getProductDetail = cache(async (slug: string) => {
   const product = await prisma.product.findFirst({
-    where: { slug, isActive: true },
+    where: { slug, isActive: true, channel: { in: ['WEB', 'BOTH'] } },
     select: {
       id: true,
       slug: true,
@@ -68,6 +68,7 @@ export const getProductDetail = cache(async (slug: string) => {
       ? await prisma.product.findMany({
           where: {
             isActive: true,
+            channel: { in: ['WEB', 'BOTH'] },
             id: { not: product.id },
             categories: { some: { categoryId: { in: categoryIds } } },
           },
@@ -79,7 +80,7 @@ export const getProductDetail = cache(async (slug: string) => {
 
   if (relatedProducts.length === 0) {
     relatedProducts = await prisma.product.findMany({
-      where: { isActive: true, id: { not: product.id } },
+      where: { isActive: true, channel: { in: ['WEB', 'BOTH'] }, id: { not: product.id } },
       take: RELATED_PRODUCTS_TAKE,
       orderBy: { createdAt: 'desc' },
       select: relatedSelect,

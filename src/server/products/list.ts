@@ -11,7 +11,7 @@ export type ListProductsFilters = z.infer<typeof listProductsQuerySchema>;
 export async function listProducts(filters: ListProductsFilters) {
   const { page, limit, q, category, tag, minPrice, maxPrice, inStock, sort } = filters;
 
-  const where: Prisma.ProductWhereInput = { isActive: true };
+  const where: Prisma.ProductWhereInput = { isActive: true, channel: { in: ['WEB', 'BOTH'] } };
 
   if (category) {
     where.categories = { some: { category: { slug: category } } };

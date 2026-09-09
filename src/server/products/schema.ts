@@ -4,9 +4,11 @@ const CURRENT_YEAR = new Date().getFullYear();
 
 export const COVER_TYPES = ['SOFTCOVER', 'HARDCOVER', 'EBOOK'] as const;
 export const RIBBON_TYPES = ['NEW', 'BEST', 'DISCOUNT'] as const;
+export const PRODUCT_CHANNELS = ['WEB', 'POS', 'BOTH'] as const;
 
 const productFields = {
   sku: z.string().trim().min(1, 'SKU wajib diisi'),
+  isbn: z.string().trim().min(1).optional(),
   title: z.string().trim().min(1, 'Judul wajib diisi'),
   subtitle: z.string().trim().default(''),
   author: z.string().trim().min(1, 'Penulis wajib diisi'),
@@ -51,6 +53,7 @@ const productFields = {
   ribbonType: z.enum(RIBBON_TYPES).optional(),
   ribbonText: z.string().optional(),
   isActive: z.boolean().default(true),
+  channel: z.enum(PRODUCT_CHANNELS).default('BOTH'),
 };
 
 function refineWholesaleAndPreOrder(

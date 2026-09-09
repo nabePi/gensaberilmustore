@@ -39,6 +39,7 @@ export async function GET(request: NextRequest) {
     SELECT id
     FROM "Product"
     WHERE "isActive" = true
+      AND "channel" IN ('WEB', 'BOTH')
       AND (to_tsvector('simple', title) || to_tsvector('simple', author)) @@ to_tsquery('simple', ${tsQuery})
     ORDER BY ts_rank(
       to_tsvector('simple', title) || to_tsvector('simple', author),

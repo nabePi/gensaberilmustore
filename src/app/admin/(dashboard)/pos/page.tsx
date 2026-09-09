@@ -232,14 +232,14 @@ export default function AdminPosPage() {
   useEffect(() => {
     async function load() {
       setLoadingCatalog(true);
-      const params = new URLSearchParams({ limit: '60', stock: 'instock' });
+      const params = new URLSearchParams({ limit: '60', channel: 'POS' });
       if (q.trim()) params.set('q', q.trim());
       if (categoryId) params.set('categoryId', categoryId);
 
       const response = await fetch(`/api/admin/products?${params.toString()}`);
       if (response.ok) {
         const data: { items: CatalogProduct[] } = await response.json();
-        setProducts(data.items);
+        setProducts(data.items.filter((product) => product.stock > 0));
       }
       setLoadingCatalog(false);
     }

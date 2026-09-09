@@ -40,6 +40,7 @@ const cardSelect = {
   isPreOrderActive: true,
   stock: true,
   isActive: true,
+  channel: true,
   ribbonType: true,
   ribbonText: true,
   images: {
@@ -91,7 +92,7 @@ async function getHomepageBanners(): Promise<HomepageBanners> {
 
 async function getFallbackProducts(): Promise<ProductCardData[]> {
   const rows = await prisma.product.findMany({
-    where: { isActive: true },
+    where: { isActive: true, channel: { in: ['WEB', 'BOTH'] } },
     orderBy: { createdAt: 'desc' },
     take: FALLBACK_SECTION_TAKE,
     select: cardSelect,
@@ -112,7 +113,9 @@ async function getSectionProducts(sectionId: string): Promise<ProductCardData[]>
 
   return rows
     .map((row) => row.product)
-    .filter((product) => product.isActive)
+    .filter(
+      (product) => product.isActive && (product.channel === 'WEB' || product.channel === 'BOTH'),
+    )
     .map(toCardData);
 }
 

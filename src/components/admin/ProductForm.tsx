@@ -16,7 +16,7 @@ import {
   adminLabelBase,
   adminTextareaBase,
 } from '@/lib/admin/styles';
-import { COVER_TYPES } from '@/server/products/schema';
+import { COVER_TYPES, PRODUCT_CHANNELS } from '@/server/products/schema';
 
 export type AdminCategoryOption = { id: string; name: string; depth: number };
 
@@ -31,6 +31,7 @@ export type AdminProductImage = {
 export type AdminProductDetail = {
   id: string;
   sku: string;
+  isbn: string | null;
   title: string;
   subtitle: string;
   author: string;
@@ -49,6 +50,7 @@ export type AdminProductDetail = {
   coverType: (typeof COVER_TYPES)[number];
   publishYear: number;
   isActive: boolean;
+  channel: (typeof PRODUCT_CHANNELS)[number];
   categories: { id: string; name: string }[];
   images: AdminProductImage[];
 };
@@ -58,6 +60,7 @@ const emptyToUndefined = (val: unknown) => (val === '' || val === null ? undefin
 const productFormSchema = z
   .object({
     sku: z.string().trim().min(1, 'SKU wajib diisi'),
+    isbn: z.preprocess(emptyToUndefined, z.string().trim().min(1).optional()),
     title: z.string().trim().min(1, 'Judul wajib diisi'),
     subtitle: z.string().trim().optional(),
     author: z.string().trim().min(1, 'Penulis wajib diisi'),
@@ -88,6 +91,7 @@ const productFormSchema = z
     coverType: z.enum(COVER_TYPES),
     publishYear: z.coerce.number().int().min(1900),
     isActive: z.boolean(),
+    channel: z.enum(PRODUCT_CHANNELS),
   })
   .superRefine((data, ctx) => {
     if (data.wholesalePrice !== undefined && data.wholesaleMinQty === undefined) {
@@ -143,6 +147,7 @@ export function ProductForm({
     defaultValues: product
       ? {
           sku: product.sku,
+          isbn: product.isbn ?? undefined,
           title: product.title,
           subtitle: product.subtitle,
           author: product.author,
@@ -161,6 +166,7 @@ export function ProductForm({
           coverType: product.coverType,
           publishYear: product.publishYear,
           isActive: product.isActive,
+          channel: product.channel,
         }
       : {
           discountPercent: 0,
@@ -168,6 +174,7 @@ export function ProductForm({
           coverType: 'SOFTCOVER',
           publishYear: new Date().getFullYear(),
           isActive: true,
+          channel: 'BOTH',
         },
   });
 
@@ -295,6 +302,9 @@ export function ProductForm({
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="SKU" error={errors.sku?.message}>
             <input {...register('sku')} className={adminInputBase} />
+          </Field>
+          <Field label="ISBN" error={errors.isbn?.message}>
+            <input {...register('isbn')} className={adminInputBase} />
           </Field>
           <Field label="Judul" error={errors.title?.message}>
             <input {...register('title')} className={adminInputBase} />
@@ -478,6 +488,14 @@ export function ProductForm({
             <input type="checkbox" {...register('isActive')} className="h-4 w-4" />
             Aktif (ditampilkan di toko)
           </label>
+
+          <Field label="Tampil di" error={errors.channel?.message}>
+            <select {...register('channel')} className={adminInputBase}>
+              <option value="BOTH">Website & POS</option>
+              <option value="WEB">Website Saja</option>
+              <option value="POS">POS Saja</option>
+            </select>
+          </Field>
 
           {apiError ? <p className="text-sm text-red">{apiError}</p> : null}
 

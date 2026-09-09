@@ -178,32 +178,32 @@ describe('GET /api/admin/products', () => {
     expect(json.items).toHaveLength(2);
   });
 
-  it('filters by stock', async () => {
+  it('filters by isActive', async () => {
     const cookie = await createAdminCookie();
     const marker = randomUUID();
-    const stocked = await prisma.product.create({
+    const active = await prisma.product.create({
       data: {
-        ...validPayload({ title: `Stocked-${marker}`, stock: 5 }),
+        ...validPayload({ title: `Active-${marker}`, isActive: true }),
         subtitle: '',
         slug: `slug-${randomUUID()}`,
         finalPrice: 100000,
       },
     });
-    const empty = await prisma.product.create({
+    const inactive = await prisma.product.create({
       data: {
-        ...validPayload({ title: `Empty-${marker}`, stock: 0 }),
+        ...validPayload({ title: `Inactive-${marker}`, isActive: false }),
         subtitle: '',
         slug: `slug-${randomUUID()}`,
         finalPrice: 100000,
       },
     });
-    createdProductIds.push(stocked.id, empty.id);
+    createdProductIds.push(active.id, inactive.id);
 
-    const response = await GET(buildGetRequest(cookie, `?q=${marker}&stock=outofstock`));
+    const response = await GET(buildGetRequest(cookie, `?q=${marker}&isActive=inactive`));
     const json = await response.json();
 
     expect(response.status).toBe(200);
     expect(json.items).toHaveLength(1);
-    expect(json.items[0].stock).toBe(0);
+    expect(json.items[0].id).toBe(inactive.id);
   });
 });

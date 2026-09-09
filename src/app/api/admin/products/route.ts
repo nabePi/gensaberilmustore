@@ -5,7 +5,7 @@ import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { withAuth } from '@/server/auth';
 import { computeEffectivePrice } from '@/server/products/pricing';
-import { createProductSchema } from '@/server/products/schema';
+import { createProductSchema, PRODUCT_CHANNELS } from '@/server/products/schema';
 import { generateUniqueSlug } from '@/server/products/slug';
 
 const listAdminProductsQuerySchema = z.object({
@@ -13,10 +13,10 @@ const listAdminProductsQuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(60).default(20),
   q: z.string().trim().min(1).optional(),
   categoryId: z.string().uuid().optional(),
-  stock: z.enum(['instock', 'lowstock', 'outofstock']).optional(),
+  isActive: z.enum(['active', 'inactive']).optional(),
+  channel: z.enum(['WEB', 'POS']).optional(),
+  channelFilter: z.enum(PRODUCT_CHANNELS).optional(),
 });
-
-const LOW_STOCK_THRESHOLD = 10;
 
 export const GET = withAuth(
   async (request: NextRequest) => {
@@ -31,7 +31,7 @@ export const GET = withAuth(
       );
     }
 
-    const { page, limit, q, categoryId, stock } = parsed.data;
+    const { page, limit, q, categoryId, isActive, channel, channelFilter } = parsed.data;
 
     const where: Prisma.ProductWhereInput = {};
 
@@ -39,12 +39,16 @@ export const GET = withAuth(
       where.categories = { some: { categoryId } };
     }
 
-    if (stock === 'instock') {
-      where.stock = { gt: LOW_STOCK_THRESHOLD };
-    } else if (stock === 'lowstock') {
-      where.stock = { gt: 0, lte: LOW_STOCK_THRESHOLD };
-    } else if (stock === 'outofstock') {
-      where.stock = { lte: 0 };
+    if (isActive) {
+      where.isActive = isActive === 'active';
+    }
+
+    if (channel) {
+      where.channel = { in: [channel, 'BOTH'] };
+    }
+
+    if (channelFilter) {
+      where.channel = channelFilter;
     }
 
     if (q) {
@@ -77,6 +81,7 @@ export const GET = withAuth(
           finalPrice: true,
           stock: true,
           isActive: true,
+          channel: true,
           images: {
             orderBy: [{ isPrimary: 'desc' }, { position: 'asc' }],
             take: 1,

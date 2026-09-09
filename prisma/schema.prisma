@@ -26,6 +26,12 @@ enum RibbonType {
   DISCOUNT
 }
 
+enum ProductChannel {
+  WEB
+  POS
+  BOTH
+}
+
 enum OrderStatus {
   AWAITING_PAYMENT
   PAID
@@ -199,9 +205,10 @@ model Tag {
 }
 
 model Product {
-  id               String      @id @default(uuid())
-  sku              String      @unique
-  slug             String      @unique
+  id               String         @id @default(uuid())
+  sku              String         @unique
+  isbn             String?
+  slug             String         @unique
   title            String
   subtitle         String
   author           String
@@ -212,23 +219,24 @@ model Product {
   price            Int
   costPrice        Int?
   preOrderPrice    Int?
-  isPreOrderActive Boolean     @default(false)
+  isPreOrderActive Boolean        @default(false)
   wholesalePrice   Int?
   wholesaleMinQty  Int?
-  discountPercent  Int         @default(0)
+  discountPercent  Int            @default(0)
   discountEndDate  DateTime?
   finalPrice       Int
-  stock            Int         @default(0)
+  stock            Int            @default(0)
   weightGram       Int
   coverType        CoverType
   pageCount        Int
   publishYear      Int
-  isActive         Boolean     @default(true)
-  position         Int         @default(0)
+  isActive         Boolean        @default(true)
+  channel          ProductChannel @default(BOTH)
+  position         Int            @default(0)
   ribbonType       RibbonType?
   ribbonText       String?
-  createdAt        DateTime    @default(now())
-  updatedAt        DateTime    @updatedAt
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
 
   images                  ProductImage[]
   tags                    ProductTag[]
@@ -244,6 +252,7 @@ model Product {
   @@index([slug])
   @@index([sku])
   @@index([isActive])
+  @@index([channel])
   @@index([position])
   @@index([coverType])
   @@index([ribbonType])

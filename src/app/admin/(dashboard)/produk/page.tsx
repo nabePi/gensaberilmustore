@@ -15,8 +15,15 @@ import {
   adminInputBase,
 } from '@/lib/admin/styles';
 import { formatCurrency } from '@/lib/format';
+import { PRODUCT_CHANNELS } from '@/server/products/schema';
 
 type AdminCategoryOption = { id: string; name: string; depth: number };
+
+const CHANNEL_LABELS: Record<(typeof PRODUCT_CHANNELS)[number], string> = {
+  WEB: 'Website',
+  POS: 'POS',
+  BOTH: 'Website & POS',
+};
 
 type AdminProductListItem = {
   id: string;
@@ -33,6 +40,7 @@ type AdminProductListItem = {
   finalPrice: number;
   stock: number;
   isActive: boolean;
+  channel: (typeof PRODUCT_CHANNELS)[number];
   primaryImageUrl: string | null;
   categories: { id: string; name: string }[];
 };
@@ -44,7 +52,8 @@ export default function AdminProdukPage() {
   const [loading, setLoading] = useState(true);
   const [q, setQ] = useState('');
   const [categoryId, setCategoryId] = useState('');
-  const [stock, setStock] = useState('');
+  const [isActive, setIsActive] = useState('');
+  const [channelFilter, setChannelFilter] = useState('');
   const [page, setPage] = useState(1);
   const [deleteTarget, setDeleteTarget] = useState<AdminProductListItem | null>(null);
   const [deleting, setDeleting] = useState(false);
@@ -63,7 +72,8 @@ export default function AdminProdukPage() {
     const params = new URLSearchParams({ page: String(page), limit: String(limit) });
     if (q.trim()) params.set('q', q.trim());
     if (categoryId) params.set('categoryId', categoryId);
-    if (stock) params.set('stock', stock);
+    if (isActive) params.set('isActive', isActive);
+    if (channelFilter) params.set('channelFilter', channelFilter);
 
     const response = await fetch(`/api/admin/products?${params.toString()}`);
     if (response.ok) {
@@ -80,7 +90,8 @@ export default function AdminProdukPage() {
       const params = new URLSearchParams({ page: String(page), limit: String(limit) });
       if (q.trim()) params.set('q', q.trim());
       if (categoryId) params.set('categoryId', categoryId);
-      if (stock) params.set('stock', stock);
+      if (isActive) params.set('isActive', isActive);
+      if (channelFilter) params.set('channelFilter', channelFilter);
 
       const response = await fetch(`/api/admin/products?${params.toString()}`);
       if (response.ok) {
@@ -92,7 +103,7 @@ export default function AdminProdukPage() {
     }
 
     load();
-  }, [q, categoryId, stock, page]);
+  }, [q, categoryId, isActive, channelFilter, page]);
 
   async function handleDelete() {
     if (!deleteTarget) return;
@@ -117,7 +128,7 @@ export default function AdminProdukPage() {
         }
       />
 
-      <div className="grid gap-3 sm:grid-cols-3">
+      <div className="grid gap-3 sm:grid-cols-4">
         <input
           type="search"
           placeholder="Cari judul / penulis"
@@ -144,17 +155,31 @@ export default function AdminProdukPage() {
           ))}
         </select>
         <select
-          value={stock}
+          value={isActive}
           onChange={(e) => {
-            setStock(e.target.value);
+            setIsActive(e.target.value);
             setPage(1);
           }}
           className={adminInputBase}
         >
-          <option value="">Semua Stok</option>
-          <option value="instock">Stok Aman</option>
-          <option value="lowstock">Stok Menipis</option>
-          <option value="outofstock">Stok Habis</option>
+          <option value="">Semua Status</option>
+          <option value="active">Aktif</option>
+          <option value="inactive">Nonaktif</option>
+        </select>
+        <select
+          value={channelFilter}
+          onChange={(e) => {
+            setChannelFilter(e.target.value);
+            setPage(1);
+          }}
+          className={adminInputBase}
+        >
+          <option value="">Semua Channel</option>
+          {PRODUCT_CHANNELS.map((channel) => (
+            <option key={channel} value={channel}>
+              {CHANNEL_LABELS[channel]}
+            </option>
+          ))}
         </select>
       </div>
 
@@ -173,6 +198,7 @@ export default function AdminProdukPage() {
             <Th className="text-right">Grosir</Th>
             <Th className="text-right">Stok</Th>
             <Th>Status</Th>
+            <Th>Channel</Th>
             <Th />
           </Thead>
           <Tbody>
@@ -246,6 +272,11 @@ export default function AdminProdukPage() {
                 <Td>
                   <Badge tone={product.isActive ? 'success' : 'neutral'}>
                     {product.isActive ? 'Aktif' : 'Nonaktif'}
+                  </Badge>
+                </Td>
+                <Td>
+                  <Badge tone={product.channel === 'BOTH' ? 'info' : 'neutral'}>
+                    {CHANNEL_LABELS[product.channel]}
                   </Badge>
                 </Td>
                 <Td className="text-right">
