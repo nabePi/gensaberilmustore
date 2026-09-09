@@ -5,7 +5,11 @@ import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 import { formatCurrency } from '@/lib/format';
-import { ORDER_STATUS_BADGE_CLASSES, ORDER_STATUS_LABELS } from '@/lib/order-status';
+import {
+  getOrderStatusBadgeClass,
+  getOrderStatusLabel,
+  ORDER_STATUS_LABELS,
+} from '@/lib/order-status';
 import { badgeBase, btnOutline, btnSolid, cardBase } from '@/lib/styles';
 
 type OrderStatusValue = keyof typeof ORDER_STATUS_LABELS;
@@ -29,7 +33,7 @@ type OrderDetail = {
     discount: number;
     total: number;
   };
-  payment: { method: string };
+  payment: { method: string; paymentClaimedAt: string | null };
   items: {
     id: string;
     title: string;
@@ -120,8 +124,10 @@ export default function MemberTransaksiDetailPage() {
         <div>
           <div className="flex items-center gap-3">
             <h1 className="text-xl font-bold text-foreground">{order.orderNumber}</h1>
-            <span className={`${badgeBase} ${ORDER_STATUS_BADGE_CLASSES[order.status]}`}>
-              {ORDER_STATUS_LABELS[order.status]}
+            <span
+              className={`${badgeBase} ${getOrderStatusBadgeClass(order.status, order.payment.paymentClaimedAt)}`}
+            >
+              {getOrderStatusLabel(order.status, order.payment.paymentClaimedAt)}
             </span>
           </div>
           <p className="mt-1 text-sm text-neutral-500">

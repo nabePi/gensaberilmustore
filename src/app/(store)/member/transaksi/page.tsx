@@ -5,7 +5,8 @@ import { useEffect, useState } from 'react';
 
 import { formatCurrency } from '@/lib/format';
 import {
-  ORDER_STATUS_BADGE_CLASSES,
+  getOrderStatusBadgeClass,
+  getOrderStatusLabel,
   ORDER_STATUS_FILTER_TABS,
   ORDER_STATUS_LABELS,
 } from '@/lib/order-status';
@@ -17,6 +18,7 @@ type OrderListItem = {
   id: string;
   orderNumber: string;
   status: OrderStatusValue;
+  paymentClaimedAt: string | null;
   total: number;
   itemCount: number;
   thumbnailUrl: string | null;
@@ -114,9 +116,9 @@ export default function MemberTransaksiPage() {
                     · {order.itemCount} item
                   </p>
                   <span
-                    className={`mt-1 inline-block ${badgeBase} ${ORDER_STATUS_BADGE_CLASSES[order.status]}`}
+                    className={`mt-1 inline-block ${badgeBase} ${getOrderStatusBadgeClass(order.status, order.paymentClaimedAt)}`}
                   >
-                    {ORDER_STATUS_LABELS[order.status]}
+                    {getOrderStatusLabel(order.status, order.paymentClaimedAt)}
                   </span>
                 </div>
               </div>

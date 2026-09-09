@@ -18,6 +18,26 @@ export const ORDER_STATUS_BADGE_CLASSES: Record<OrderStatus, string> = {
   CANCELLED: 'bg-red/10 text-red',
 };
 
+export function getOrderStatusLabel(
+  status: OrderStatus,
+  paymentClaimedAt?: string | Date | null,
+): string {
+  if (status === 'AWAITING_PAYMENT' && paymentClaimedAt) {
+    return 'Pembayaran Sedang Dicek Admin';
+  }
+  return ORDER_STATUS_LABELS[status];
+}
+
+export function getOrderStatusBadgeClass(
+  status: OrderStatus,
+  paymentClaimedAt?: string | Date | null,
+): string {
+  if (status === 'AWAITING_PAYMENT' && paymentClaimedAt) {
+    return 'bg-amber-100 text-amber-700';
+  }
+  return ORDER_STATUS_BADGE_CLASSES[status];
+}
+
 export const ORDER_STATUS_FILTER_TABS: { label: string; value: OrderStatus | 'ALL' }[] = [
   { label: 'Semua', value: 'ALL' },
   { label: 'Menunggu Pembayaran', value: 'AWAITING_PAYMENT' },
