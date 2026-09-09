@@ -18,7 +18,6 @@ export const GET = withAuth<RouteContext>(
         name: true,
         email: true,
         phone: true,
-        whatsappNumber: true,
         role: true,
         createdAt: true,
         orders: {

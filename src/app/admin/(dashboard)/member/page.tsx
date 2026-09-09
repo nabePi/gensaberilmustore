@@ -41,7 +41,6 @@ type MemberDetail = {
   name: string | null;
   email: string;
   phone: string | null;
-  whatsappNumber: string | null;
   role: MemberRole;
   createdAt: string;
   orders: MemberOrder[];
