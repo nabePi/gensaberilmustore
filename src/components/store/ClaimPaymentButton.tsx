@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 
-import { btnSolid } from '@/lib/styles';
+import { btnOutline, btnSolid } from '@/lib/styles';
 
 function formatClaimedAt(value: string): string {
   return new Date(value).toLocaleString('id-ID', {
@@ -25,8 +25,9 @@ export function ClaimPaymentButton({
   const [claimedAt, setClaimedAt] = useState(initialClaimedAt);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showConfirm, setShowConfirm] = useState(false);
 
-  async function handleClaim() {
+  async function handleConfirm() {
     setSubmitting(true);
     setError(null);
     try {
@@ -38,6 +39,7 @@ export function ClaimPaymentButton({
       }
       setClaimedAt(data.paymentClaimedAt);
       onClaimed?.(data.paymentClaimedAt);
+      setShowConfirm(false);
     } catch {
       setError('Gagal mengirim konfirmasi. Silakan coba lagi.');
     } finally {
@@ -56,20 +58,46 @@ export function ClaimPaymentButton({
 
   return (
     <div className="flex w-full max-w-sm flex-col items-center gap-3">
-      <div className="w-full rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-left text-xs text-amber-800">
-        Hanya tekan tombol ini jika Anda <strong>sudah menyelesaikan pembayaran QRIS</strong> sesuai
-        nominal yang tertera. Setelah dikonfirmasi, QRIS tidak akan tampil lagi dan admin kami akan
-        memeriksa pembayaran Anda.
-      </div>
       <button
         type="button"
-        onClick={handleClaim}
-        disabled={submitting}
+        onClick={() => setShowConfirm(true)}
         className={`${btnSolid} w-full py-3 text-base`}
       >
-        {submitting ? 'Mengirim...' : 'Saya Sudah Transfer'}
+        Saya Sudah Transfer
       </button>
       {error ? <p className="text-xs text-red">{error}</p> : null}
+
+      {showConfirm ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-neutral-950/50 p-4">
+          <div className="w-full max-w-sm rounded-lg bg-white p-6 text-center shadow-xl">
+            <p className="text-sm font-semibold text-foreground">
+              Apakah kamu benar sudah membayar dengan QRIS?
+            </p>
+            <p className="mt-2 text-xs text-neutral-500">
+              Setelah dikonfirmasi, QRIS tidak akan tampil lagi dan admin kami akan memeriksa
+              pembayaran Anda.
+            </p>
+            <div className="mt-5 flex gap-3">
+              <button
+                type="button"
+                onClick={() => setShowConfirm(false)}
+                disabled={submitting}
+                className={`${btnOutline} flex-1`}
+              >
+                Tutup
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirm}
+                disabled={submitting}
+                className={`${btnSolid} flex-1`}
+              >
+                {submitting ? 'Mengirim...' : 'Konfirmasi'}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

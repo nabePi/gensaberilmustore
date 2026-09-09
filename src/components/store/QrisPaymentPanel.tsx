@@ -66,10 +66,6 @@ export function QrisPaymentPanel({
         initialClaimedAt={initialClaimedAt}
         onClaimed={setClaimedAt}
       />
-      <div className="w-full max-w-sm rounded-lg border border-neutral-200 bg-neutral-50 px-4 py-3 text-left text-xs text-neutral-500">
-        Status pesanan masih <strong>&quot;Menunggu Pembayaran&quot;</strong> karena setiap transfer
-        diperiksa manual oleh admin kami (maksimal 1x24 jam), belum otomatis.
-      </div>
       <div className="flex gap-3">
         <Link href="/" className={btnSolid}>
           Kembali ke Beranda

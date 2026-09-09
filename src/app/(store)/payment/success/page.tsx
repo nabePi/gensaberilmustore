@@ -102,11 +102,6 @@ export default async function PaymentSuccessPage({
         </div>
         {order.manualPaymentCode !== null ? (
           <>
-            <div className="w-full max-w-sm rounded-lg border border-neutral-200 bg-neutral-50 px-4 py-3 text-left text-xs text-neutral-500">
-              Status pesanan masih <strong>&quot;Menunggu Pembayaran&quot;</strong> karena setiap
-              transfer diperiksa manual oleh admin kami (maksimal 1x24 jam), belum otomatis. Sudah
-              transfer? Tekan tombol di bawah ini agar admin segera memeriksa pembayaran Anda.
-            </div>
             <ClaimPaymentButton
               orderId={order.id}
               initialClaimedAt={order.paymentClaimedAt?.toISOString() ?? null}
