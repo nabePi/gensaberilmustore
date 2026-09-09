@@ -8,7 +8,7 @@ import { z } from 'zod';
 
 import { INDONESIAN_BANKS } from '@/lib/banks';
 import { formatCurrency } from '@/lib/format';
-import { btnOutline, btnSolid, cardBase, inputBase } from '@/lib/styles';
+import { badgeBase, btnOutline, btnSolid, cardBase, inputBase } from '@/lib/styles';
 
 type ProductPerformance = {
   productId: string;
@@ -111,12 +111,40 @@ function OnboardingCard({ onJoined }: { onJoined: () => void }) {
 
 function PendingApprovalCard() {
   return (
-    <div className={`p-6 ${cardBase}`}>
-      <h1 className="text-xl font-bold text-foreground">Pendaftaran Sedang Diproses</h1>
-      <p className="mt-2 max-w-md text-sm text-neutral-500">
-        Terima kasih sudah mendaftar sebagai afiliasi. Tim kami akan meninjau dan menyetujui
-        pendaftaran Anda maksimal 3x24 jam. Anda akan bisa memilih produk dan membagikan link
-        afiliasi setelah pendaftaran disetujui.
+    <div className={`flex flex-col items-center gap-4 p-10 text-center ${cardBase}`}>
+      <div className="flex h-16 w-16 items-center justify-center rounded-full bg-amber-100 text-amber-600">
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={1.5}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className="h-8 w-8"
+        >
+          <circle cx="12" cy="12" r="9" />
+          <path d="M12 7v5l3 3" />
+        </svg>
+      </div>
+
+      <span className={`${badgeBase} bg-amber-100 text-amber-700`}>Menunggu Persetujuan</span>
+
+      <div>
+        <h1 className="text-xl font-bold text-foreground">Pendaftaran Sedang Diproses</h1>
+        <p className="mt-2 max-w-md text-sm text-neutral-500">
+          Terima kasih sudah mendaftar sebagai afiliasi. Tim kami sedang meninjau data bank Anda
+          sebelum akun afiliasi diaktifkan.
+        </p>
+      </div>
+
+      <div className="rounded-lg bg-neutral-50 px-4 py-3 text-sm text-neutral-600">
+        Estimasi persetujuan maksimal{' '}
+        <span className="font-semibold text-foreground">3x24 jam</span>
+      </div>
+
+      <p className="max-w-md text-xs text-neutral-400">
+        Setelah disetujui, Anda bisa memilih produk dan membagikan link afiliasi untuk mulai
+        mendapatkan komisi.
       </p>
     </div>
   );
