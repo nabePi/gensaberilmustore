@@ -1,11 +1,9 @@
 'use client';
 
-import Link from 'next/link';
 import { useState } from 'react';
 
 import { ClaimPaymentButton } from '@/components/store/ClaimPaymentButton';
 import { formatCurrency } from '@/lib/format';
-import { btnSolid } from '@/lib/styles';
 
 export function QrisPaymentPanel({
   orderId,
@@ -66,11 +64,6 @@ export function QrisPaymentPanel({
         initialClaimedAt={initialClaimedAt}
         onClaimed={setClaimedAt}
       />
-      <div className="flex gap-3">
-        <Link href="/" className={btnSolid}>
-          Kembali ke Beranda
-        </Link>
-      </div>
     </div>
   );
 }
