@@ -2,7 +2,7 @@ import Link from 'next/link';
 
 import { prisma } from '@/lib/db';
 import { formatCurrency } from '@/lib/format';
-import { ORDER_STATUS_BADGE_CLASSES, ORDER_STATUS_LABELS } from '@/lib/order-status';
+import { getOrderStatusBadgeClass, getOrderStatusLabel } from '@/lib/order-status';
 import { badgeBase, btnSolid, cardBase } from '@/lib/styles';
 import { getSessionUser } from '@/server/auth';
 import { orderListInclude, serializeOrderListItem } from '@/server/orders/serialize';
@@ -125,8 +125,10 @@ export default async function MemberDashboardPage() {
                     </p>
                   </div>
                   <div className="flex items-center gap-4">
-                    <span className={`${badgeBase} ${ORDER_STATUS_BADGE_CLASSES[item.status]}`}>
-                      {ORDER_STATUS_LABELS[item.status]}
+                    <span
+                      className={`${badgeBase} ${getOrderStatusBadgeClass(item.status, item.paymentClaimedAt)}`}
+                    >
+                      {getOrderStatusLabel(item.status, item.paymentClaimedAt)}
                     </span>
                     <span className="text-sm font-semibold text-foreground">
                       {formatCurrency(item.total)}
