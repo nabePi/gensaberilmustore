@@ -37,7 +37,7 @@ export type OrderDetail = {
     discount: number;
     total: number;
   };
-  payment: { method: string; manualPaymentCode: number | null };
+  payment: { method: string; manualPaymentCode: number | null; paymentClaimedAt: string | null };
   voucher: { code: string; discount: number } | null;
   affiliate: { code: string; user: { id: string; name: string | null } | null } | null;
   member: { id: string; name: string | null; email: string } | null;
@@ -191,6 +191,12 @@ export function OrderDetailModal({
                     {formatCurrency(order.pricing.total + order.payment.manualPaymentCode)}
                   </p>
                 </>
+              ) : null}
+              {order.status === 'AWAITING_PAYMENT' && order.payment.paymentClaimedAt ? (
+                <p className="text-sm font-medium text-amber-600">
+                  Pembeli mengklaim sudah transfer pada{' '}
+                  {formatOrderDate(order.payment.paymentClaimedAt)}
+                </p>
               ) : null}
               {order.member ? (
                 <p className="text-sm text-neutral-600">

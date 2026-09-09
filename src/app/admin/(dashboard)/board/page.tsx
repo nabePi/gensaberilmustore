@@ -33,6 +33,7 @@ type BoardOrder = {
   receiverName: string;
   receiverPhone: string;
   source: 'ONLINE' | 'POS';
+  paymentClaimedAt: string | null;
 };
 
 const BOARD_COLUMNS: OrderStatusValue[] = [
@@ -96,6 +97,11 @@ function OrderCard({ order }: { order: BoardOrder }) {
     >
       <p className="font-semibold text-foreground">{order.orderNumber}</p>
       <p className="mt-0.5 text-xs text-neutral-500">{order.receiverName}</p>
+      {order.status === 'AWAITING_PAYMENT' && order.paymentClaimedAt ? (
+        <span className="mt-1 inline-block rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-medium text-amber-700">
+          Diklaim dibayar
+        </span>
+      ) : null}
       <div className="mt-2 flex items-center justify-between text-xs">
         <span className="rounded-full bg-neutral-100 px-2 py-0.5 text-neutral-600">
           {order.source === 'ONLINE' ? 'Online' : 'POS'}

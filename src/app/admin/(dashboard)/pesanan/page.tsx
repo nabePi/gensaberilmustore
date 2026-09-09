@@ -29,6 +29,7 @@ type AdminOrderListItem = {
   status: OrderStatusValue;
   total: number;
   manualPaymentCode: number | null;
+  paymentClaimedAt: string | null;
   itemCount: number;
   thumbnailUrl: string | null;
   createdAt: string;
@@ -194,6 +195,11 @@ export default function AdminPesananPage() {
                   <span className={`${adminBadgeBase} ${ORDER_STATUS_BADGE_CLASSES[order.status]}`}>
                     {ORDER_STATUS_LABELS[order.status]}
                   </span>
+                  {order.status === 'AWAITING_PAYMENT' && order.paymentClaimedAt ? (
+                    <span className="mt-1 block text-[11px] font-medium text-amber-600">
+                      Diklaim dibayar
+                    </span>
+                  ) : null}
                 </Td>
                 <Td className="text-right font-medium text-foreground">
                   {formatCurrency(

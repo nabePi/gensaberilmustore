@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
+import { ClaimPaymentButton } from '@/components/store/ClaimPaymentButton';
 import { env } from '@/env';
 import { prisma } from '@/lib/db';
 import { formatCurrency } from '@/lib/format';
@@ -92,10 +93,15 @@ export default async function PaymentSuccessPage({
           <p className="max-w-md text-xs text-neutral-500">
             Kode unik ini menjadi milik GenSa Berilmu dan tidak dapat dikembalikan/direfund.
           </p>
-          <p className="max-w-md text-xs text-neutral-500">
-            Setelah transfer, admin kami akan memeriksa dan mengonfirmasi pembayaran secara manual
-            (maksimal 1x24 jam). Status pesanan akan otomatis berubah setelah dikonfirmasi.
-          </p>
+          <div className="w-full max-w-sm rounded-lg border border-neutral-200 bg-neutral-50 px-4 py-3 text-left text-xs text-neutral-500">
+            Status pesanan masih <strong>&quot;Menunggu Pembayaran&quot;</strong> karena setiap
+            transfer diperiksa manual oleh admin kami (maksimal 1x24 jam), belum otomatis. Sudah
+            transfer? Tekan tombol di bawah ini agar admin segera memeriksa pembayaran Anda.
+          </div>
+          <ClaimPaymentButton
+            orderId={order.id}
+            initialClaimedAt={order.paymentClaimedAt?.toISOString() ?? null}
+          />
           <div className="flex gap-3">
             <Link href="/" className={btnSolid}>
               Kembali ke Beranda
@@ -131,6 +137,19 @@ export default async function PaymentSuccessPage({
             <strong>Total Pembayaran:</strong> {formatCurrency(order.total)}
           </p>
         </div>
+        {order.manualPaymentCode !== null ? (
+          <>
+            <div className="w-full max-w-sm rounded-lg border border-neutral-200 bg-neutral-50 px-4 py-3 text-left text-xs text-neutral-500">
+              Status pesanan masih <strong>&quot;Menunggu Pembayaran&quot;</strong> karena setiap
+              transfer diperiksa manual oleh admin kami (maksimal 1x24 jam), belum otomatis. Sudah
+              transfer? Tekan tombol di bawah ini agar admin segera memeriksa pembayaran Anda.
+            </div>
+            <ClaimPaymentButton
+              orderId={order.id}
+              initialClaimedAt={order.paymentClaimedAt?.toISOString() ?? null}
+            />
+          </>
+        ) : null}
         <div className="flex gap-3">
           <Link href="/" className={btnSolid}>
             Kembali ke Beranda
