@@ -6,6 +6,7 @@ import { AddToCartPanel } from '@/components/product/AddToCartPanel';
 import { ProductCard } from '@/components/product/ProductCard';
 import { ProductGallery } from '@/components/product/ProductGallery';
 import { ProductTabs } from '@/components/product/ProductTabs';
+import { WishlistButton } from '@/components/product/WishlistButton';
 import { Carousel } from '@/components/ui/Carousel';
 import { ShareButton } from '@/components/ui/ShareButton';
 import { formatCurrency } from '@/lib/format';
@@ -147,7 +148,25 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
 
           <div className="flex items-start justify-between gap-4">
             <h1 className="text-2xl font-bold text-foreground lg:text-3xl">{product.title}</h1>
-            <ShareButton title={product.title} text={product.subtitle ?? undefined} />
+            <div className="flex shrink-0 items-center gap-2">
+              <WishlistButton
+                product={{
+                  id: product.id,
+                  slug: product.slug,
+                  title: product.title,
+                  author: product.author,
+                  price: product.price,
+                  finalPrice: product.finalPrice,
+                  discountPercent: product.discountPercent,
+                  isPreOrderActive: product.isPreOrderActive,
+                  stock: product.stock,
+                  ribbonType: product.ribbonType,
+                  ribbonText: product.ribbonText,
+                  primaryImageUrl: product.images[0]?.url ?? null,
+                }}
+              />
+              <ShareButton title={product.title} text={product.subtitle ?? undefined} />
+            </div>
           </div>
           {product.subtitle ? <p className="text-sm text-neutral-500">{product.subtitle}</p> : null}
           {product.author ? (
