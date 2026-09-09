@@ -25,6 +25,8 @@ const RIBBON_STYLES: Record<string, string> = {
   DISCOUNT: 'bg-red text-white',
 };
 
+export const dynamic = 'force-dynamic';
+
 export async function generateMetadata({
   params,
 }: {

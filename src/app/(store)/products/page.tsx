@@ -10,6 +10,8 @@ import { listProductsQuerySchema } from '@/server/products/schema';
 const PRODUCTS_DESCRIPTION =
   'Jelajahi koleksi lengkap buku Islam dan produk keluarga muslim GenSa Berilmu: buku dewasa, buku anak, dan merchandise.';
 
+export const dynamic = 'force-dynamic';
+
 type SearchParams = Record<string, string | string[] | undefined>;
 
 type ResolvedFilters = ReturnType<typeof listProductsQuerySchema.parse>;

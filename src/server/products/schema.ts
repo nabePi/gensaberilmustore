@@ -53,11 +53,41 @@ const productFields = {
   isActive: z.boolean().default(true),
 };
 
-export const createProductSchema = z.object(productFields);
+function refineWholesaleAndPreOrder(
+  data: {
+    wholesalePrice?: number;
+    wholesaleMinQty?: number;
+    isPreOrderActive?: boolean;
+    preOrderPrice?: number;
+  },
+  ctx: z.RefinementCtx,
+) {
+  if (data.wholesalePrice !== undefined && data.wholesaleMinQty === undefined) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'Minimum pcs grosir wajib diisi jika harga grosir diisi',
+      path: ['wholesaleMinQty'],
+    });
+  }
 
-export const updateProductSchema = z.object(productFields).partial().extend({
-  regenerateSlug: z.boolean().optional(),
-});
+  if (data.isPreOrderActive === true && data.preOrderPrice === undefined) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'Harga PO wajib diisi jika ingin menampilkan harga PO ke pembeli',
+      path: ['preOrderPrice'],
+    });
+  }
+}
+
+export const createProductSchema = z.object(productFields).superRefine(refineWholesaleAndPreOrder);
+
+export const updateProductSchema = z
+  .object(productFields)
+  .partial()
+  .extend({
+    regenerateSlug: z.boolean().optional(),
+  })
+  .superRefine(refineWholesaleAndPreOrder);
 
 export type CreateProductInput = z.infer<typeof createProductSchema>;
 export type UpdateProductInput = z.infer<typeof updateProductSchema>;

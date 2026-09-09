@@ -53,29 +53,62 @@ export type AdminProductDetail = {
   images: AdminProductImage[];
 };
 
-const productFormSchema = z.object({
-  sku: z.string().trim().min(1, 'SKU wajib diisi'),
-  title: z.string().trim().min(1, 'Judul wajib diisi'),
-  subtitle: z.string().trim().optional(),
-  author: z.string().trim().min(1, 'Penulis wajib diisi'),
-  publisher: z.string().trim().optional(),
-  description: z.string().trim().min(1, 'Deskripsi wajib diisi'),
-  price: z.coerce.number().int().positive('Harga harus lebih dari 0'),
-  costPrice: z.coerce.number().int().min(0, 'Harga HPP tidak boleh negatif').optional(),
-  preOrderPrice: z.coerce.number().int().min(0, 'Harga PO tidak boleh negatif').optional(),
-  isPreOrderActive: z.boolean(),
-  wholesalePrice: z.coerce.number().int().min(0, 'Harga grosir tidak boleh negatif').optional(),
-  wholesaleMinQty: z.coerce.number().int().min(2, 'Minimum pcs grosir minimal 2').optional(),
-  discountPercent: z.coerce.number().int().min(0).max(90),
-  stock: z.coerce.number().int().min(0, 'Stok tidak boleh negatif'),
-  weightGram: z.coerce.number().int().positive('Berat harus lebih dari 0'),
-  pageCount: z.coerce.number().int().positive('Jumlah halaman harus lebih dari 0'),
-  coverType: z.enum(COVER_TYPES),
-  publishYear: z.coerce.number().int().min(1900),
-  isActive: z.boolean(),
-});
+const emptyToUndefined = (val: unknown) => (val === '' || val === null ? undefined : val);
 
-type ProductFormValues = z.infer<typeof productFormSchema>;
+const productFormSchema = z
+  .object({
+    sku: z.string().trim().min(1, 'SKU wajib diisi'),
+    title: z.string().trim().min(1, 'Judul wajib diisi'),
+    subtitle: z.string().trim().optional(),
+    author: z.string().trim().min(1, 'Penulis wajib diisi'),
+    publisher: z.string().trim().optional(),
+    description: z.string().trim().min(1, 'Deskripsi wajib diisi'),
+    price: z.coerce.number().int().positive('Harga harus lebih dari 0'),
+    costPrice: z.preprocess(
+      emptyToUndefined,
+      z.coerce.number().int().min(0, 'Harga HPP tidak boleh negatif').optional(),
+    ),
+    preOrderPrice: z.preprocess(
+      emptyToUndefined,
+      z.coerce.number().int().min(0, 'Harga PO tidak boleh negatif').optional(),
+    ),
+    isPreOrderActive: z.boolean(),
+    wholesalePrice: z.preprocess(
+      emptyToUndefined,
+      z.coerce.number().int().min(0, 'Harga grosir tidak boleh negatif').optional(),
+    ),
+    wholesaleMinQty: z.preprocess(
+      emptyToUndefined,
+      z.coerce.number().int().min(2, 'Minimum pcs grosir minimal 2').optional(),
+    ),
+    discountPercent: z.coerce.number().int().min(0).max(90),
+    stock: z.coerce.number().int().min(0, 'Stok tidak boleh negatif'),
+    weightGram: z.coerce.number().int().positive('Berat harus lebih dari 0'),
+    pageCount: z.coerce.number().int().positive('Jumlah halaman harus lebih dari 0'),
+    coverType: z.enum(COVER_TYPES),
+    publishYear: z.coerce.number().int().min(1900),
+    isActive: z.boolean(),
+  })
+  .superRefine((data, ctx) => {
+    if (data.wholesalePrice !== undefined && data.wholesaleMinQty === undefined) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Minimum pcs grosir wajib diisi jika harga grosir diisi',
+        path: ['wholesaleMinQty'],
+      });
+    }
+
+    if (data.isPreOrderActive === true && data.preOrderPrice === undefined) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Harga PO wajib diisi jika ingin menampilkan harga PO ke pembeli',
+        path: ['preOrderPrice'],
+      });
+    }
+  });
+
+type ProductFormInput = z.input<typeof productFormSchema>;
+type ProductFormValues = z.output<typeof productFormSchema>;
 
 export function ProductForm({
   product,
@@ -105,7 +138,7 @@ export function ProductForm({
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<ProductFormValues>({
+  } = useForm<ProductFormInput, unknown, ProductFormValues>({
     resolver: zodResolver(productFormSchema),
     defaultValues: product
       ? {
