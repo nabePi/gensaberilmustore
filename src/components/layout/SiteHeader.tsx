@@ -14,6 +14,7 @@ export type HeaderUser = {
   id: string;
   name: string | null;
   email: string;
+  avatarUrl: string | null;
 };
 
 type SearchSuggestion = {
@@ -305,9 +306,21 @@ export function SiteHeader({ initialUser }: { initialUser: HeaderUser | null }) 
               <button
                 type="button"
                 onClick={() => setUserMenuOpen((open) => !open)}
-                className="flex items-center gap-2 rounded-sm border border-neutral-200 px-3 py-2 text-sm font-semibold hover:bg-neutral-50"
+                aria-label={user.name ?? user.email}
+                className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border border-neutral-200 hover:bg-neutral-50"
               >
-                {user.name ?? user.email}
+                {user.avatarUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={user.avatarUrl}
+                    alt={user.name ?? user.email}
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <span className="flex h-full w-full items-center justify-center bg-brand text-sm font-semibold text-white">
+                    {(user.name?.trim().charAt(0) ?? user.email.charAt(0)).toUpperCase()}
+                  </span>
+                )}
               </button>
               {userMenuOpen ? (
                 <div className="absolute right-0 top-full z-20 mt-2 min-w-[180px] rounded-sm border border-neutral-200 bg-white py-2 shadow-lg">

@@ -13,7 +13,13 @@ export default async function StoreLayout({ children }: { children: ReactNode })
 
   return (
     <div className="flex min-h-screen flex-col pb-16 lg:pb-0">
-      <SiteHeader initialUser={user ? { id: user.id, name: user.name, email: user.email } : null} />
+      <SiteHeader
+        initialUser={
+          user
+            ? { id: user.id, name: user.name, email: user.email, avatarUrl: user.avatarUrl }
+            : null
+        }
+      />
       <main className="flex-1">{children}</main>
       <MobileRecommendedProducts />
       <SiteFooter />
