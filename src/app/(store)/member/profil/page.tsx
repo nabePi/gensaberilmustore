@@ -11,7 +11,6 @@ import { btnOutline, btnSolid, inputBase } from '@/lib/styles';
 const profileFormSchema = z.object({
   name: z.string().trim().min(1, 'Nama wajib diisi'),
   phone: z.string().trim().min(1, 'Nomor telepon wajib diisi'),
-  whatsappNumber: z.string().trim().min(1, 'Nomor WhatsApp wajib diisi'),
 });
 
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
@@ -20,7 +19,6 @@ type ProfileData = {
   name: string | null;
   email: string;
   phone: string | null;
-  whatsappNumber: string | null;
   avatarUrl: string | null;
 };
 
@@ -29,7 +27,6 @@ export default function MemberProfilePage() {
   const [email, setEmail] = useState('');
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [avatarUploading, setAvatarUploading] = useState(false);
-  const [whatsappSame, setWhatsappSame] = useState(true);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [apiError, setApiError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -37,15 +34,12 @@ export default function MemberProfilePage() {
   const {
     register,
     handleSubmit,
-    watch,
     setValue,
     formState: { errors, isSubmitting },
   } = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
-    defaultValues: { name: '', phone: '', whatsappNumber: '' },
+    defaultValues: { name: '', phone: '' },
   });
-
-  const phoneValue = watch('phone');
 
   useEffect(() => {
     async function loadProfile() {
@@ -59,18 +53,10 @@ export default function MemberProfilePage() {
       setAvatarUrl(data.avatarUrl);
       setValue('name', data.name ?? '');
       setValue('phone', data.phone ?? '');
-      setValue('whatsappNumber', data.whatsappNumber ?? '');
-      setWhatsappSame(!data.whatsappNumber || data.whatsappNumber === (data.phone ?? ''));
       setLoading(false);
     }
     loadProfile();
   }, [setValue]);
-
-  useEffect(() => {
-    if (whatsappSame) {
-      setValue('whatsappNumber', phoneValue ?? '');
-    }
-  }, [whatsappSame, phoneValue, setValue]);
 
   async function handlePhotoChange(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
@@ -231,7 +217,7 @@ export default function MemberProfilePage() {
           </div>
 
           <div className="flex flex-col gap-1">
-            <label className="text-sm font-medium text-neutral-600">No. Telepon</label>
+            <label className="text-sm font-medium text-neutral-600">No. Telepon / WhatsApp</label>
             <input
               type="tel"
               placeholder="08xxxxxxxxxx"
@@ -239,30 +225,6 @@ export default function MemberProfilePage() {
               className={inputBase}
             />
             {errors.phone ? <p className="text-xs text-red">{errors.phone.message}</p> : null}
-          </div>
-
-          <div className="flex flex-col gap-1">
-            <div className="flex items-center justify-between">
-              <label className="text-sm font-medium text-neutral-600">No. WhatsApp</label>
-              <label className="flex items-center gap-2 text-sm text-neutral-600">
-                <input
-                  type="checkbox"
-                  checked={whatsappSame}
-                  onChange={(event) => setWhatsappSame(event.target.checked)}
-                />
-                Sama dengan no. telepon
-              </label>
-            </div>
-            <input
-              type="tel"
-              placeholder="08xxxxxxxxxx"
-              {...register('whatsappNumber')}
-              readOnly={whatsappSame}
-              className={`${inputBase} ${whatsappSame ? 'bg-neutral-50 text-neutral-400' : ''}`}
-            />
-            {errors.whatsappNumber ? (
-              <p className="text-xs text-red">{errors.whatsappNumber.message}</p>
-            ) : null}
           </div>
 
           {apiError ? <p className="text-sm text-red">{apiError}</p> : null}

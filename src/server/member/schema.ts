@@ -3,7 +3,6 @@ import { z } from 'zod';
 export const updateProfileSchema = z.object({
   name: z.string().trim().min(1, 'Nama wajib diisi').optional(),
   phone: z.string().trim().min(1, 'Nomor telepon wajib diisi').optional(),
-  whatsappNumber: z.string().trim().min(1, 'Nomor WhatsApp wajib diisi').optional(),
 });
 
 const receiverFields = {

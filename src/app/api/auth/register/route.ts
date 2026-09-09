@@ -16,12 +16,11 @@ const registerSchema = z
   .object({
     name: z.string().min(3, 'Nama minimal 3 karakter'),
     email: z.string().email('Format email tidak valid'),
-    phone: z.string().optional(),
-    whatsappNumber: z
+    phone: z
       .string()
-      .min(1, 'Nomor WhatsApp wajib diisi')
+      .min(1, 'Nomor telepon wajib diisi')
       .transform((val) => normalizePhone(val))
-      .pipe(z.string().regex(/^628[1-9][0-9]{6,10}$/, 'Format nomor WhatsApp tidak valid')),
+      .pipe(z.string().regex(/^628[1-9][0-9]{6,10}$/, 'Format nomor telepon tidak valid')),
     password: z
       .string()
       .min(8, 'Password minimal 8 karakter')
@@ -45,7 +44,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const { name, email, phone, whatsappNumber, password } = parsed.data;
+  const { name, email, phone, password } = parsed.data;
 
   const existingUser = await prisma.user.findUnique({ where: { email } });
   if (existingUser) {
@@ -60,7 +59,6 @@ export async function POST(request: NextRequest) {
       passwordHash,
       name,
       phone,
-      whatsappNumber,
       role: 'BUYER',
     },
   });

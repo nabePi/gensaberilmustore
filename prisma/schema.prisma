@@ -116,7 +116,6 @@ model User {
   passwordmd5     String?
   name            String?
   phone           String?
-  whatsappNumber  String?
   avatarUrl       String?
   role            Role      @default(BUYER)
   emailVerifiedAt DateTime?
@@ -366,6 +365,7 @@ model Order {
   discount             Int
   total                Int
   manualPaymentCode    Int?
+  paymentClaimedAt     DateTime?
   paymentMethod        PaymentMethod
   source               OrderSource
   status               OrderStatus   @default(AWAITING_PAYMENT)

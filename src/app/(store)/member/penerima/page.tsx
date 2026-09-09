@@ -9,12 +9,30 @@ import { btnOutline, btnSolid, cardBase, inputBase } from '@/lib/styles';
 
 type City = { id: string; name: string; province: string };
 
+const PHONE_PREFIX = '62';
+
+function normalizePhone(localNumber: string): string {
+  const digits = localNumber.replace(/\D/g, '').replace(/^0+/, '');
+  return `${PHONE_PREFIX}${digits}`;
+}
+
+function formatPhoneDisplay(value: string): string {
+  const digits = value.replace(/\D/g, '').slice(0, 13);
+  return [digits.slice(0, 3), digits.slice(3, 7), digits.slice(7)].filter(Boolean).join(' - ');
+}
+
+function toLocalPhoneDigits(stored: string): string {
+  const digits = stored.replace(/\D/g, '');
+  return digits.startsWith(PHONE_PREFIX)
+    ? digits.slice(PHONE_PREFIX.length)
+    : digits.replace(/^0+/, '');
+}
+
 type Receiver = {
   id: string;
   label: string;
   name: string;
   phone: string;
-  email: string | null;
   address: string;
   isDefault: boolean;
   city: { name: string; shippingCost: number };
@@ -25,7 +43,6 @@ const receiverFormSchema = z.object({
   label: z.string().trim().min(1, 'Label wajib diisi'),
   name: z.string().trim().min(1, 'Nama wajib diisi'),
   phone: z.string().trim().min(1, 'Nomor telepon wajib diisi'),
-  email: z.union([z.string().trim().email('Format email tidak valid'), z.literal('')]),
   address: z.string().trim().min(1, 'Alamat wajib diisi'),
   cityId: z.string().uuid('Kota tujuan wajib dipilih'),
   isDefault: z.boolean(),
@@ -54,18 +71,19 @@ function ReceiverModal({
     defaultValues: {
       label: editing?.label ?? '',
       name: editing?.name ?? '',
-      phone: editing?.phone ?? '',
-      email: editing?.email ?? '',
+      phone: editing ? formatPhoneDisplay(toLocalPhoneDigits(editing.phone)) : '',
       address: editing?.address ?? '',
       cityId: editing?.cityId ?? '',
       isDefault: editing?.isDefault ?? false,
     },
   });
 
+  const phoneField = register('phone');
+
   async function onSubmit(values: ReceiverFormValues) {
     setApiError(null);
     try {
-      const payload = { ...values, email: values.email === '' ? undefined : values.email };
+      const payload = { ...values, phone: normalizePhone(values.phone) };
       const response = await fetch(
         editing ? `/api/member/receivers/${editing.id}` : '/api/member/receivers',
         {
@@ -120,18 +138,22 @@ function ReceiverModal({
           </div>
           <div className="flex flex-col gap-1">
             <label className="text-sm font-medium text-neutral-600">No. WhatsApp / Telepon</label>
-            <input
-              type="tel"
-              placeholder="08xxxxxxxxxx"
-              {...register('phone')}
-              className={inputBase}
-            />
+            <div className="flex">
+              <span className="flex items-center rounded-sm rounded-r-none border border-r-0 border-neutral-200 bg-neutral-50 px-2.5 py-2.5 text-sm text-neutral-600">
+                +{PHONE_PREFIX}
+              </span>
+              <input
+                {...phoneField}
+                onChange={(event) => {
+                  event.target.value = formatPhoneDisplay(event.target.value);
+                  phoneField.onChange(event);
+                }}
+                inputMode="numeric"
+                placeholder="812 - 3456 - 7890"
+                className={`${inputBase} rounded-l-none`}
+              />
+            </div>
             {errors.phone ? <p className="text-xs text-red">{errors.phone.message}</p> : null}
-          </div>
-          <div className="flex flex-col gap-1">
-            <label className="text-sm font-medium text-neutral-600">Email (opsional)</label>
-            <input type="email" {...register('email')} className={inputBase} />
-            {errors.email ? <p className="text-xs text-red">{errors.email.message}</p> : null}
           </div>
           <div className="flex flex-col gap-1">
             <label className="text-sm font-medium text-neutral-600">Kota</label>
@@ -305,7 +327,6 @@ export default function MemberPenerimaPage() {
               <div className="mt-3 text-sm text-neutral-600">
                 <p className="font-medium text-foreground">{receiver.name}</p>
                 <p>{receiver.phone}</p>
-                {receiver.email ? <p>{receiver.email}</p> : null}
                 <p className="mt-1">
                   {receiver.address}, {receiver.city.name}
                 </p>

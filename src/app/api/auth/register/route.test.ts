@@ -25,7 +25,7 @@ function buildRequest(body: unknown) {
 const validPayload = () => ({
   name: 'Budi Santoso',
   email: uniqueEmail(),
-  whatsappNumber: '081234567890',
+  phone: '081234567890',
   password: 'Password123',
   confirmPassword: 'Password123',
 });
@@ -50,7 +50,7 @@ describe('POST /api/auth/register', () => {
     const dbUser = await prisma.user.findUnique({ where: { email: payload.email } });
     expect(dbUser?.role).toBe('BUYER');
     expect(dbUser?.passwordHash).not.toBe(payload.password);
-    expect(dbUser?.whatsappNumber).toBe('6281234567890');
+    expect(dbUser?.phone).toBe('6281234567890');
   });
 
   it('rejects invalid input with 400', async () => {
@@ -58,7 +58,7 @@ describe('POST /api/auth/register', () => {
       buildRequest({
         name: 'Ab',
         email: 'not-an-email',
-        whatsappNumber: '12345',
+        phone: '12345',
         password: 'short',
         confirmPassword: 'mismatch',
       }),

@@ -49,7 +49,6 @@ describe('GET /api/member/profile', () => {
     expect(json.email).toBe(user.email);
     expect(json.role).toBe('BUYER');
     expect(json).toHaveProperty('phone');
-    expect(json).toHaveProperty('whatsappNumber');
     expect(json).toHaveProperty('createdAt');
     expect(json).not.toHaveProperty('passwordHash');
   });
@@ -70,18 +69,13 @@ describe('PUT /api/member/profile', () => {
   it('updates the profile fields', async () => {
     const { cookie } = await createMemberCookie();
     const response = await PUT(
-      buildRequest(
-        'PUT',
-        { name: 'Updated Name', phone: '08123456789', whatsappNumber: '08129876543' },
-        cookie,
-      ),
+      buildRequest('PUT', { name: 'Updated Name', phone: '08123456789' }, cookie),
     );
     const json = await response.json();
 
     expect(response.status).toBe(200);
     expect(json.name).toBe('Updated Name');
     expect(json.phone).toBe('08123456789');
-    expect(json.whatsappNumber).toBe('08129876543');
   });
 
   it('does not change the email', async () => {

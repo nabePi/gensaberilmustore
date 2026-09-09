@@ -79,20 +79,11 @@ type VoucherResult =
   | { valid: true; voucherId: string; code: string; discountAmount: number }
   | { valid: false; reason: string };
 
-const PHONE_COUNTRIES = [
-  { value: 'ID', flag: '🇮🇩', label: 'Indonesia', prefix: '62' },
-  { value: 'MY', flag: '🇲🇾', label: 'Malaysia', prefix: '60' },
-] as const;
+const PHONE_PREFIX = '62';
 
-type PhoneCountryValue = (typeof PHONE_COUNTRIES)[number]['value'];
-
-function getPhonePrefix(country: PhoneCountryValue): string {
-  return PHONE_COUNTRIES.find((item) => item.value === country)?.prefix ?? '62';
-}
-
-function normalizePhone(localNumber: string, country: PhoneCountryValue): string {
+function normalizePhone(localNumber: string): string {
   const digits = localNumber.replace(/\D/g, '').replace(/^0+/, '');
-  return `${getPhonePrefix(country)}${digits}`;
+  return `${PHONE_PREFIX}${digits}`;
 }
 
 function formatPhoneDisplay(value: string): string {
@@ -106,7 +97,6 @@ const checkoutSchema = z
     receiverId: z.string().optional(),
     receiverName: z.string().optional(),
     receiverPhone: z.string().optional(),
-    phoneCountry: z.enum(['ID', 'MY']),
     receiverEmail: z.string().optional(),
     receiverAddress: z.string().optional(),
     cityId: z.string().optional(),
@@ -141,7 +131,9 @@ const checkoutSchema = z
         message: 'Nomor telepon tidak valid',
       });
     }
-    if (data.receiverEmail && !z.string().email().safeParse(data.receiverEmail).success) {
+    if (!data.receiverEmail) {
+      ctx.addIssue({ code: 'custom', path: ['receiverEmail'], message: 'Email wajib diisi' });
+    } else if (!z.string().email().safeParse(data.receiverEmail).success) {
       ctx.addIssue({
         code: 'custom',
         path: ['receiverEmail'],
@@ -180,7 +172,7 @@ export default function CheckoutPage() {
     formState: { errors },
   } = useForm<CheckoutFormValues>({
     resolver: zodResolver(checkoutSchema),
-    defaultValues: { mode: 'manual', phoneCountry: 'ID' },
+    defaultValues: { mode: 'manual' },
   });
 
   const mode = watch('mode');
@@ -283,7 +275,7 @@ export default function CheckoutPage() {
           }
         : {
             receiverName: values.receiverName,
-            receiverPhone: normalizePhone(values.receiverPhone ?? '', values.phoneCountry),
+            receiverPhone: normalizePhone(values.receiverPhone ?? ''),
             receiverEmail: values.receiverEmail?.trim() ? values.receiverEmail.trim() : undefined,
             receiverAddress: values.receiverAddress,
             cityId: values.cityId,
@@ -373,7 +365,11 @@ export default function CheckoutPage() {
       ) : null}
       <h1 className="mb-6 text-2xl font-bold text-foreground">Checkout</h1>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="grid gap-8 lg:grid-cols-[1fr_320px]">
+      <form
+        onSubmit={handleSubmit(onSubmit)}
+        noValidate
+        className="grid gap-8 lg:grid-cols-[1fr_320px]"
+      >
         <div className="flex flex-col gap-6">
           <div className="rounded-lg border border-neutral-200 bg-white p-5">
             <div className="mb-4 flex items-center justify-between">
@@ -421,7 +417,9 @@ export default function CheckoutPage() {
             ) : (
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="flex flex-col gap-1">
-                  <label className="text-xs font-medium text-neutral-600">Nama Penerima</label>
+                  <label className="text-xs font-medium text-neutral-600">
+                    Nama Penerima <span className="text-red">*</span>
+                  </label>
                   <input {...register('receiverName')} className={inputBase} />
                   {errors.receiverName ? (
                     <p className="text-xs text-red">{errors.receiverName.message}</p>
@@ -429,20 +427,12 @@ export default function CheckoutPage() {
                 </div>
                 <div className="flex flex-col gap-1">
                   <label className="text-xs font-medium text-neutral-600">
-                    Nomor Telepon <span className="text-red">*</span>
+                    Nomor Telepon / WhatsApp <span className="text-red">*</span>
                   </label>
                   <div className="flex">
-                    <select
-                      {...register('phoneCountry')}
-                      className="rounded-sm rounded-r-none border border-r-0 border-neutral-200 bg-white px-2.5 py-2.5 pr-7 text-sm transition-colors outline-none focus:border-brand"
-                      aria-label="Kode negara"
-                    >
-                      {PHONE_COUNTRIES.map((country) => (
-                        <option key={country.value} value={country.value}>
-                          {country.flag} +{country.prefix}
-                        </option>
-                      ))}
-                    </select>
+                    <span className="flex items-center rounded-sm rounded-r-none border border-r-0 border-neutral-200 bg-neutral-50 px-2.5 py-2.5 text-sm text-neutral-600">
+                      +{PHONE_PREFIX}
+                    </span>
                     <input
                       {...receiverPhoneField}
                       onChange={(event) => {
@@ -460,7 +450,7 @@ export default function CheckoutPage() {
                 </div>
                 <div className="flex flex-col gap-1">
                   <label className="text-xs font-medium text-neutral-600">
-                    Email <span className="text-neutral-400">(opsional)</span>
+                    Email <span className="text-red">*</span>
                   </label>
                   <input
                     type="email"
@@ -486,7 +476,9 @@ export default function CheckoutPage() {
                   ) : null}
                 </div>
                 <div className="flex flex-col gap-1 sm:col-span-2">
-                  <label className="text-xs font-medium text-neutral-600">Alamat Lengkap</label>
+                  <label className="text-xs font-medium text-neutral-600">
+                    Alamat Lengkap <span className="text-red">*</span>
+                  </label>
                   <textarea {...register('receiverAddress')} rows={3} className={inputBase} />
                   {errors.receiverAddress ? (
                     <p className="text-xs text-red">{errors.receiverAddress.message}</p>

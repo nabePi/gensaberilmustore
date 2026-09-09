@@ -9,7 +9,6 @@ const PROFILE_SELECT = {
   name: true,
   email: true,
   phone: true,
-  whatsappNumber: true,
   avatarUrl: true,
   role: true,
   createdAt: true,
