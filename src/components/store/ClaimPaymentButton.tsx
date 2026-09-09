@@ -52,7 +52,12 @@ export function ClaimPaymentButton({
   }
 
   return (
-    <div className="flex w-full max-w-sm flex-col items-center gap-2">
+    <div className="flex w-full max-w-sm flex-col items-center gap-3">
+      <div className="w-full rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-left text-xs text-amber-800">
+        Hanya tekan tombol ini jika Anda <strong>sudah menyelesaikan pembayaran QRIS</strong> sesuai
+        nominal yang tertera. Setelah dikonfirmasi, QRIS tidak akan tampil lagi dan admin kami akan
+        memeriksa pembayaran Anda.
+      </div>
       <button type="button" onClick={handleClaim} disabled={submitting} className={btnSolid}>
         {submitting ? 'Mengirim...' : 'Saya Sudah Transfer'}
       </button>

@@ -64,14 +64,18 @@ export default async function PaymentSuccessPage({
       return (
         <div className="container-prototype flex flex-col items-center gap-4 pt-6 pb-16 text-center">
           <h1 className="text-2xl font-bold text-foreground">Selesaikan Pembayaran</h1>
-          <p className="max-w-md text-sm text-neutral-500">
-            Scan QRIS di bawah ini dan transfer <strong>tepat sejumlah</strong> nominal yang tertera
-            (termasuk 3 digit kode unik) agar pesanan Anda dapat kami verifikasi.
-          </p>
-          <div className="rounded-lg border border-neutral-200 bg-white p-4">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/qris.jpeg" alt="QRIS Berilmu Bookstore" className="w-72 max-w-full" />
-          </div>
+          {order.paymentClaimedAt === null ? (
+            <>
+              <p className="max-w-md text-sm text-neutral-500">
+                Scan QRIS di bawah ini dan transfer <strong>tepat sejumlah</strong> nominal yang
+                tertera (termasuk 3 digit kode unik) agar pesanan Anda dapat kami verifikasi.
+              </p>
+              <div className="rounded-lg border border-neutral-200 bg-white p-4">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/qris.jpeg" alt="QRIS Berilmu Bookstore" className="w-72 max-w-full" />
+              </div>
+            </>
+          ) : null}
           <div className="w-full max-w-sm rounded-lg border border-neutral-200 bg-white px-6 py-4 text-sm">
             <p>
               <strong>No. Pesanan:</strong> {order.orderNumber}
