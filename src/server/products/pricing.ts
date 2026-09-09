@@ -14,6 +14,15 @@ export function computeEffectivePrice(
   return computeFinalPrice(price, discountPercent);
 }
 
+export function resolveActiveDiscount(
+  product: { price: number; discountPercent: number; discountEndDate: Date | null },
+  now: Date = new Date(),
+): { discountPercent: number; finalPrice: number } {
+  const expired = product.discountEndDate != null && product.discountEndDate < now;
+  const discountPercent = expired ? 0 : product.discountPercent;
+  return { discountPercent, finalPrice: computeFinalPrice(product.price, discountPercent) };
+}
+
 export function computeUnitPrice(
   finalPrice: number,
   quantity: number,

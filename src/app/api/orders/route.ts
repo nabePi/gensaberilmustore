@@ -11,7 +11,7 @@ import { createOrderSchema, listMemberOrdersQuerySchema } from '@/server/orders/
 import { orderListInclude, serializeOrderListItem } from '@/server/orders/serialize';
 import { validateVoucherForOrder, VoucherValidationError } from '@/server/orders/voucher';
 import { generateUniqueManualPaymentCode } from '@/server/payment/manual-qris';
-import { computeUnitPrice } from '@/server/products/pricing';
+import { computeUnitPrice, resolveActiveDiscount } from '@/server/products/pricing';
 
 class OrderCreationError extends Error {}
 
@@ -81,11 +81,20 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    const effectiveDiscountByItemId = new Map(
+      cart.items.map((item) => [
+        item.id,
+        item.product.isPreOrderActive
+          ? { discountPercent: item.product.discountPercent, finalPrice: item.product.finalPrice }
+          : resolveActiveDiscount(item.product),
+      ]),
+    );
+
     const unitPriceByItemId = new Map(
       cart.items.map((item) => [
         item.id,
         computeUnitPrice(
-          item.product.finalPrice,
+          effectiveDiscountByItemId.get(item.id)!.finalPrice,
           item.quantity,
           item.product.wholesalePrice,
           item.product.wholesaleMinQty,
@@ -204,7 +213,7 @@ export async function POST(request: NextRequest) {
                 productId: item.productId,
                 titleSnapshot: item.product.title,
                 priceSnapshot: unitPrice,
-                discountPercentSnapshot: item.product.discountPercent,
+                discountPercentSnapshot: effectiveDiscountByItemId.get(item.id)!.discountPercent,
                 quantity: item.quantity,
                 lineTotal: unitPrice * item.quantity,
               };

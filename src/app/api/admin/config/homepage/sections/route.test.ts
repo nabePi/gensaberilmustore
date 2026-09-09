@@ -3,13 +3,13 @@ import { randomUUID } from 'node:crypto';
 import { NextRequest } from 'next/server';
 import { afterAll, describe, expect, it } from 'vitest';
 
-import { GET, PUT } from '@/app/api/admin/config/homepage/sections/route';
+import { GET, POST, PUT } from '@/app/api/admin/config/homepage/sections/route';
 import { prisma } from '@/lib/db';
 import { hashPassword } from '@/server/auth/password';
 import { ADMIN_SESSION_COOKIE_NAME, createSession } from '@/server/auth/session';
 
 const createdEmails: string[] = [];
-const createdProductIds: string[] = [];
+const createdSectionIds: string[] = [];
 
 async function createAdminCookie() {
   const email = `test-${randomUUID()}@example.com`;
@@ -22,29 +22,6 @@ async function createAdminCookie() {
   return `${ADMIN_SESSION_COOKIE_NAME}=${token}`;
 }
 
-async function createProduct() {
-  const product = await prisma.product.create({
-    data: {
-      sku: `SKU-${randomUUID()}`,
-      slug: `slug-${randomUUID()}`,
-      title: `Homepage Product ${randomUUID()}`,
-      subtitle: '',
-      author: 'Author',
-      description: 'Desc',
-      price: 100000,
-      finalPrice: 100000,
-      stock: 5,
-      weightGram: 100,
-      pageCount: 100,
-      coverType: 'SOFTCOVER',
-      publishYear: 2024,
-      isActive: true,
-    },
-  });
-  createdProductIds.push(product.id);
-  return product;
-}
-
 function buildRequest(method: string, body: unknown, cookie: string) {
   return new NextRequest('http://localhost/api/admin/config/homepage/sections', {
     method,
@@ -53,32 +30,42 @@ function buildRequest(method: string, body: unknown, cookie: string) {
   });
 }
 
-function validPayload(productId: string) {
-  return {
-    sections: [
-      {
-        key: 'newest',
-        title: 'Buku Terbaru',
-        subtitle: 'Rilisan terbaru',
-        promoImageUrl: 'https://example.com/img/promo1.jpg',
-        position: 0,
-        productIds: [productId],
-      },
-    ],
-  };
+async function createSection(
+  overrides: Partial<{ key: string; title: string; position: number }> = {},
+) {
+  const section = await prisma.homepageSection.create({
+    data: {
+      key: overrides.key ?? `test-${randomUUID()}`,
+      title: overrides.title ?? 'Buku Terbaru',
+      subtitle: '',
+      promoImageUrl: '',
+      position: overrides.position ?? 0,
+    },
+  });
+  createdSectionIds.push(section.id);
+  return section;
 }
 
-async function cleanupTestSections() {
-  await prisma.homepageSectionProduct.deleteMany({});
-  await prisma.homepageSection.deleteMany({});
+// Other test files (e.g. sections/[id]/route.test.ts) create HomepageSection rows in this
+// same shared table. The PUT route deletes any section not present in the incoming list, so
+// tests must echo back every currently-existing section they don't intend to delete, instead
+// of wiping/replacing the whole table - otherwise concurrently-running test files race and
+// their rows get collaterally deleted.
+async function listAllSectionsAsPayload(excludeId?: string) {
+  const sections = await prisma.homepageSection.findMany({
+    where: excludeId ? { id: { not: excludeId } } : undefined,
+  });
+  return sections.map((s) => ({
+    id: s.id,
+    key: s.key,
+    title: s.title,
+    position: s.position,
+    isEnabled: s.isEnabled,
+  }));
 }
 
 afterAll(async () => {
-  await cleanupTestSections();
-  await prisma.homepageSectionProduct.deleteMany({
-    where: { productId: { in: createdProductIds } },
-  });
-  await prisma.product.deleteMany({ where: { id: { in: createdProductIds } } });
+  await prisma.homepageSection.deleteMany({ where: { id: { in: createdSectionIds } } });
   await prisma.user.deleteMany({ where: { email: { in: createdEmails } } });
 });
 
@@ -90,23 +77,14 @@ describe('GET /api/admin/config/homepage/sections', () => {
 
   it('returns dynamic sections array', async () => {
     const cookie = await createAdminCookie();
-    await cleanupTestSections();
-    await prisma.homepageSection.create({
-      data: {
-        key: 'test-newest',
-        title: 'Buku Terbaru',
-        subtitle: 'Rilisan terbaru',
-        promoImageUrl: '',
-        position: 0,
-      },
-    });
+    const section = await createSection({ key: `test-newest-${randomUUID()}` });
 
     const response = await GET(buildRequest('GET', undefined, cookie));
     const json = await response.json();
 
     expect(response.status).toBe(200);
     expect(Array.isArray(json.sections)).toBe(true);
-    expect(json.sections[0].key).toBe('test-newest');
+    expect(json.sections.some((s: { key: string }) => s.key === section.key)).toBe(true);
   });
 });
 
@@ -116,24 +94,50 @@ describe('PUT /api/admin/config/homepage/sections', () => {
     expect(response.status).toBe(401);
   });
 
-  it('rejects an unknown product id in a section', async () => {
+  it('renames, reorders, and toggles sections without touching product curation', async () => {
     const cookie = await createAdminCookie();
-    const response = await PUT(buildRequest('PUT', validPayload(randomUUID()), cookie));
-    expect(response.status).toBe(400);
-  });
+    const section = await createSection({ key: `newest-${randomUUID()}`, title: 'Buku Terbaru' });
+    const others = await listAllSectionsAsPayload(section.id);
 
-  it('saves the dynamic sections with curated products', async () => {
-    const cookie = await createAdminCookie();
-    const product = await createProduct();
-    await cleanupTestSections();
-
-    const response = await PUT(buildRequest('PUT', validPayload(product.id), cookie));
+    const response = await PUT(
+      buildRequest(
+        'PUT',
+        {
+          sections: [
+            ...others,
+            {
+              id: section.id,
+              key: `newest-renamed-${randomUUID()}`,
+              title: 'Buku Terbaru Renamed',
+              position: 0,
+              isEnabled: false,
+            },
+          ],
+        },
+        cookie,
+      ),
+    );
     const json = await response.json();
 
     expect(response.status).toBe(200);
-    expect(json.sections).toHaveLength(1);
-    expect(json.sections[0].key).toBe('newest');
-    expect(json.sections[0].productIds).toEqual([product.id]);
+    const renamed = json.sections.find((s: { id: string }) => s.id === section.id);
+    expect(renamed?.isEnabled).toBe(false);
+
+    const persisted = await prisma.homepageSection.findUnique({ where: { id: section.id } });
+    expect(persisted?.title).toBe('Buku Terbaru Renamed');
+  });
+
+  it('deletes sections missing from the incoming list', async () => {
+    const cookie = await createAdminCookie();
+    const section = await createSection();
+    const others = await listAllSectionsAsPayload(section.id);
+
+    const response = await PUT(buildRequest('PUT', { sections: others }, cookie));
+    expect(response.status).toBe(200);
+
+    const remaining = await prisma.homepageSection.findUnique({ where: { id: section.id } });
+    expect(remaining).toBeNull();
+    createdSectionIds.splice(createdSectionIds.indexOf(section.id), 1);
   });
 
   it('does not affect homepage banners when saving sections', async () => {
@@ -147,7 +151,8 @@ describe('PUT /api/admin/config/homepage/sections', () => {
     });
 
     try {
-      const response = await PUT(buildRequest('PUT', { sections: [] }, cookie));
+      const others = await listAllSectionsAsPayload();
+      const response = await PUT(buildRequest('PUT', { sections: others }, cookie));
       expect(response.status).toBe(200);
 
       const persisted = await prisma.homepageBanner.findUnique({ where: { id: banner.id } });
@@ -155,5 +160,36 @@ describe('PUT /api/admin/config/homepage/sections', () => {
     } finally {
       await prisma.homepageBanner.deleteMany({ where: { id: banner.id } });
     }
+  });
+});
+
+describe('POST /api/admin/config/homepage/sections', () => {
+  it('rejects unauthenticated requests', async () => {
+    const response = await POST(buildRequest('POST', {}, ''));
+    expect(response.status).toBe(401);
+  });
+
+  it('creates a disabled draft section', async () => {
+    const cookie = await createAdminCookie();
+    const key = `draft-${randomUUID()}`;
+
+    const response = await POST(buildRequest('POST', { title: 'Draft Section', key }, cookie));
+    const json = await response.json();
+
+    expect(response.status).toBe(201);
+    expect(json.id).toBeDefined();
+
+    const persisted = await prisma.homepageSection.findUnique({ where: { id: json.id } });
+    expect(persisted?.isEnabled).toBe(false);
+    expect(persisted?.type).toBe('REGULAR');
+  });
+
+  it('rejects a duplicate key', async () => {
+    const cookie = await createAdminCookie();
+    const key = `dup-${randomUUID()}`;
+    await createSection({ key });
+
+    const response = await POST(buildRequest('POST', { title: 'Dup', key }, cookie));
+    expect(response.status).toBe(400);
   });
 });

@@ -107,7 +107,7 @@ describe('GET /api/cart', () => {
   });
 
   it('flags an item as price_changed when the product price has since changed', async () => {
-    const product = await createProduct({ finalPrice: 90000 });
+    const product = await createProduct({ price: 90000, finalPrice: 90000 });
     const guestToken = await createGuestCartWithItem(product, 100000, 1);
 
     const response = await GET(buildRequest(`${GUEST_CART_COOKIE_NAME}=${guestToken}`));

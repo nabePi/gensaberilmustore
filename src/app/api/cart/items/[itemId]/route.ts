@@ -9,7 +9,7 @@ import {
   serializeCart,
 } from '@/server/cart/cart';
 import { updateCartItemQuantitySchema } from '@/server/cart/schema';
-import { computeUnitPrice } from '@/server/products/pricing';
+import { computeUnitPrice, resolveActiveDiscount } from '@/server/products/pricing';
 
 export async function PATCH(
   request: NextRequest,
@@ -40,7 +40,16 @@ export async function PATCH(
     where: { id: itemId },
     include: {
       product: {
-        select: { stock: true, finalPrice: true, wholesalePrice: true, wholesaleMinQty: true },
+        select: {
+          stock: true,
+          price: true,
+          finalPrice: true,
+          discountPercent: true,
+          discountEndDate: true,
+          isPreOrderActive: true,
+          wholesalePrice: true,
+          wholesaleMinQty: true,
+        },
       },
     },
   });
@@ -60,8 +69,12 @@ export async function PATCH(
     );
   }
 
+  const { finalPrice } = item.product.isPreOrderActive
+    ? { finalPrice: item.product.finalPrice }
+    : resolveActiveDiscount(item.product);
+
   const unitPrice = computeUnitPrice(
-    item.product.finalPrice,
+    finalPrice,
     parsed.data.quantity,
     item.product.wholesalePrice,
     item.product.wholesaleMinQty,

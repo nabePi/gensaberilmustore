@@ -2,6 +2,7 @@ import type { Prisma } from '@prisma/client';
 import { cache } from 'react';
 
 import { prisma } from '@/lib/db';
+import { resolveActiveDiscount } from '@/server/products/pricing';
 
 const RELATED_PRODUCTS_TAKE = 8;
 
@@ -18,6 +19,7 @@ export const getProductDetail = cache(async (slug: string) => {
       price: true,
       finalPrice: true,
       discountPercent: true,
+      discountEndDate: true,
       isPreOrderActive: true,
       wholesalePrice: true,
       wholesaleMinQty: true,
@@ -52,6 +54,7 @@ export const getProductDetail = cache(async (slug: string) => {
     price: true,
     finalPrice: true,
     discountPercent: true,
+    discountEndDate: true,
     isPreOrderActive: true,
     images: {
       orderBy: [{ isPrimary: 'desc' }, { position: 'asc' }],
@@ -87,11 +90,13 @@ export const getProductDetail = cache(async (slug: string) => {
 
   return {
     ...rest,
+    ...(rest.isPreOrderActive ? {} : resolveActiveDiscount(rest)),
     publisher: imprint,
     categories: categories.map(({ category }) => category),
     tags: tags.map(({ tag }) => tag),
     relatedProducts: relatedProducts.map(({ images, ...relatedProduct }) => ({
       ...relatedProduct,
+      ...(relatedProduct.isPreOrderActive ? {} : resolveActiveDiscount(relatedProduct)),
       primaryImageUrl: images[0]?.url ?? null,
     })),
   };

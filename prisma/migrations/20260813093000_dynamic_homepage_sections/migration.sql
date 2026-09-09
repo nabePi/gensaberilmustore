@@ -29,16 +29,6 @@ CREATE TABLE "HomepageSection" (
 CREATE UNIQUE INDEX "HomepageSection_key_key" ON "HomepageSection"("key");
 CREATE INDEX "HomepageSection_position_idx" ON "HomepageSection"("position");
 
--- Insert default homepage sections
-INSERT INTO "HomepageSection" ("id", "key", "title", "subtitle", "promoImageUrl", "position", "updatedAt")
-VALUES
-  (gen_random_uuid()::text, 'newest', 'Buku Terbaru', 'Rilisan terbaru dari GenSa Berilmu', '', 0, CURRENT_TIMESTAMP),
-  (gen_random_uuid()::text, 'bestseller', 'Bestseller', 'Paling banyak dicari pembaca', '', 1, CURRENT_TIMESTAMP),
-  (gen_random_uuid()::text, 'international', 'International Bestseller', 'Karya penulis dunia pilihan', '', 2, CURRENT_TIMESTAMP),
-  (gen_random_uuid()::text, 'kiwari', 'Keislaman Kiwari', 'Wawasan Islam kontemporer', '', 3, CURRENT_TIMESTAMP),
-  (gen_random_uuid()::text, 'klasik', 'Rujukan Islam Klasik', 'Karya ulama klasik terpercaya', '', 4, CURRENT_TIMESTAMP),
-  (gen_random_uuid()::text, 'others', 'Lainnya', 'Koleksi pilihan lainnya', '', 5, CURRENT_TIMESTAMP);
-
 -- Migrate existing rows from enum sectionKey to new sectionId
 UPDATE "HomepageSectionProduct" p
 SET "sectionId" = s."id"

@@ -3,52 +3,23 @@
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 
-import { ProductPicker, type ProductOption } from '@/components/admin/ProductPicker';
-import { SingleImageUpload } from '@/components/admin/SingleImageUpload';
 import { PageHeader } from '@/components/admin/ui/PageHeader';
 import {
+  adminBadgeTone,
   adminBtnOutline,
   adminBtnPrimary,
   adminCardBase,
   adminInputBase,
 } from '@/lib/admin/styles';
 
-type SectionForm = {
-  id?: string;
+type SectionListItem = {
+  id: string;
   key: string;
   title: string;
-  subtitle: string;
-  promoImageUrl: string;
   position: number;
   isEnabled: boolean;
-  backgroundColor: string;
-  titleColor: string;
-  productIds: string[];
+  type: 'REGULAR' | 'PROMO';
 };
-
-function normalizeSections(
-  raw: (SectionForm & { backgroundColor?: string | null; titleColor?: string | null })[],
-): SectionForm[] {
-  return raw.map((section) => ({
-    ...section,
-    backgroundColor: section.backgroundColor ?? '',
-    titleColor: section.titleColor ?? '',
-  }));
-}
-
-function emptySection(position: number): SectionForm {
-  return {
-    key: '',
-    title: '',
-    subtitle: '',
-    promoImageUrl: '',
-    position,
-    isEnabled: true,
-    backgroundColor: '',
-    titleColor: '',
-    productIds: [],
-  };
-}
 
 function normalizeKey(value: string): string {
   return value
@@ -78,8 +49,7 @@ function formatSaveError(data: unknown): string {
 }
 
 export default function AdminKonfigurasiSectionPage() {
-  const [sections, setSections] = useState<SectionForm[]>([]);
-  const [products, setProducts] = useState<ProductOption[]>([]);
+  const [sections, setSections] = useState<SectionListItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
@@ -89,17 +59,10 @@ export default function AdminKonfigurasiSectionPage() {
   useEffect(() => {
     async function load() {
       setLoading(true);
-      const [sectionsRes, productsRes] = await Promise.all([
-        fetch('/api/admin/config/homepage/sections'),
-        fetch('/api/admin/products?limit=60'),
-      ]);
-      if (sectionsRes.ok) {
-        const data = await sectionsRes.json();
-        setSections(normalizeSections(data.sections ?? []));
-      }
-      if (productsRes.ok) {
-        const data: { items: ProductOption[] } = await productsRes.json();
-        setProducts(data.items);
+      const response = await fetch('/api/admin/config/homepage/sections');
+      if (response.ok) {
+        const data = await response.json();
+        setSections(data.sections ?? []);
       }
       setLoading(false);
     }
@@ -115,7 +78,7 @@ export default function AdminKonfigurasiSectionPage() {
     setDirty(true);
   }, [sections, loading]);
 
-  function updateSection(index: number, patch: Partial<SectionForm>) {
+  function updateSection(index: number, patch: Partial<SectionListItem>) {
     setSections((prev) => {
       const next = [...prev];
       const current = next[index];
@@ -139,25 +102,8 @@ export default function AdminKonfigurasiSectionPage() {
     });
   }
 
-  function addSection() {
-    setSections((prev) => [...prev, emptySection(prev.length)]);
-  }
-
   function removeSection(index: number) {
     setSections((prev) => prev.filter((_, i) => i !== index));
-  }
-
-  function toggleSectionProduct(index: number, productId: string) {
-    setSections((prev) => {
-      const next = [...prev];
-      const current = next[index];
-      if (!current) return prev;
-      const productIds = current.productIds.includes(productId)
-        ? current.productIds.filter((id) => id !== productId)
-        : [...current.productIds, productId];
-      next[index] = { ...current, productIds };
-      return next;
-    });
   }
 
   async function handleSave() {
@@ -168,16 +114,13 @@ export default function AdminKonfigurasiSectionPage() {
       method: 'PUT',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({
-        sections: sections.map((section, position) => ({
-          ...section,
-          position,
-        })),
+        sections: sections.map((section, position) => ({ ...section, position })),
       }),
     });
 
     if (response.ok) {
       const data = await response.json();
-      setSections(normalizeSections(data.sections ?? []));
+      setSections(data.sections ?? []);
       setSaveMessage('Section berhasil disimpan!');
       setDirty(false);
     } else {
@@ -196,7 +139,7 @@ export default function AdminKonfigurasiSectionPage() {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="Kelola Section"
-        description="Buat, ubah, dan atur urutan section yang muncul di halaman beranda."
+        description="Atur urutan section dan pilih buku yang tampil di beranda."
         action={
           <Link href="/admin/konfigurasi" className={adminBtnOutline}>
             Kembali ke Konfigurasi
@@ -204,147 +147,81 @@ export default function AdminKonfigurasiSectionPage() {
         }
       />
 
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-3">
         {sections.map((section, index) => (
-          <div
-            key={section.id ?? `new-${index}`}
-            className={`flex flex-col gap-3 p-4 ${adminCardBase}`}
-          >
-            <div className="flex items-start justify-between gap-3">
-              <div className="flex flex-1 flex-col gap-2">
-                <div className="grid gap-2 sm:grid-cols-2">
-                  <div className="flex flex-col gap-1">
-                    <label className="text-xs font-medium text-neutral-600">Judul Section</label>
-                    <input
-                      type="text"
-                      value={section.title}
-                      onChange={(e) => updateSection(index, { title: e.target.value })}
-                      placeholder="Contoh: Buku Terbaru"
-                      className={adminInputBase}
-                    />
-                  </div>
-                  <div className="flex flex-col gap-1">
-                    <label className="text-xs font-medium text-neutral-600">Key (URL)</label>
-                    <input
-                      type="text"
-                      value={section.key}
-                      onChange={(e) => updateSection(index, { key: normalizeKey(e.target.value) })}
-                      placeholder="buku-terbaru"
-                      className={adminInputBase}
-                    />
-                  </div>
-                </div>
-                <div className="flex flex-col gap-1">
-                  <label className="text-xs font-medium text-neutral-600">Subjudul</label>
-                  <input
-                    type="text"
-                    value={section.subtitle}
-                    onChange={(e) => updateSection(index, { subtitle: e.target.value })}
-                    placeholder="Deskripsi singkat section"
-                    className={adminInputBase}
-                  />
-                </div>
-                <SingleImageUpload
-                  label="Gambar Promo Section"
-                  imageUrl={section.promoImageUrl}
-                  onChange={(url) => updateSection(index, { promoImageUrl: url })}
-                  placeholder="Upload gambar promo untuk section ini (opsional)."
-                />
-                <label className="flex items-center gap-2 text-xs font-medium text-neutral-600">
-                  <input
-                    type="checkbox"
-                    checked={section.isEnabled}
-                    onChange={(e) => updateSection(index, { isEnabled: e.target.checked })}
-                  />
-                  Tampilkan section ini di beranda
-                </label>
-                <div className="grid gap-2 sm:grid-cols-2">
-                  <div className="flex flex-col gap-1">
-                    <label className="text-xs font-medium text-neutral-600">
-                      Warna Background (opsional)
-                    </label>
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="color"
-                        value={section.backgroundColor || '#dc2626'}
-                        onChange={(e) => updateSection(index, { backgroundColor: e.target.value })}
-                        className="h-9 w-10 shrink-0 rounded-lg border border-neutral-200 p-0.5"
-                      />
-                      <input
-                        type="text"
-                        value={section.backgroundColor}
-                        onChange={(e) => updateSection(index, { backgroundColor: e.target.value })}
-                        placeholder="Kosongkan untuk tampilan default"
-                        className={adminInputBase}
-                      />
-                    </div>
-                  </div>
-                  <div className="flex flex-col gap-1">
-                    <label className="text-xs font-medium text-neutral-600">
-                      Warna Judul (opsional)
-                    </label>
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="color"
-                        value={section.titleColor || '#ffffff'}
-                        onChange={(e) => updateSection(index, { titleColor: e.target.value })}
-                        className="h-9 w-10 shrink-0 rounded-lg border border-neutral-200 p-0.5"
-                      />
-                      <input
-                        type="text"
-                        value={section.titleColor}
-                        onChange={(e) => updateSection(index, { titleColor: e.target.value })}
-                        placeholder="Kosongkan untuk tampilan default"
-                        className={adminInputBase}
-                      />
-                    </div>
-                  </div>
-                </div>
-                <p className="text-xs text-neutral-400">
-                  Isi warna background untuk menjadikan section ini banner promo berwarna (mis.
-                  Special Promotion). Kosongkan keduanya untuk tampilan section biasa.
-                </p>
-                <ProductPicker
-                  label="Buku di Section Ini"
-                  products={products}
-                  selected={section.productIds}
-                  onToggle={(productId) => toggleSectionProduct(index, productId)}
-                />
-              </div>
-
+          <div key={section.id} className={`flex items-center gap-3 p-4 ${adminCardBase}`}>
+            <div className="grid flex-1 gap-2 sm:grid-cols-2">
               <div className="flex flex-col gap-1">
-                <button
-                  type="button"
-                  onClick={() => moveSection(index, -1)}
-                  disabled={index === 0}
-                  className="rounded-lg px-2 py-1 text-xs text-neutral-600 transition hover:bg-neutral-100 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent"
-                >
-                  ↑
-                </button>
-                <button
-                  type="button"
-                  onClick={() => moveSection(index, 1)}
-                  disabled={index === sections.length - 1}
-                  className="rounded-lg px-2 py-1 text-xs text-neutral-600 transition hover:bg-neutral-100 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent"
-                >
-                  ↓
-                </button>
-                <button
-                  type="button"
-                  onClick={() => removeSection(index)}
-                  className="rounded-lg px-2 py-1 text-xs text-red transition hover:bg-red/10"
-                >
-                  Hapus
-                </button>
+                <label className="text-xs font-medium text-neutral-600">Judul Section</label>
+                <input
+                  type="text"
+                  value={section.title}
+                  onChange={(e) => updateSection(index, { title: e.target.value })}
+                  placeholder="Contoh: Buku Terbaru"
+                  className={adminInputBase}
+                />
               </div>
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-medium text-neutral-600">Key (URL)</label>
+                <input
+                  type="text"
+                  value={section.key}
+                  onChange={(e) => updateSection(index, { key: normalizeKey(e.target.value) })}
+                  placeholder="buku-terbaru"
+                  className={adminInputBase}
+                />
+              </div>
+            </div>
+
+            <span className={adminBadgeTone(section.type === 'PROMO' ? 'warning' : 'neutral')}>
+              {section.type === 'PROMO' ? 'Promo' : 'Reguler'}
+            </span>
+
+            <label className="flex items-center gap-2 text-xs font-medium text-neutral-600">
+              <input
+                type="checkbox"
+                checked={section.isEnabled}
+                onChange={(e) => updateSection(index, { isEnabled: e.target.checked })}
+              />
+              Tampil
+            </label>
+
+            <Link href={`/admin/konfigurasi/section/${section.id}`} className={adminBtnOutline}>
+              Kelola Buku
+            </Link>
+
+            <div className="flex flex-col gap-1">
+              <button
+                type="button"
+                onClick={() => moveSection(index, -1)}
+                disabled={index === 0}
+                className="rounded-lg px-2 py-1 text-xs text-neutral-600 transition hover:bg-neutral-100 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent"
+              >
+                ↑
+              </button>
+              <button
+                type="button"
+                onClick={() => moveSection(index, 1)}
+                disabled={index === sections.length - 1}
+                className="rounded-lg px-2 py-1 text-xs text-neutral-600 transition hover:bg-neutral-100 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent"
+              >
+                ↓
+              </button>
+              <button
+                type="button"
+                onClick={() => removeSection(index)}
+                className="rounded-lg px-2 py-1 text-xs text-red transition hover:bg-red/10"
+              >
+                Hapus
+              </button>
             </div>
           </div>
         ))}
       </div>
 
-      <button type="button" onClick={addSection} className={adminBtnOutline}>
+      <Link href="/admin/konfigurasi/section/baru" className={adminBtnOutline}>
         + Tambah Section
-      </button>
+      </Link>
 
       {saveMessage ? (
         <p className={`text-sm ${saveMessage.includes('berhasil') ? 'text-green' : 'text-red'}`}>

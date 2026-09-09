@@ -217,6 +217,7 @@ model Product {
   wholesalePrice   Int?
   wholesaleMinQty  Int?
   discountPercent  Int         @default(0)
+  discountEndDate  DateTime?
   finalPrice       Int
   stock            Int         @default(0)
   weightGram       Int
@@ -572,18 +573,24 @@ model HomepageConfig {
   updatedAt DateTime @updatedAt
 }
 
+enum HomepageSectionType {
+  REGULAR
+  PROMO
+}
+
 model HomepageSection {
-  id              String   @id @default(uuid())
-  key             String   @unique
+  id              String              @id @default(uuid())
+  key             String              @unique
   title           String
   subtitle        String
   promoImageUrl   String
-  position        Int      @default(0)
-  isEnabled       Boolean  @default(true)
+  position        Int                 @default(0)
+  isEnabled       Boolean             @default(true)
   backgroundColor String?
   titleColor      String?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  type            HomepageSectionType @default(REGULAR)
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
 
   products HomepageSectionProduct[]
 
@@ -599,6 +606,7 @@ model HomepageSectionProduct {
   section HomepageSection @relation(fields: [sectionId], references: [id], onDelete: Cascade)
   product Product         @relation(fields: [productId], references: [id], onDelete: Cascade)
 
+  @@unique([sectionId, productId])
   @@index([sectionId, position])
   @@index([productId])
 }

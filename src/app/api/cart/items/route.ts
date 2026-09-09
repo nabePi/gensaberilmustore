@@ -9,7 +9,7 @@ import {
   serializeCart,
 } from '@/server/cart/cart';
 import { addCartItemSchema } from '@/server/cart/schema';
-import { computeUnitPrice } from '@/server/products/pricing';
+import { computeUnitPrice, resolveActiveDiscount } from '@/server/products/pricing';
 
 export async function POST(request: NextRequest) {
   const body: unknown = await request.json().catch(() => null);
@@ -29,7 +29,11 @@ export async function POST(request: NextRequest) {
     select: {
       isActive: true,
       stock: true,
+      price: true,
       finalPrice: true,
+      discountPercent: true,
+      discountEndDate: true,
+      isPreOrderActive: true,
       wholesalePrice: true,
       wholesaleMinQty: true,
     },
@@ -61,8 +65,12 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  const { finalPrice } = product.isPreOrderActive
+    ? { finalPrice: product.finalPrice }
+    : resolveActiveDiscount(product);
+
   const unitPrice = computeUnitPrice(
-    product.finalPrice,
+    finalPrice,
     newQuantity,
     product.wholesalePrice,
     product.wholesaleMinQty,

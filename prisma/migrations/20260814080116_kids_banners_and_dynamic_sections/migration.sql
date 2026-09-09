@@ -62,21 +62,6 @@ ALTER TABLE "KidsSectionItem" ADD CONSTRAINT "KidsSectionItem_sectionId_fkey" FO
 -- AddForeignKey
 ALTER TABLE "KidsSectionItem" ADD CONSTRAINT "KidsSectionItem_productId_fkey" FOREIGN KEY ("productId") REFERENCES "Product"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
--- Migrate existing enum-based sections into dynamic sections
-INSERT INTO "KidsSection" ("id", "title", "subtitle", "badge", "theme", "showDiscountTag", "position", "updatedAt")
-SELECT * FROM (
-  SELECT gen_random_uuid()::text, 'Buku Populer Anak', 'Koleksi cerita dan edukasi yang bikin si kecil semangat belajar', 'Paling Disukai', 'MINT'::"KidsSectionTheme", false, 0, CURRENT_TIMESTAMP
-  UNION ALL
-  SELECT gen_random_uuid()::text, 'Buku Diskon', 'Dapatkan buku favorit si kecil dengan harga spesial, stok terbatas!', 'Murah Meriah', 'CORAL'::"KidsSectionTheme", true, 1, CURRENT_TIMESTAMP
-) AS defaults
-WHERE NOT EXISTS (SELECT 1 FROM "KidsSection");
-
--- Copy existing section product assignments
-INSERT INTO "KidsSectionItem" ("id", "sectionId", "productId", "position")
-SELECT gen_random_uuid()::text, s."id", ksp."productId", ksp."position"
-FROM "KidsSectionProduct" ksp
-JOIN "KidsSection" s ON s."position" = CASE ksp."sectionKey" WHEN 'POPULAR' THEN 0 WHEN 'DISCOUNT' THEN 1 END;
-
 -- DropForeignKey
 ALTER TABLE "KidsSectionProduct" DROP CONSTRAINT "KidsSectionProduct_productId_fkey";
 

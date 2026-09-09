@@ -2,6 +2,7 @@ import type { Prisma } from '@prisma/client';
 import type { z } from 'zod';
 
 import { prisma } from '@/lib/db';
+import { resolveActiveDiscount } from '@/server/products/pricing';
 import type { listProductsQuerySchema } from '@/server/products/schema';
 import { buildTsQuery } from '@/server/products/text-search';
 
@@ -20,6 +21,8 @@ export async function listProducts(filters: ListProductsFilters) {
     where.tags = { some: { tag: { slug: tag } } };
   }
 
+  // minPrice/maxPrice/sort=price_* operate on the stored finalPrice column, not the
+  // discountEndDate-adjusted price computed below — acceptable given no cron to keep it in sync.
   if (minPrice !== undefined || maxPrice !== undefined) {
     where.finalPrice = {
       ...(minPrice !== undefined ? { gte: minPrice } : {}),
@@ -68,6 +71,7 @@ export async function listProducts(filters: ListProductsFilters) {
         author: true,
         price: true,
         discountPercent: true,
+        discountEndDate: true,
         finalPrice: true,
         isPreOrderActive: true,
         stock: true,
@@ -87,6 +91,7 @@ export async function listProducts(filters: ListProductsFilters) {
   return {
     items: items.map(({ images, categories, ...product }) => ({
       ...product,
+      ...(product.isPreOrderActive ? {} : resolveActiveDiscount(product)),
       primaryImageUrl: images[0]?.url ?? null,
       categories: categories.map(({ category: c }) => c.name),
     })),

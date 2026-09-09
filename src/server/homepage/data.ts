@@ -2,6 +2,7 @@ import type { Prisma } from '@prisma/client';
 
 import type { ProductCardData } from '@/components/product/ProductCard';
 import { prisma } from '@/lib/db';
+import { resolveActiveDiscount } from '@/server/products/pricing';
 
 const FALLBACK_SECTION_TAKE = 8;
 
@@ -35,6 +36,7 @@ const cardSelect = {
   price: true,
   finalPrice: true,
   discountPercent: true,
+  discountEndDate: true,
   isPreOrderActive: true,
   stock: true,
   isActive: true,
@@ -50,14 +52,18 @@ const cardSelect = {
 type CardRow = Prisma.ProductGetPayload<{ select: typeof cardSelect }>;
 
 function toCardData(product: CardRow): ProductCardData {
+  const { discountPercent, finalPrice } = product.isPreOrderActive
+    ? product
+    : resolveActiveDiscount(product);
+
   return {
     id: product.id,
     slug: product.slug,
     title: product.title,
     author: product.author,
     price: product.price,
-    finalPrice: product.finalPrice,
-    discountPercent: product.discountPercent,
+    finalPrice,
+    discountPercent,
     isPreOrderActive: product.isPreOrderActive,
     stock: product.stock,
     ribbonType: product.ribbonType as ProductCardData['ribbonType'],
@@ -100,13 +106,14 @@ async function getSectionProducts(sectionId: string): Promise<ProductCardData[]>
     select: { product: { select: cardSelect } },
   });
 
-  const active = rows.map((row) => row.product).filter((product) => product.isActive);
-
-  if (active.length > 0) {
-    return active.map(toCardData);
+  if (rows.length === 0) {
+    return getFallbackProducts();
   }
 
-  return getFallbackProducts();
+  return rows
+    .map((row) => row.product)
+    .filter((product) => product.isActive)
+    .map(toCardData);
 }
 
 export async function getHomepageData() {

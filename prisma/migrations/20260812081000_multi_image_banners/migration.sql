@@ -17,22 +17,6 @@ CREATE TABLE "HomepageBanner" (
 -- CreateIndex
 CREATE INDEX "HomepageBanner_slot_position_idx" ON "HomepageBanner"("slot", "position");
 
--- Migrate existing banner URLs to new HomepageBanner table
-INSERT INTO "HomepageBanner" ("id", "slot", "imageUrl", "linkUrl", "position", "createdAt", "updatedAt")
-SELECT gen_random_uuid()::text, 'HERO_MAIN', "heroMainImageUrl", NULL, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
-FROM "HomepageConfig"
-WHERE "heroMainImageUrl" IS NOT NULL AND "heroMainImageUrl" != '';
-
-INSERT INTO "HomepageBanner" ("id", "slot", "imageUrl", "linkUrl", "position", "createdAt", "updatedAt")
-SELECT gen_random_uuid()::text, 'HERO_SIDE_1', "heroSideImage1Url", NULL, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
-FROM "HomepageConfig"
-WHERE "heroSideImage1Url" IS NOT NULL AND "heroSideImage1Url" != '';
-
-INSERT INTO "HomepageBanner" ("id", "slot", "imageUrl", "linkUrl", "position", "createdAt", "updatedAt")
-SELECT gen_random_uuid()::text, 'HERO_SIDE_2', "heroSideImage2Url", NULL, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
-FROM "HomepageConfig"
-WHERE "heroSideImage2Url" IS NOT NULL AND "heroSideImage2Url" != '';
-
 -- AlterTable
 ALTER TABLE "HomepageConfig" DROP COLUMN "heroMainImageUrl",
 DROP COLUMN "heroSideImage1Url",

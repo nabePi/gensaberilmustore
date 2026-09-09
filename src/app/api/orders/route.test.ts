@@ -143,7 +143,7 @@ describe('POST /api/orders', () => {
 
   it('creates a guest order, decrements stock, and clears the cart', async () => {
     const city = await createCity();
-    const product = await createProduct({ stock: 5, finalPrice: 50000 });
+    const product = await createProduct({ stock: 5, discountPercent: 50, finalPrice: 50000 });
     const guestToken = await createGuestCartWithItem(product.id, 2);
 
     const { response, json } = await post(

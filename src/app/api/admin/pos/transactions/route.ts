@@ -7,7 +7,7 @@ import { generateUniqueOrderNumber } from '@/server/orders/order-number';
 import { orderListInclude, serializeAdminOrderListItem } from '@/server/orders/serialize';
 import { validateVoucherForOrder, VoucherValidationError } from '@/server/orders/voucher';
 import { createPosTransactionSchema, listPosTransactionsQuerySchema } from '@/server/pos/schema';
-import { computeUnitPrice } from '@/server/products/pricing';
+import { computeUnitPrice, resolveActiveDiscount } from '@/server/products/pricing';
 
 class PosTransactionError extends Error {}
 
@@ -30,6 +30,14 @@ export const POST = withAuth(
         where: { id: { in: data.items.map((item) => item.productId) } },
       });
       const productById = new Map(products.map((product) => [product.id, product]));
+      const effectiveDiscountByProductId = new Map(
+        products.map((product) => [
+          product.id,
+          product.isPreOrderActive
+            ? { discountPercent: product.discountPercent, finalPrice: product.finalPrice }
+            : resolveActiveDiscount(product),
+        ]),
+      );
 
       for (const item of data.items) {
         const product = productById.get(item.productId);
@@ -44,7 +52,7 @@ export const POST = withAuth(
       const subtotal = data.items.reduce((sum, item) => {
         const product = productById.get(item.productId)!;
         const unitPrice = computeUnitPrice(
-          product.finalPrice,
+          effectiveDiscountByProductId.get(item.productId)!.finalPrice,
           item.quantity,
           product.wholesalePrice,
           product.wholesaleMinQty,
@@ -151,8 +159,9 @@ export const POST = withAuth(
             items: {
               create: data.items.map((item) => {
                 const product = productById.get(item.productId)!;
+                const effectiveDiscount = effectiveDiscountByProductId.get(item.productId)!;
                 const unitPrice = computeUnitPrice(
-                  product.finalPrice,
+                  effectiveDiscount.finalPrice,
                   item.quantity,
                   product.wholesalePrice,
                   product.wholesaleMinQty,
@@ -161,7 +170,7 @@ export const POST = withAuth(
                   productId: product.id,
                   titleSnapshot: product.title,
                   priceSnapshot: unitPrice,
-                  discountPercentSnapshot: product.discountPercent,
+                  discountPercentSnapshot: effectiveDiscount.discountPercent,
                   quantity: item.quantity,
                   lineTotal: unitPrice * item.quantity,
                 };

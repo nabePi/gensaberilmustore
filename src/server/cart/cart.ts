@@ -6,7 +6,7 @@ import type { NextRequest } from 'next/server';
 import { env } from '@/env';
 import { prisma } from '@/lib/db';
 import { getSession } from '@/server/auth';
-import { computeUnitPrice } from '@/server/products/pricing';
+import { computeUnitPrice, resolveActiveDiscount } from '@/server/products/pricing';
 
 export const GUEST_CART_COOKIE_NAME = 'gsb_cart_guest';
 const GUEST_CART_COOKIE_MAX_AGE_SECONDS = 30 * 24 * 60 * 60;
@@ -22,8 +22,11 @@ const cartInclude = {
           title: true,
           isActive: true,
           stock: true,
+          price: true,
           finalPrice: true,
           discountPercent: true,
+          discountEndDate: true,
+          isPreOrderActive: true,
           wholesalePrice: true,
           wholesaleMinQty: true,
           images: {
@@ -38,6 +41,16 @@ const cartInclude = {
 } satisfies Prisma.CartInclude;
 
 type CartWithItems = Prisma.CartGetPayload<{ include: typeof cartInclude }>;
+
+function resolveFinalPrice(product: {
+  price: number;
+  finalPrice: number;
+  discountPercent: number;
+  discountEndDate: Date | null;
+  isPreOrderActive: boolean;
+}): number {
+  return product.isPreOrderActive ? product.finalPrice : resolveActiveDiscount(product).finalPrice;
+}
 
 export type ResolvedCart = {
   cart: CartWithItems;
@@ -123,7 +136,7 @@ export async function mergeGuestCartIntoUserCart(
       }
 
       const unitPrice = computeUnitPrice(
-        guestItem.product.finalPrice,
+        resolveFinalPrice(guestItem.product),
         cappedQuantity,
         guestItem.product.wholesalePrice,
         guestItem.product.wholesaleMinQty,
@@ -153,8 +166,9 @@ export async function mergeGuestCartIntoUserCart(
 export function serializeCart(cart: CartWithItems) {
   const items = cart.items.map((item) => {
     const { product } = item;
+    const finalPrice = resolveFinalPrice(product);
     const expectedUnitPrice = computeUnitPrice(
-      product.finalPrice,
+      finalPrice,
       item.quantity,
       product.wholesalePrice,
       product.wholesaleMinQty,
@@ -177,7 +191,7 @@ export function serializeCart(cart: CartWithItems) {
       title: product.title,
       imageUrl: product.images[0]?.url ?? null,
       priceSnapshot: item.priceSnapshot,
-      normalPrice: product.finalPrice,
+      normalPrice: finalPrice,
       isWholesale,
       wholesaleMinQty: product.wholesaleMinQty,
       quantity: item.quantity,
