@@ -40,6 +40,22 @@ const SNAP_SCRIPT_URL =
     ? 'https://app.midtrans.com/snap/snap.js'
     : 'https://app.sandbox.midtrans.com/snap/snap.js';
 
+const PHONE_PREFIX = '62';
+
+function normalizePhone(localNumber: string): string {
+  const digits = localNumber.replace(/\D/g, '').replace(/^0+/, '');
+  return `${PHONE_PREFIX}${digits}`;
+}
+
+function formatPhoneDisplay(value: string): string {
+  const digits = value.replace(/\D/g, '').slice(0, 13);
+  return [digits.slice(0, 3), digits.slice(3, 7), digits.slice(7)].filter(Boolean).join(' - ');
+}
+
+function isValidEmail(value: string): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+}
+
 function QuantityInput({
   quantity,
   stock,
@@ -387,9 +403,17 @@ export default function AdminPosPage() {
 
   async function handleCheckout() {
     if (cart.length === 0) return;
+    if (!customerName.trim()) {
+      setCheckoutError('Nama pelanggan wajib diisi');
+      return;
+    }
     const phoneDigits = customerPhone.trim().replace(/\D/g, '').replace(/^0+/, '');
     if (phoneDigits.length < 8 || phoneDigits.length > 13) {
       setCheckoutError('Nomor telepon/WhatsApp pelanggan wajib diisi dengan benar');
+      return;
+    }
+    if (!isValidEmail(customerEmail.trim())) {
+      setCheckoutError('Email pelanggan wajib diisi dengan format yang benar');
       return;
     }
     setCheckingOut(true);
@@ -401,9 +425,9 @@ export default function AdminPosPage() {
       body: JSON.stringify({
         items: cart.map((line) => ({ productId: line.productId, quantity: line.quantity })),
         paymentMethod,
-        customerName: customerName.trim() || undefined,
-        customerPhone: customerPhone.trim() || undefined,
-        customerEmail: customerEmail.trim() || undefined,
+        customerName: customerName.trim(),
+        customerPhone: normalizePhone(customerPhone),
+        customerEmail: customerEmail.trim(),
         note: note.trim() || undefined,
       }),
     });
@@ -664,7 +688,7 @@ export default function AdminPosPage() {
 
           <div className="flex flex-col gap-1">
             <label htmlFor="posCustomerName" className="text-xs font-medium text-neutral-600">
-              Nama Pelanggan (opsional)
+              Nama Pelanggan <span className="text-red">*</span>
             </label>
             <input
               id="posCustomerName"
@@ -680,19 +704,25 @@ export default function AdminPosPage() {
             <label htmlFor="posCustomerPhone" className="text-xs font-medium text-neutral-600">
               Telepon / WhatsApp <span className="text-red">*</span>
             </label>
-            <input
-              id="posCustomerPhone"
-              type="text"
-              placeholder="08xxxxxxxxxx"
-              value={customerPhone}
-              onChange={(e) => setCustomerPhone(e.target.value)}
-              className={adminInputBase}
-            />
+            <div className="flex">
+              <span className="flex h-11 items-center rounded-lg rounded-r-none border border-r-0 border-neutral-300 bg-neutral-50 px-3 text-sm text-neutral-600">
+                +{PHONE_PREFIX}
+              </span>
+              <input
+                id="posCustomerPhone"
+                type="text"
+                inputMode="numeric"
+                placeholder="812 - 3456 - 7890"
+                value={customerPhone}
+                onChange={(e) => setCustomerPhone(formatPhoneDisplay(e.target.value))}
+                className={`${adminInputBase} rounded-l-none`}
+              />
+            </div>
           </div>
 
           <div className="flex flex-col gap-1">
             <label htmlFor="posCustomerEmail" className="text-xs font-medium text-neutral-600">
-              Email Pelanggan (opsional)
+              Email Pelanggan <span className="text-red">*</span>
             </label>
             <input
               id="posCustomerEmail"

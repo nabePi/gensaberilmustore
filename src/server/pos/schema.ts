@@ -12,7 +12,7 @@ export const createPosTransactionSchema = z.object({
   paymentMethod: z.enum(['POS_CASH', 'POS_GATEWAY', 'POS_QRIS'], {
     required_error: 'Metode pembayaran wajib diisi',
   }),
-  customerName: z.string().trim().min(1).optional(),
+  customerName: z.string().trim().min(1, 'Nama pelanggan wajib diisi'),
   customerPhone: z
     .string()
     .trim()
@@ -21,7 +21,7 @@ export const createPosTransactionSchema = z.object({
       const digits = value.replace(/\D/g, '').replace(/^0+/, '');
       return digits.length >= 8 && digits.length <= 13;
     }, 'Nomor telepon tidak valid'),
-  customerEmail: z.string().trim().email('Email tidak valid').optional(),
+  customerEmail: z.string().trim().min(1, 'Email pelanggan wajib diisi').email('Email tidak valid'),
   note: z.string().trim().min(1).optional(),
   voucherCode: z
     .string()

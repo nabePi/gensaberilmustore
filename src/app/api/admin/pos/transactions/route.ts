@@ -137,9 +137,9 @@ export const POST = withAuth(
         const createdOrder = await tx.order.create({
           data: {
             orderNumber,
-            receiverName: data.customerName ?? 'Walk-in Customer',
+            receiverName: data.customerName,
             receiverPhone: data.customerPhone,
-            receiverEmail: data.customerEmail ?? null,
+            receiverEmail: data.customerEmail,
             receiverAddress: '-',
             receiverCity: '-',
             receiverNote: data.note ?? null,
