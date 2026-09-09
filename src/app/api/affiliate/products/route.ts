@@ -20,6 +20,12 @@ export const GET = withAuth(async (request: NextRequest, { user }) => {
   if (!profile) {
     return NextResponse.json({ error: 'Anda belum menjadi afiliasi' }, { status: 404 });
   }
+  if (profile.status !== 'APPROVED') {
+    return NextResponse.json(
+      { error: 'Pendaftaran afiliasi Anda masih menunggu persetujuan admin' },
+      { status: 403 },
+    );
+  }
 
   const q = request.nextUrl.searchParams.get('q')?.trim();
 
@@ -70,6 +76,12 @@ export const PUT = withAuth(async (request: NextRequest, { user }) => {
   const profile = await requireAffiliateProfile(user.id);
   if (!profile) {
     return NextResponse.json({ error: 'Anda belum menjadi afiliasi' }, { status: 404 });
+  }
+  if (profile.status !== 'APPROVED') {
+    return NextResponse.json(
+      { error: 'Pendaftaran afiliasi Anda masih menunggu persetujuan admin' },
+      { status: 403 },
+    );
   }
 
   const body: unknown = await request.json().catch(() => null);

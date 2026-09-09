@@ -24,7 +24,7 @@ async function createSessionCookie(userId: string) {
   return `session=${token}`;
 }
 
-async function createAffiliateProfile(userId: string) {
+async function createAffiliateProfile(userId: string, status: 'PENDING' | 'APPROVED' = 'APPROVED') {
   const profile = await prisma.affiliateProfile.create({
     data: {
       userId,
@@ -32,6 +32,7 @@ async function createAffiliateProfile(userId: string) {
       payoutBankName: 'Bank',
       payoutBankAccount: '123',
       payoutBankHolder: 'Holder',
+      status,
     },
   });
   createdAffiliateProfileIds.push(profile.id);
@@ -98,6 +99,15 @@ describe('GET /api/affiliate/products', () => {
     expect(response.status).toBe(404);
   });
 
+  it('returns 403 when the affiliate profile is still pending approval', async () => {
+    const user = await createTestUser();
+    const cookie = await createSessionCookie(user.id);
+    await createAffiliateProfile(user.id, 'PENDING');
+
+    const response = await GET(buildGetRequest(cookie));
+    expect(response.status).toBe(403);
+  });
+
   it('marks products already selected by the affiliate as isSelected', async () => {
     const user = await createTestUser();
     const cookie = await createSessionCookie(user.id);
@@ -124,6 +134,15 @@ describe('PUT/POST /api/affiliate/products', () => {
 
     const response = await PUT(buildWriteRequest({ productIds: [] }, cookie));
     expect(response.status).toBe(404);
+  });
+
+  it('returns 403 when the affiliate profile is still pending approval', async () => {
+    const user = await createTestUser();
+    const cookie = await createSessionCookie(user.id);
+    await createAffiliateProfile(user.id, 'PENDING');
+
+    const response = await PUT(buildWriteRequest({ productIds: [] }, cookie));
+    expect(response.status).toBe(403);
   });
 
   it('rejects an invalid payload', async () => {

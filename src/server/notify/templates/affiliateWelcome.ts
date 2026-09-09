@@ -8,7 +8,7 @@ export function affiliateWelcomeEmail(payload: AffiliateWelcomePayload): {
   html: string;
 } {
   return {
-    subject: 'Selamat! Anda Terdaftar Sebagai Afiliasi',
-    html: `<p>Halo ${payload.name},</p><p>Anda berhasil terdaftar sebagai afiliasi Gensa Berilmu Store dengan kode referral <strong>${payload.code}</strong>.</p><p>Silakan pilih produk yang ingin Anda promosikan di halaman afiliasi member.</p>`,
+    subject: 'Pendaftaran Afiliasi Anda Sedang Ditinjau',
+    html: `<p>Halo ${payload.name},</p><p>Terima kasih telah mendaftar sebagai afiliasi Gensa Berilmu Store dengan kode referral <strong>${payload.code}</strong>.</p><p>Pendaftaran Anda sedang kami tinjau dan akan disetujui maksimal 3x24 jam. Kami akan memberi kabar begitu akun afiliasi Anda aktif.</p>`,
   };
 }

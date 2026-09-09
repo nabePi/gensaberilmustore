@@ -19,7 +19,7 @@ type ProductPerformance = {
 };
 
 type AffiliateStats = {
-  profile: { code: string; isActive: boolean };
+  profile: { code: string; isActive: boolean; status: 'PENDING' | 'APPROVED' };
   totalClicks: number;
   totalConversions: number;
   commissionPending: number;
@@ -109,6 +109,19 @@ function OnboardingCard({ onJoined }: { onJoined: () => void }) {
   );
 }
 
+function PendingApprovalCard() {
+  return (
+    <div className={`p-6 ${cardBase}`}>
+      <h1 className="text-xl font-bold text-foreground">Pendaftaran Sedang Diproses</h1>
+      <p className="mt-2 max-w-md text-sm text-neutral-500">
+        Terima kasih sudah mendaftar sebagai afiliasi. Tim kami akan meninjau dan menyetujui
+        pendaftaran Anda maksimal 3x24 jam. Anda akan bisa memilih produk dan membagikan link
+        afiliasi setelah pendaftaran disetujui.
+      </p>
+    </div>
+  );
+}
+
 function formatCommissionRate(rate: ProductPerformance['commissionRate']): string {
   if (!rate || !rate.isActive) return '-';
   if (rate.fixedAmount !== null) return `${formatCurrency(rate.fixedAmount)}/item`;
@@ -183,6 +196,10 @@ export default function MemberAfiliasiPage() {
 
   if (!isAffiliate || !stats) {
     return <OnboardingCard onJoined={handleJoined} />;
+  }
+
+  if (stats.profile.status === 'PENDING') {
+    return <PendingApprovalCard />;
   }
 
   const origin = typeof window !== 'undefined' ? window.location.origin : '';

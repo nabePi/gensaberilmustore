@@ -84,6 +84,7 @@ describe('POST /api/affiliate/join', () => {
 
     expect(response.status).toBe(201);
     expect(json.code).toBeTruthy();
+    expect(json.status).toBe('PENDING');
     createdAffiliateProfileIds.push(json.id);
 
     const updatedUser = await prisma.user.findUnique({ where: { id: user.id } });

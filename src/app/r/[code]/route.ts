@@ -20,7 +20,7 @@ export async function GET(request: NextRequest, { params }: RouteContext) {
 
   const profile = await prisma.affiliateProfile.findUnique({ where: { code } });
 
-  if (!profile || !profile.isActive) {
+  if (!profile || !profile.isActive || profile.status !== 'APPROVED') {
     return NextResponse.redirect(redirectUrl);
   }
 

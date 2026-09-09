@@ -11,7 +11,10 @@ const createdEmails: string[] = [];
 const createdProductIds: string[] = [];
 const createdAffiliateProfileIds: string[] = [];
 
-async function createAffiliateProfile(isActive = true) {
+async function createAffiliateProfile(
+  isActive = true,
+  status: 'PENDING' | 'APPROVED' = 'APPROVED',
+) {
   const email = `test-${randomUUID()}@example.com`;
   createdEmails.push(email);
   const passwordHash = await hashPassword('Password123');
@@ -26,6 +29,7 @@ async function createAffiliateProfile(isActive = true) {
       payoutBankAccount: '123',
       payoutBankHolder: 'Holder',
       isActive,
+      status,
     },
   });
   createdAffiliateProfileIds.push(profile.id);
@@ -86,6 +90,19 @@ describe('GET /r/[code]', () => {
 
   it('redirects to home without tracking when the affiliate is inactive', async () => {
     const profile = await createAffiliateProfile(false);
+
+    const response = await GET(
+      buildRequest(`http://localhost/r/${profile.code}`),
+      context(profile.code),
+    );
+
+    expect(response.status).toBe(307);
+    expect(response.headers.get('location')).toBe('http://localhost/');
+    expect(response.cookies.get('gsb_aff')).toBeUndefined();
+  });
+
+  it('redirects to home without tracking when the affiliate is pending approval', async () => {
+    const profile = await createAffiliateProfile(true, 'PENDING');
 
     const response = await GET(
       buildRequest(`http://localhost/r/${profile.code}`),

@@ -63,6 +63,11 @@ enum AffiliateConversionStatus {
   REJECTED
 }
 
+enum AffiliateApprovalStatus {
+  PENDING
+  APPROVED
+}
+
 enum AffiliatePayoutStatus {
   PENDING
   PAID
@@ -470,6 +475,7 @@ model AffiliateProfile {
   payoutBankAccount String
   payoutBankHolder  String
   isActive          Boolean  @default(true)
+  status            AffiliateApprovalStatus @default(PENDING)
   joinedAt          DateTime @default(now())
 
   user              User                        @relation(fields: [userId], references: [id], onDelete: Cascade)

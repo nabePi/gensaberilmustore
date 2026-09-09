@@ -67,7 +67,7 @@ export const GET = withAuth(async (_request, { user }) => {
   );
 
   return NextResponse.json({
-    profile: { code: profile.code, isActive: profile.isActive },
+    profile: { code: profile.code, isActive: profile.isActive, status: profile.status },
     totalClicks,
     totalConversions: conversions.length,
     commissionPending,
