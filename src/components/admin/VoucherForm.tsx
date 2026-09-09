@@ -25,6 +25,7 @@ export type AdminVoucherDetail = {
   maxDiscount: number | null;
   minPurchase: number;
   channel: 'ALL' | 'ONLINE' | 'POS';
+  visibility: 'PUBLIC' | 'PRIVATE';
   quota: number | null;
   perUserLimit: number | null;
   startsAt: string | null;
@@ -40,6 +41,7 @@ const voucherFormSchema = z.object({
   maxDiscount: z.string().optional(),
   minPurchase: z.coerce.number().int().min(0, 'Minimal 0'),
   channel: z.enum(['ALL', 'ONLINE', 'POS']),
+  visibility: z.enum(['PUBLIC', 'PRIVATE']),
   quota: z.string().optional(),
   perUserLimit: z.string().optional(),
   startsAt: z.string().optional(),
@@ -88,6 +90,7 @@ export function VoucherForm({
           maxDiscount: voucher.maxDiscount != null ? String(voucher.maxDiscount) : '',
           minPurchase: voucher.minPurchase,
           channel: voucher.channel,
+          visibility: voucher.visibility,
           quota: voucher.quota != null ? String(voucher.quota) : '',
           perUserLimit: voucher.perUserLimit != null ? String(voucher.perUserLimit) : '',
           startsAt: toDatetimeLocal(voucher.startsAt),
@@ -98,6 +101,7 @@ export function VoucherForm({
           type: 'PERCENT',
           minPurchase: 0,
           channel: 'ALL',
+          visibility: 'PRIVATE',
           isActive: true,
         },
   });
@@ -116,6 +120,7 @@ export function VoucherForm({
       maxDiscount: values.type === 'PERCENT' ? toNullableInt(values.maxDiscount) : null,
       minPurchase: values.minPurchase,
       channel: values.channel,
+      visibility: values.visibility,
       quota: toNullableInt(values.quota),
       perUserLimit: toNullableInt(values.perUserLimit),
       startsAt: values.startsAt ? new Date(values.startsAt).toISOString() : null,
@@ -155,6 +160,12 @@ export function VoucherForm({
               <option value="ALL">Semua Kanal</option>
               <option value="ONLINE">Online</option>
               <option value="POS">POS</option>
+            </select>
+          </Field>
+          <Field label="Visibilitas" error={errors.visibility?.message}>
+            <select {...register('visibility')} className={adminInputBase}>
+              <option value="PRIVATE">Privat (hanya via kode)</option>
+              <option value="PUBLIC">Publik (tampil di checkout)</option>
             </select>
           </Field>
           <Field label="Tipe" error={errors.type?.message}>

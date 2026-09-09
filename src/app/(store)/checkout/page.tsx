@@ -79,6 +79,18 @@ type VoucherResult =
   | { valid: true; voucherId: string; code: string; discountAmount: number }
   | { valid: false; reason: string };
 
+type PublicVoucher = {
+  id: string;
+  code: string;
+  description: string | null;
+  type: 'PERCENT' | 'FIXED';
+  value: number;
+  maxDiscount: number | null;
+  minPurchase: number;
+  eligible: boolean;
+  discountAmount: number;
+};
+
 const PHONE_PREFIX = '62';
 
 function normalizePhone(localNumber: string): string {
@@ -160,6 +172,7 @@ export default function CheckoutPage() {
   const [voucherInput, setVoucherInput] = useState('');
   const [voucherResult, setVoucherResult] = useState<VoucherResult | null>(null);
   const [voucherLoading, setVoucherLoading] = useState(false);
+  const [publicVouchers, setPublicVouchers] = useState<PublicVoucher[]>([]);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const snapFailedRef = useRef(false);
@@ -221,24 +234,50 @@ export default function CheckoutPage() {
     bootstrap();
   }, [router, setValue]);
 
-  async function handleVoucherApply() {
-    if (!voucherInput.trim() || !cart) return;
+  useEffect(() => {
+    if (!cart) return;
+    let active = true;
+
+    async function loadPublicVouchers() {
+      const params = new URLSearchParams({
+        subtotal: String(cart!.subtotal),
+        channel: 'ONLINE',
+      });
+      const response = await fetch(`/api/vouchers/public?${params.toString()}`);
+      if (!response.ok) return;
+      const data: { items: PublicVoucher[] } = await response.json();
+      if (active) setPublicVouchers(data.items);
+    }
+
+    loadPublicVouchers();
+    return () => {
+      active = false;
+    };
+  }, [cart]);
+
+  async function applyVoucherCode(code: string) {
+    if (!code.trim() || !cart) return;
     setVoucherLoading(true);
     try {
       const response = await fetch('/api/vouchers/validate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          code: voucherInput.trim(),
+          code: code.trim(),
           subtotal: cart.subtotal,
           channel: 'ONLINE',
         }),
       });
       const data: VoucherResult = await response.json();
       setVoucherResult(data);
+      setVoucherInput(code.trim().toUpperCase());
     } finally {
       setVoucherLoading(false);
     }
+  }
+
+  async function handleVoucherApply() {
+    await applyVoucherCode(voucherInput);
   }
 
   function handleVoucherRemove() {
@@ -515,6 +554,47 @@ export default function CheckoutPage() {
               <span className="font-semibold">JNE</span>.
             </p>
           </div>
+
+          {publicVouchers.length > 0 ? (
+            <div className="mb-4 flex flex-col gap-2">
+              <p className="text-xs font-semibold text-neutral-600">Voucher Tersedia</p>
+              <div className="flex flex-col gap-2">
+                {publicVouchers.map((voucher) => {
+                  const selected = voucherResult?.valid && voucherResult.code === voucher.code;
+                  return (
+                    <label
+                      key={voucher.id}
+                      className={`flex cursor-pointer items-start gap-2 rounded-sm border p-3 text-sm ${
+                        selected
+                          ? 'border-brand bg-brand-50'
+                          : 'border-neutral-200 bg-white hover:bg-neutral-50'
+                      } ${!voucher.eligible ? 'opacity-50' : ''}`}
+                    >
+                      <input
+                        type="radio"
+                        name="publicVoucher"
+                        className="mt-1"
+                        checked={Boolean(selected)}
+                        disabled={!voucher.eligible || voucherLoading}
+                        onChange={() => applyVoucherCode(voucher.code)}
+                      />
+                      <span className="flex flex-col">
+                        <span className="font-medium text-foreground">{voucher.code}</span>
+                        {voucher.description ? (
+                          <span className="text-xs text-neutral-500">{voucher.description}</span>
+                        ) : null}
+                        <span className="text-xs text-neutral-500">
+                          {voucher.eligible
+                            ? `Hemat ${formatCurrency(voucher.discountAmount)}`
+                            : `Minimal belanja ${formatCurrency(voucher.minPurchase)}`}
+                        </span>
+                      </span>
+                    </label>
+                  );
+                })}
+              </div>
+            </div>
+          ) : null}
 
           <div className="mb-4 flex flex-col gap-2">
             <div className="flex items-center gap-2">

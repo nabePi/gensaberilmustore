@@ -13,6 +13,7 @@ const voucherFields = {
   maxDiscount: z.number().int().positive().nullable().optional(),
   minPurchase: z.number().int().min(0).default(0),
   channel: z.enum(['ALL', 'ONLINE', 'POS']).default('ALL'),
+  visibility: z.enum(['PUBLIC', 'PRIVATE']).default('PRIVATE'),
   quota: z.number().int().positive().nullable().optional(),
   perUserLimit: z.number().int().positive().nullable().optional(),
   startsAt: z.coerce.date().nullable().optional(),
@@ -32,6 +33,11 @@ export const listAdminVouchersQuerySchema = z.object({
   q: z.string().trim().min(1).optional(),
   channel: z.enum(['ALL', 'ONLINE', 'POS']).optional(),
   isActive: z.enum(['true', 'false']).optional(),
+});
+
+export const listPublicVouchersQuerySchema = z.object({
+  subtotal: z.coerce.number().int().min(0).default(0),
+  channel: z.enum(['ONLINE', 'POS']).default('ONLINE'),
 });
 
 export const voucherValidateSchema = z.object({

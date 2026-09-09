@@ -53,6 +53,11 @@ const CHANNEL_LABELS: Record<AdminVoucherListItem['channel'], string> = {
   POS: 'POS',
 };
 
+const VISIBILITY_LABELS: Record<AdminVoucherListItem['visibility'], string> = {
+  PUBLIC: 'Publik',
+  PRIVATE: 'Privat',
+};
+
 export default function AdminVoucherPage() {
   const [vouchers, setVouchers] = useState<AdminVoucherListItem[]>([]);
   const [total, setTotal] = useState(0);
@@ -188,6 +193,7 @@ export default function AdminVoucherPage() {
             <Th>Tipe</Th>
             <Th>Nilai</Th>
             <Th>Kanal</Th>
+            <Th>Visibilitas</Th>
             <Th>Kuota</Th>
             <Th>Periode</Th>
             <Th>Status</Th>
@@ -209,6 +215,11 @@ export default function AdminVoucherPage() {
                 </Td>
                 <Td className="text-neutral-600">{formatValue(voucher)}</Td>
                 <Td className="text-neutral-600">{CHANNEL_LABELS[voucher.channel]}</Td>
+                <Td>
+                  <Badge tone={voucher.visibility === 'PUBLIC' ? 'info' : 'neutral'}>
+                    {VISIBILITY_LABELS[voucher.visibility]}
+                  </Badge>
+                </Td>
                 <Td className="text-neutral-600">
                   {voucher.usedCount}/{voucher.quota ?? '∞'}
                 </Td>
@@ -280,6 +291,7 @@ export default function AdminVoucherPage() {
               <Row label="Nilai" value={formatValue(detailTarget)} />
               <Row label="Minimal Belanja" value={formatCurrency(detailTarget.minPurchase)} />
               <Row label="Kanal" value={CHANNEL_LABELS[detailTarget.channel]} />
+              <Row label="Visibilitas" value={VISIBILITY_LABELS[detailTarget.visibility]} />
               <Row label="Kuota" value={`${detailTarget.usedCount}/${detailTarget.quota ?? '∞'}`} />
               <Row
                 label="Batas per Pengguna"
