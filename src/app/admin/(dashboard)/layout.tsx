@@ -8,8 +8,6 @@ import { getAdminSessionUser } from '@/server/auth';
 
 const outfit = Outfit({ subsets: ['latin'] });
 
-const DEFAULT_ADMIN_EMAIL = 'admin@gensaberilmu.co.id';
-
 export default async function AdminLayout({ children }: { children: ReactNode }) {
   const user = await getAdminSessionUser();
 
@@ -27,9 +25,7 @@ export default async function AdminLayout({ children }: { children: ReactNode })
   return (
     <AdminSessionProvider user={sessionUser}>
       <div className={outfit.className}>
-        <AdminShell showDefaultCredentialWarning={user.email === DEFAULT_ADMIN_EMAIL}>
-          {children}
-        </AdminShell>
+        <AdminShell>{children}</AdminShell>
       </div>
     </AdminSessionProvider>
   );

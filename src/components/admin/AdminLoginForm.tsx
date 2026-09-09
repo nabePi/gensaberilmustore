@@ -63,7 +63,7 @@ export function AdminLoginForm() {
         <label className={adminLabelBase}>Email</label>
         <input
           type="email"
-          placeholder="admin@gensaberilmu.co.id"
+          placeholder="email@domain.com"
           {...register('email')}
           className={adminInputBase}
         />
@@ -86,10 +86,6 @@ export function AdminLoginForm() {
       <button type="submit" disabled={submitting} className={`${adminBtnPrimary} mt-2 w-full`}>
         {submitting ? 'Memproses...' : 'Masuk'}
       </button>
-
-      <p className="text-center text-xs text-neutral-400">
-        Gunakan email <strong>admin@gensaberilmu.co.id</strong> untuk demo
-      </p>
     </form>
   );
 }

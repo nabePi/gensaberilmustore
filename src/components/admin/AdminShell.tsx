@@ -7,13 +7,7 @@ import { AdminSidebarProvider, useAdminSidebar } from '@/components/admin/AdminS
 import { AdminTopbar } from '@/components/admin/AdminTopbar';
 import { ChevronDownIcon } from '@/components/admin/ui/icons';
 
-function AdminShellInner({
-  children,
-  showDefaultCredentialWarning,
-}: {
-  children: ReactNode;
-  showDefaultCredentialWarning: boolean;
-}) {
+function AdminShellInner({ children }: { children: ReactNode }) {
   const { collapsed } = useAdminSidebar();
 
   return (
@@ -39,13 +33,6 @@ function AdminShellInner({
         <AdminTopbar />
 
         <main className="flex-1 px-4 py-6 sm:px-6 lg:px-8">
-          {showDefaultCredentialWarning ? (
-            <div className="mb-6 rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-              Anda masih menggunakan kredensial admin default. Segera ganti password di halaman
-              Pengaturan.
-            </div>
-          ) : null}
-
           <details className="group mb-6 rounded-xl border border-neutral-200 bg-white lg:hidden">
             <summary className="flex cursor-pointer list-none items-center justify-between px-4 py-3 text-sm font-semibold text-foreground">
               Menu Admin
@@ -63,10 +50,10 @@ function AdminShellInner({
   );
 }
 
-export function AdminShell(props: { children: ReactNode; showDefaultCredentialWarning: boolean }) {
+export function AdminShell({ children }: { children: ReactNode }) {
   return (
     <AdminSidebarProvider>
-      <AdminShellInner {...props} />
+      <AdminShellInner>{children}</AdminShellInner>
     </AdminSidebarProvider>
   );
 }
