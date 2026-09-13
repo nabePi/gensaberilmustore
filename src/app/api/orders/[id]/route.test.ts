@@ -52,7 +52,6 @@ async function createOrderForUser(userId: string | null) {
       receiverPhone: '0812',
       receiverEmail: 'test@example.com',
       receiverAddress: 'Addr',
-      receiverCity: 'City',
       subtotal: 10000,
       shippingCost: 5000,
       discount: 0,

@@ -17,7 +17,10 @@ const coreApi = new CoreApi(clientOptions);
 const ENABLED_PAYMENTS = ['bank_transfer', 'gopay', 'qris', 'shopeepay'];
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-export type OrderForSnapTransaction = Order & { items: OrderItem[] };
+export type OrderForSnapTransaction = Order & {
+  items: OrderItem[];
+  destination: { cityName: string } | null;
+};
 
 export type SnapTransactionResult = {
   snapToken: string;
@@ -65,7 +68,7 @@ export async function createSnapTransaction(
       phone: order.receiverPhone,
       shipping_address: {
         address: order.receiverAddress,
-        city: order.receiverCity,
+        city: order.destination?.cityName,
       },
     },
     item_details: itemDetails,

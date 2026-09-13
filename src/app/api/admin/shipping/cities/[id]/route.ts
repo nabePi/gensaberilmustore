@@ -42,14 +42,6 @@ export const DELETE = withAuth<RouteContext>(
       return NextResponse.json({ error: 'Kota tidak ditemukan' }, { status: 404 });
     }
 
-    const linkedReceiverCount = await prisma.receiver.count({ where: { cityId: id } });
-    if (linkedReceiverCount > 0) {
-      return NextResponse.json(
-        { error: 'Kota masih digunakan pada alamat penerima yang tersimpan' },
-        { status: 409 },
-      );
-    }
-
     await prisma.city.delete({ where: { id } });
 
     return new NextResponse(null, { status: 204 });

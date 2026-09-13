@@ -10,7 +10,7 @@ import { createSession, SESSION_COOKIE_NAME } from '@/server/auth/session';
 
 const createdEmails: string[] = [];
 const createdUserIds: string[] = [];
-const createdCityIds: string[] = [];
+const createdDestinationIds: string[] = [];
 
 async function createMemberCookie() {
   const email = `test-${randomUUID()}@example.com`;
@@ -24,17 +24,20 @@ async function createMemberCookie() {
   return { cookie: `${SESSION_COOKIE_NAME}=${token}`, user };
 }
 
-async function createCity() {
-  const city = await prisma.city.create({
+async function createDestination() {
+  const destination = await prisma.destination.create({
     data: {
-      name: `Test City ${randomUUID()}`,
-      province: 'Test Province',
-      shippingCost: 20000,
-      isActive: true,
+      countryName: 'INDONESIA',
+      provinceName: 'Test Province',
+      cityName: `Test City ${randomUUID()}`,
+      districtName: 'Test District',
+      subdistrictName: 'Test Subdistrict',
+      zipCode: '12345',
+      tariffCode: 'JKT10000',
     },
   });
-  createdCityIds.push(city.id);
-  return city;
+  createdDestinationIds.push(destination.id);
+  return destination;
 }
 
 function buildRequest(method: string, body: unknown, cookie: string) {
@@ -47,7 +50,7 @@ function buildRequest(method: string, body: unknown, cookie: string) {
 
 afterAll(async () => {
   await prisma.receiver.deleteMany({ where: { userId: { in: createdUserIds } } });
-  await prisma.city.deleteMany({ where: { id: { in: createdCityIds } } });
+  await prisma.destination.deleteMany({ where: { id: { in: createdDestinationIds } } });
   await prisma.user.deleteMany({ where: { email: { in: createdEmails } } });
 });
 
@@ -59,7 +62,7 @@ describe('GET /api/member/receivers', () => {
 
   it('lists receivers ordered by isDefault desc, updatedAt desc', async () => {
     const { cookie, user } = await createMemberCookie();
-    const city = await createCity();
+    const destination = await createDestination();
 
     const first = await prisma.receiver.create({
       data: {
@@ -68,7 +71,7 @@ describe('GET /api/member/receivers', () => {
         name: 'A',
         phone: '08111',
         address: 'Addr 1',
-        cityId: city.id,
+        destinationId: destination.id,
         isDefault: false,
       },
     });
@@ -79,7 +82,7 @@ describe('GET /api/member/receivers', () => {
         name: 'B',
         phone: '08222',
         address: 'Addr 2',
-        cityId: city.id,
+        destinationId: destination.id,
         isDefault: true,
       },
     });
@@ -90,15 +93,14 @@ describe('GET /api/member/receivers', () => {
     expect(response.status).toBe(200);
     expect(json.items).toHaveLength(2);
     expect(json.items[0].id).toBe(second.id);
-    expect(json.items[0].city.name).toBe(city.name);
-    expect(json.items[0].city.shippingCost).toBe(city.shippingCost);
+    expect(json.items[0].destination.cityName).toBe(destination.cityName);
     expect(json.items[1].id).toBe(first.id);
   });
 
   it('only returns receivers belonging to the authenticated user', async () => {
     const { cookie } = await createMemberCookie();
     const { user: otherUser } = await createMemberCookie();
-    const city = await createCity();
+    const destination = await createDestination();
 
     await prisma.receiver.create({
       data: {
@@ -107,7 +109,7 @@ describe('GET /api/member/receivers', () => {
         name: 'Other',
         phone: '08333',
         address: 'Addr',
-        cityId: city.id,
+        destinationId: destination.id,
       },
     });
 
@@ -131,12 +133,12 @@ describe('POST /api/member/receivers', () => {
     expect(response.status).toBe(400);
   });
 
-  it('rejects a non-existent city', async () => {
+  it('rejects a non-existent destination', async () => {
     const { cookie } = await createMemberCookie();
     const response = await POST(
       buildRequest(
         'POST',
-        { label: 'Rumah', name: 'A', phone: '08111', address: 'Addr', cityId: randomUUID() },
+        { label: 'Rumah', name: 'A', phone: '08111', address: 'Addr', destinationId: randomUUID() },
         cookie,
       ),
     );
@@ -145,12 +147,18 @@ describe('POST /api/member/receivers', () => {
 
   it('creates a receiver', async () => {
     const { cookie, user } = await createMemberCookie();
-    const city = await createCity();
+    const destination = await createDestination();
 
     const response = await POST(
       buildRequest(
         'POST',
-        { label: 'Rumah', name: 'A', phone: '08111', address: 'Addr', cityId: city.id },
+        {
+          label: 'Rumah',
+          name: 'A',
+          phone: '08111',
+          address: 'Addr',
+          destinationId: destination.id,
+        },
         cookie,
       ),
     );
@@ -159,12 +167,12 @@ describe('POST /api/member/receivers', () => {
     expect(response.status).toBe(201);
     expect(json.userId).toBe(user.id);
     expect(json.isDefault).toBe(false);
-    expect(json.city.name).toBe(city.name);
+    expect(json.destination.cityName).toBe(destination.cityName);
   });
 
   it('unsets other receivers as default when isDefault=true', async () => {
     const { cookie, user } = await createMemberCookie();
-    const city = await createCity();
+    const destination = await createDestination();
 
     const existing = await prisma.receiver.create({
       data: {
@@ -173,7 +181,7 @@ describe('POST /api/member/receivers', () => {
         name: 'A',
         phone: '08111',
         address: 'Addr',
-        cityId: city.id,
+        destinationId: destination.id,
         isDefault: true,
       },
     });
@@ -186,7 +194,7 @@ describe('POST /api/member/receivers', () => {
           name: 'B',
           phone: '08222',
           address: 'Addr 2',
-          cityId: city.id,
+          destinationId: destination.id,
           isDefault: true,
         },
         cookie,

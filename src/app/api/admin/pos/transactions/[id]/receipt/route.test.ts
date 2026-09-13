@@ -30,7 +30,6 @@ async function createPosOrder(cashierId: string) {
       receiverPhone: '-',
       receiverEmail: '-',
       receiverAddress: '-',
-      receiverCity: '-',
       subtotal: 50000,
       shippingCost: 0,
       discount: 0,

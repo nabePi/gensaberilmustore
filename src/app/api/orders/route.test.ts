@@ -1,18 +1,31 @@
 import { randomUUID } from 'node:crypto';
 
 import { NextRequest } from 'next/server';
-import { afterAll, describe, expect, it } from 'vitest';
+import { afterAll, describe, expect, it, vi } from 'vitest';
 
-import { GET, POST } from '@/app/api/orders/route';
 import { prisma } from '@/lib/db';
 import { hashPassword } from '@/server/auth/password';
 import { createSession } from '@/server/auth/session';
 import { GUEST_CART_COOKIE_NAME } from '@/server/cart/cart';
 
+const SHIPPING_COST = 15000;
+
+vi.mock('@/server/shipping/jne-tariff', () => ({
+  getShippingCost: async () => ({
+    price: SHIPPING_COST,
+    serviceCode: 'REG11',
+    etdFrom: '2',
+    etdThru: '3',
+  }),
+  JneTariffError: class JneTariffError extends Error {},
+}));
+
+const { GET, POST } = await import('@/app/api/orders/route');
+
 const createdEmails: string[] = [];
 const createdProductIds: string[] = [];
 const createdCartIds: string[] = [];
-const createdCityIds: string[] = [];
+const createdDestinationIds: string[] = [];
 const createdOrderIds: string[] = [];
 const createdVoucherCodes: string[] = [];
 const createdReceiverIds: string[] = [];
@@ -51,20 +64,23 @@ async function createProduct(
   return product;
 }
 
-async function createCity(
-  overrides: Partial<Parameters<typeof prisma.city.create>[0]['data']> = {},
+async function createDestination(
+  overrides: Partial<Parameters<typeof prisma.destination.create>[0]['data']> = {},
 ) {
-  const city = await prisma.city.create({
+  const destination = await prisma.destination.create({
     data: {
-      name: `City ${randomUUID()}`,
-      province: 'Test Province',
-      shippingCost: 15000,
-      isActive: true,
+      countryName: 'INDONESIA',
+      provinceName: 'Test Province',
+      cityName: `City ${randomUUID()}`,
+      districtName: 'Test District',
+      subdistrictName: 'Test Subdistrict',
+      zipCode: '12345',
+      tariffCode: 'JKT10000',
       ...overrides,
     },
   });
-  createdCityIds.push(city.id);
-  return city;
+  createdDestinationIds.push(destination.id);
+  return destination;
 }
 
 async function createGuestCartWithItem(productId: string, quantity = 1) {
@@ -95,13 +111,13 @@ function buildOrderRequest(body: unknown, cookie?: string) {
   });
 }
 
-function receiverPayload(cityId: string, overrides: Record<string, unknown> = {}) {
+function receiverPayload(destinationId: string, overrides: Record<string, unknown> = {}) {
   return {
     receiverName: 'Budi',
     receiverPhone: '08123456789',
     receiverEmail: 'budi@example.com',
     receiverAddress: 'Jl. Test No. 1',
-    cityId,
+    destinationId,
     paymentMethod: 'BANK_TRANSFER',
     ...overrides,
   };
@@ -126,7 +142,7 @@ describe('POST /api/orders', () => {
     await prisma.cartItem.deleteMany({ where: { cartId: { in: createdCartIds } } });
     await prisma.cart.deleteMany({ where: { id: { in: createdCartIds } } });
     await prisma.product.deleteMany({ where: { id: { in: createdProductIds } } });
-    await prisma.city.deleteMany({ where: { id: { in: createdCityIds } } });
+    await prisma.destination.deleteMany({ where: { id: { in: createdDestinationIds } } });
     await prisma.user.deleteMany({ where: { email: { in: createdEmails } } });
   });
 
@@ -136,18 +152,18 @@ describe('POST /api/orders', () => {
   });
 
   it('rejects when the cart is empty', async () => {
-    const city = await createCity();
-    const { response } = await post(receiverPayload(city.id));
+    const destination = await createDestination();
+    const { response } = await post(receiverPayload(destination.id));
     expect(response.status).toBe(400);
   });
 
   it('creates a guest order, decrements stock, and clears the cart', async () => {
-    const city = await createCity();
+    const destination = await createDestination();
     const product = await createProduct({ stock: 5, discountPercent: 50, finalPrice: 50000 });
     const guestToken = await createGuestCartWithItem(product.id, 2);
 
     const { response, json } = await post(
-      receiverPayload(city.id),
+      receiverPayload(destination.id),
       `${GUEST_CART_COOKIE_NAME}=${guestToken}`,
     );
 
@@ -156,8 +172,8 @@ describe('POST /api/orders', () => {
 
     const order = await prisma.order.findUnique({ where: { id: json.orderId } });
     expect(order?.subtotal).toBe(100000);
-    expect(order?.shippingCost).toBe(city.shippingCost);
-    expect(order?.total).toBe(100000 + city.shippingCost);
+    expect(order?.shippingCost).toBe(SHIPPING_COST);
+    expect(order?.total).toBe(100000 + SHIPPING_COST);
     expect(order?.status).toBe('AWAITING_PAYMENT');
 
     const updatedProduct = await prisma.product.findUnique({ where: { id: product.id } });
@@ -176,12 +192,12 @@ describe('POST /api/orders', () => {
   });
 
   it('rejects when stock is insufficient', async () => {
-    const city = await createCity();
+    const destination = await createDestination();
     const product = await createProduct({ stock: 1 });
     const guestToken = await createGuestCartWithItem(product.id, 5);
 
     const { response } = await post(
-      receiverPayload(city.id),
+      receiverPayload(destination.id),
       `${GUEST_CART_COOKIE_NAME}=${guestToken}`,
     );
 
@@ -194,7 +210,7 @@ describe('POST /api/orders', () => {
   it('creates a member order using a saved receiver', async () => {
     const user = await createTestUser();
     const { token } = await createSession({ userId: user.id });
-    const city = await createCity();
+    const destination = await createDestination();
     const receiver = await prisma.receiver.create({
       data: {
         userId: user.id,
@@ -203,7 +219,7 @@ describe('POST /api/orders', () => {
         phone: '0899999',
         email: 'ani@example.com',
         address: 'Jl. Rumah No. 2',
-        cityId: city.id,
+        destinationId: destination.id,
       },
     });
     createdReceiverIds.push(receiver.id);
@@ -224,7 +240,7 @@ describe('POST /api/orders', () => {
   });
 
   it('applies a percent voucher discount and increments usedCount', async () => {
-    const city = await createCity();
+    const destination = await createDestination();
     const product = await createProduct({ stock: 5, finalPrice: 100000 });
     const guestToken = await createGuestCartWithItem(product.id, 1);
     const adminUser = await createTestUser('ADMIN');
@@ -244,7 +260,7 @@ describe('POST /api/orders', () => {
     });
 
     const { response, json } = await post(
-      receiverPayload(city.id, { voucherCode: code }),
+      receiverPayload(destination.id, { voucherCode: code }),
       `${GUEST_CART_COOKIE_NAME}=${guestToken}`,
     );
 
@@ -253,7 +269,7 @@ describe('POST /api/orders', () => {
     const order = await prisma.order.findUnique({ where: { id: json.orderId } });
     expect(order?.voucherDiscount).toBe(10000);
     expect(order?.discount).toBe(10000);
-    expect(order?.total).toBe(100000 + city.shippingCost - 10000);
+    expect(order?.total).toBe(100000 + SHIPPING_COST - 10000);
 
     const voucher = await prisma.voucher.findUnique({ where: { code } });
     expect(voucher?.usedCount).toBe(1);
@@ -265,12 +281,12 @@ describe('POST /api/orders', () => {
   });
 
   it('rejects an invalid voucher code without creating the order', async () => {
-    const city = await createCity();
+    const destination = await createDestination();
     const product = await createProduct({ stock: 5 });
     const guestToken = await createGuestCartWithItem(product.id, 1);
 
     const { response } = await post(
-      receiverPayload(city.id, { voucherCode: 'DOES-NOT-EXIST' }),
+      receiverPayload(destination.id, { voucherCode: 'DOES-NOT-EXIST' }),
       `${GUEST_CART_COOKIE_NAME}=${guestToken}`,
     );
 
@@ -281,7 +297,7 @@ describe('POST /api/orders', () => {
   });
 
   it('sets the affiliate user when a valid affiliate code is provided', async () => {
-    const city = await createCity();
+    const destination = await createDestination();
     const product = await createProduct({ stock: 5 });
     const guestToken = await createGuestCartWithItem(product.id, 1);
     const affiliateOwner = await createTestUser();
@@ -298,7 +314,7 @@ describe('POST /api/orders', () => {
     });
 
     const { response, json } = await post(
-      receiverPayload(city.id, { affiliateCode }),
+      receiverPayload(destination.id, { affiliateCode }),
       `${GUEST_CART_COOKIE_NAME}=${guestToken}`,
     );
 
@@ -310,12 +326,12 @@ describe('POST /api/orders', () => {
   });
 
   it('ignores an invalid affiliate code without failing the order', async () => {
-    const city = await createCity();
+    const destination = await createDestination();
     const product = await createProduct({ stock: 5 });
     const guestToken = await createGuestCartWithItem(product.id, 1);
 
     const { response, json } = await post(
-      receiverPayload(city.id, { affiliateCode: 'NOT-REAL' }),
+      receiverPayload(destination.id, { affiliateCode: 'NOT-REAL' }),
       `${GUEST_CART_COOKIE_NAME}=${guestToken}`,
     );
 
@@ -355,7 +371,6 @@ describe('GET /api/orders', () => {
         receiverPhone: '0812',
         receiverEmail: 'test@example.com',
         receiverAddress: 'Addr',
-        receiverCity: 'City',
         subtotal: 10000,
         shippingCost: 5000,
         discount: 0,

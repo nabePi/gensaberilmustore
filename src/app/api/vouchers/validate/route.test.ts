@@ -176,7 +176,6 @@ describe('POST /api/vouchers/validate', () => {
         receiverPhone: '08123456789',
         receiverEmail: 'budi@example.com',
         receiverAddress: 'Addr',
-        receiverCity: 'City',
         subtotal: 100000,
         shippingCost: 5000,
         discount: 10000,

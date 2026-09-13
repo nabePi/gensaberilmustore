@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
   const user = await getSession(request);
   const order = await prisma.order.findUnique({
     where: { id: parsed.data.orderId },
-    include: { items: true },
+    include: { items: true, destination: { select: { cityName: true } } },
   });
 
   if (!order || (order.userId !== null && order.userId !== user?.id)) {

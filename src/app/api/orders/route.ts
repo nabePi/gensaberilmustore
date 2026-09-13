@@ -4,7 +4,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { env } from '@/env';
 import { prisma } from '@/lib/db';
 import { getSession, withAuth } from '@/server/auth';
-import { GUEST_CART_COOKIE_NAME, guestCartCookieOptions, resolveCart } from '@/server/cart/cart';
+import {
+  computeCartWeightKg,
+  GUEST_CART_COOKIE_NAME,
+  guestCartCookieOptions,
+  resolveCart,
+} from '@/server/cart/cart';
 import { dispatchPendingNotificationsForOrder } from '@/server/notify/dispatch';
 import { generateUniqueOrderNumber } from '@/server/orders/order-number';
 import { createOrderSchema, listMemberOrdersQuerySchema } from '@/server/orders/schema';
@@ -12,6 +17,7 @@ import { orderListInclude, serializeOrderListItem } from '@/server/orders/serial
 import { validateVoucherForOrder, VoucherValidationError } from '@/server/orders/voucher';
 import { generateUniqueManualPaymentCode } from '@/server/payment/manual-qris';
 import { computeUnitPrice, resolveActiveDiscount } from '@/server/products/pricing';
+import { getShippingCost, JneTariffError } from '@/server/shipping/jne-tariff';
 
 class OrderCreationError extends Error {}
 
@@ -46,7 +52,7 @@ export async function POST(request: NextRequest) {
     let receiverPhone: string;
     let receiverEmail: string | null;
     let receiverAddress: string;
-    let cityId: string;
+    let destinationId: string;
 
     if (data.useReceiverId) {
       if (!user) {
@@ -61,18 +67,30 @@ export async function POST(request: NextRequest) {
       receiverPhone = receiver.phone;
       receiverEmail = email;
       receiverAddress = receiver.address;
-      cityId = receiver.cityId;
+      destinationId = receiver.destinationId;
     } else {
       receiverName = data.receiverName!;
       receiverPhone = data.receiverPhone!;
       receiverEmail = data.receiverEmail ?? null;
       receiverAddress = data.receiverAddress!;
-      cityId = data.cityId!;
+      destinationId = data.destinationId!;
     }
 
-    const city = await prisma.city.findUnique({ where: { id: cityId } });
-    if (!city || !city.isActive) {
-      throw new OrderCreationError('Kota tujuan tidak valid');
+    const destination = await prisma.destination.findUnique({ where: { id: destinationId } });
+    if (!destination) {
+      throw new OrderCreationError('Tujuan pengiriman tidak valid');
+    }
+
+    const weightKg = computeCartWeightKg(cart);
+    let shippingCost: number;
+    try {
+      const tariff = await getShippingCost(destination.tariffCode, weightKg, data.service);
+      shippingCost = tariff.price;
+    } catch (error) {
+      if (error instanceof JneTariffError) {
+        throw new OrderCreationError(error.message);
+      }
+      throw error;
     }
 
     for (const item of cart.items) {
@@ -106,8 +124,6 @@ export async function POST(request: NextRequest) {
       (sum, item) => sum + unitPriceByItemId.get(item.id)! * item.quantity,
       0,
     );
-    const shippingCost = city.shippingCost;
-
     if (data.voucherCode) {
       try {
         await validateVoucherForOrder(prisma, data.voucherCode, {
@@ -191,7 +207,7 @@ export async function POST(request: NextRequest) {
           receiverPhone,
           receiverEmail,
           receiverAddress,
-          receiverCity: city.name,
+          destinationId: destination.id,
           receiverNote: data.note ?? null,
           subtotal,
           shippingCost,

@@ -50,7 +50,6 @@ async function createOrder(overrides: { status?: 'AWAITING_PAYMENT' | 'PACKED' }
       receiverPhone: '0812',
       receiverEmail: 'test@example.com',
       receiverAddress: 'Addr',
-      receiverCity: 'City',
       subtotal: 100000,
       shippingCost: 0,
       discount: 0,

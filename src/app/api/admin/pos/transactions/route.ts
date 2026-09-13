@@ -141,7 +141,6 @@ export const POST = withAuth(
             receiverPhone: data.customerPhone,
             receiverEmail: data.customerEmail,
             receiverAddress: '-',
-            receiverCity: '-',
             receiverNote: data.note ?? null,
             subtotal,
             shippingCost: 0,

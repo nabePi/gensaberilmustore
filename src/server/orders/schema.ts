@@ -16,9 +16,10 @@ export const createOrderSchema = z
     receiverPhone: z.string().trim().min(1, 'Nomor telepon wajib diisi').optional(),
     receiverEmail: z.string().trim().email('Format email tidak valid').optional(),
     receiverAddress: z.string().trim().min(1, 'Alamat wajib diisi').optional(),
-    cityId: z.string().uuid('Kota tidak valid').optional(),
+    destinationId: z.string().uuid('Tujuan pengiriman tidak valid').optional(),
     note: z.string().trim().max(500).optional(),
     useReceiverId: z.string().uuid('useReceiverId tidak valid').optional(),
+    service: z.enum(['REG', 'YES']).default('REG'),
     paymentMethod: z.enum(ONLINE_PAYMENT_METHODS).default('BANK_TRANSFER'),
     affiliateCode: z.string().trim().min(1).optional(),
     voucherCode: z.string().trim().min(1).optional(),
@@ -26,7 +27,7 @@ export const createOrderSchema = z
   .refine(
     (value) =>
       value.useReceiverId !== undefined ||
-      (value.receiverName && value.receiverPhone && value.receiverAddress && value.cityId),
+      (value.receiverName && value.receiverPhone && value.receiverAddress && value.destinationId),
     {
       message: 'Data penerima wajib diisi, atau gunakan useReceiverId',
       path: ['receiverName'],

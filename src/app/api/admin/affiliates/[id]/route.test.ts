@@ -101,7 +101,6 @@ describe('GET /api/admin/affiliates/[id]', () => {
         receiverPhone: '08123',
         receiverEmail: 'buyer@example.com',
         receiverAddress: 'Address',
-        receiverCity: 'City',
         subtotal: 100000,
         shippingCost: 10000,
         discount: 0,

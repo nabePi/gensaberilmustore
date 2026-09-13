@@ -22,6 +22,7 @@ const cartInclude = {
           title: true,
           isActive: true,
           stock: true,
+          weightGram: true,
           price: true,
           finalPrice: true,
           discountPercent: true,
@@ -161,6 +162,14 @@ export async function mergeGuestCartIntoUserCart(
 
     await tx.cart.delete({ where: { id: guestCart.id } });
   });
+}
+
+export function computeCartWeightKg(cart: CartWithItems): number {
+  const totalGrams = cart.items.reduce(
+    (sum, item) => sum + item.product.weightGram * item.quantity,
+    0,
+  );
+  return Math.max(1, Math.ceil(totalGrams / 1000));
 }
 
 export function serializeCart(cart: CartWithItems) {

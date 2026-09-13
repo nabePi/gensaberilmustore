@@ -55,7 +55,6 @@ async function createOrder(total: number, source: 'ONLINE' | 'POS' = 'ONLINE') {
       receiverPhone: '08123456789',
       receiverEmail: 'budi@example.com',
       receiverAddress: 'Addr',
-      receiverCity: 'City',
       subtotal: total,
       shippingCost: 0,
       discount: 0,

@@ -5,9 +5,8 @@ import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
+import { DestinationSelect } from '@/components/ui/DestinationSelect';
 import { btnOutline, btnSolid, cardBase, inputBase } from '@/lib/styles';
-
-type City = { id: string; name: string; province: string };
 
 const PHONE_PREFIX = '62';
 
@@ -35,8 +34,14 @@ type Receiver = {
   phone: string;
   address: string;
   isDefault: boolean;
-  city: { name: string; shippingCost: number };
-  cityId?: string;
+  destinationId?: string;
+  destination: {
+    provinceName: string;
+    cityName: string;
+    districtName: string;
+    subdistrictName: string;
+    zipCode: string;
+  };
 };
 
 const receiverFormSchema = z.object({
@@ -44,19 +49,17 @@ const receiverFormSchema = z.object({
   name: z.string().trim().min(1, 'Nama wajib diisi'),
   phone: z.string().trim().min(1, 'Nomor telepon wajib diisi'),
   address: z.string().trim().min(1, 'Alamat wajib diisi'),
-  cityId: z.string().uuid('Kota tujuan wajib dipilih'),
+  destinationId: z.string().uuid('Tujuan pengiriman wajib dipilih'),
   isDefault: z.boolean(),
 });
 
 type ReceiverFormValues = z.infer<typeof receiverFormSchema>;
 
 function ReceiverModal({
-  cities,
   editing,
   onClose,
   onSaved,
 }: {
-  cities: City[];
   editing: Receiver | null;
   onClose: () => void;
   onSaved: () => void;
@@ -65,6 +68,7 @@ function ReceiverModal({
   const {
     register,
     handleSubmit,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<ReceiverFormValues>({
     resolver: zodResolver(receiverFormSchema),
@@ -73,7 +77,7 @@ function ReceiverModal({
       name: editing?.name ?? '',
       phone: editing ? formatPhoneDisplay(toLocalPhoneDigits(editing.phone)) : '',
       address: editing?.address ?? '',
-      cityId: editing?.cityId ?? '',
+      destinationId: editing?.destinationId ?? '',
       isDefault: editing?.isDefault ?? false,
     },
   });
@@ -156,22 +160,17 @@ function ReceiverModal({
             {errors.phone ? <p className="text-xs text-red">{errors.phone.message}</p> : null}
           </div>
           <div className="flex flex-col gap-1">
-            <label className="text-sm font-medium text-neutral-600">Kota</label>
-            <select
-              {...register('cityId')}
-              className={inputBase}
-              defaultValue={editing?.cityId ?? ''}
-            >
-              <option value="" disabled>
-                Pilih kota
-              </option>
-              {cities.map((city) => (
-                <option key={city.id} value={city.id}>
-                  {city.name}, {city.province}
-                </option>
-              ))}
-            </select>
-            {errors.cityId ? <p className="text-xs text-red">{errors.cityId.message}</p> : null}
+            <label className="text-sm font-medium text-neutral-600">Tujuan Pengiriman</label>
+            <DestinationSelect
+              initialDestinationId={editing?.destinationId ?? null}
+              hasError={Boolean(errors.destinationId)}
+              onChange={(value) =>
+                setValue('destinationId', value?.destinationId ?? '', { shouldValidate: true })
+              }
+            />
+            {errors.destinationId ? (
+              <p className="text-xs text-red">{errors.destinationId.message}</p>
+            ) : null}
           </div>
           <div className="flex flex-col gap-1">
             <label className="text-sm font-medium text-neutral-600">Alamat Lengkap</label>
@@ -201,7 +200,6 @@ function ReceiverModal({
 
 export default function MemberPenerimaPage() {
   const [receivers, setReceivers] = useState<Receiver[]>([]);
-  const [cities, setCities] = useState<City[]>([]);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<Receiver | null>(null);
@@ -217,18 +215,7 @@ export default function MemberPenerimaPage() {
 
   useEffect(() => {
     async function bootstrap() {
-      const [receiversResponse, citiesResponse] = await Promise.all([
-        fetch('/api/member/receivers'),
-        fetch('/api/shipping/cities'),
-      ]);
-      if (receiversResponse.ok) {
-        const data: { items: Receiver[] } = await receiversResponse.json();
-        setReceivers(data.items);
-      }
-      if (citiesResponse.ok) {
-        const data: { items: City[] } = await citiesResponse.json();
-        setCities(data.items);
-      }
+      await loadReceivers();
       setLoading(false);
     }
     bootstrap();
@@ -328,7 +315,7 @@ export default function MemberPenerimaPage() {
                 <p className="font-medium text-foreground">{receiver.name}</p>
                 <p>{receiver.phone}</p>
                 <p className="mt-1">
-                  {receiver.address}, {receiver.city.name}
+                  {receiver.address}, {receiver.destination.cityName}
                 </p>
               </div>
             </div>
@@ -337,12 +324,7 @@ export default function MemberPenerimaPage() {
       )}
 
       {modalOpen ? (
-        <ReceiverModal
-          cities={cities}
-          editing={editing}
-          onClose={closeModal}
-          onSaved={handleSaved}
-        />
+        <ReceiverModal editing={editing} onClose={closeModal} onSaved={handleSaved} />
       ) : null}
     </div>
   );

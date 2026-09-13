@@ -11,7 +11,7 @@ const receiverFields = {
   phone: z.string().trim().min(1, 'Nomor telepon wajib diisi'),
   email: z.string().trim().email('Format email tidak valid').optional(),
   address: z.string().trim().min(1, 'Alamat wajib diisi'),
-  cityId: z.string().uuid('Kota tidak valid'),
+  destinationId: z.string().uuid('Tujuan pengiriman tidak valid'),
   isDefault: z.boolean().optional(),
 };
 

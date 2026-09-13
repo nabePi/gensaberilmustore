@@ -5,7 +5,15 @@ import { withAuth } from '@/server/auth';
 import { createReceiverSchema } from '@/server/member/schema';
 
 const RECEIVER_INCLUDE = {
-  city: { select: { name: true, shippingCost: true } },
+  destination: {
+    select: {
+      provinceName: true,
+      cityName: true,
+      districtName: true,
+      subdistrictName: true,
+      zipCode: true,
+    },
+  },
 } as const;
 
 export const GET = withAuth(async (_request: NextRequest, { user }) => {
@@ -29,13 +37,13 @@ export const POST = withAuth(async (request: NextRequest, { user }) => {
     );
   }
 
-  const city = await prisma.city.findUnique({
-    where: { id: parsed.data.cityId },
+  const destination = await prisma.destination.findUnique({
+    where: { id: parsed.data.destinationId },
     select: { id: true },
   });
-  if (!city) {
+  if (!destination) {
     return NextResponse.json(
-      { error: 'Validasi gagal', issues: { cityId: ['Kota tidak ditemukan'] } },
+      { error: 'Validasi gagal', issues: { destinationId: ['Tujuan pengiriman tidak ditemukan'] } },
       { status: 400 },
     );
   }

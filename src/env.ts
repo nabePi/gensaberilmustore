@@ -47,6 +47,12 @@ const envSchema = z.object({
 
   // Monitoring placeholders
   SENTRY_DSN: z.string().optional(),
+
+  // JNE tariff (shipping cost) API
+  JNE_TARIFF_API_URL: z.string().optional(),
+  JNE_USERNAME: z.string().optional(),
+  JNE_API_KEY: z.string().optional(),
+  JNE_SENDER_ORIGIN: z.string().optional(),
 });
 
 const validatedEnvSchema = envSchema
@@ -151,6 +157,11 @@ export const env = {
   r2PublicUrl: rawEnv.R2_PUBLIC_URL,
 
   sentryDsn: rawEnv.SENTRY_DSN,
+
+  jneTariffApiUrl: rawEnv.JNE_TARIFF_API_URL,
+  jneUsername: rawEnv.JNE_USERNAME,
+  jneApiKey: rawEnv.JNE_API_KEY,
+  jneSenderOrigin: rawEnv.JNE_SENDER_ORIGIN,
 };
 
 export type Env = typeof env;

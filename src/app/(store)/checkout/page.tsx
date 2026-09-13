@@ -8,7 +8,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
-import { CitySelect } from '@/components/ui/CitySelect';
+import { DestinationSelect } from '@/components/ui/DestinationSelect';
 import { dispatchCartUpdated } from '@/lib/cart-events';
 import { formatCurrency } from '@/lib/format';
 import { btnOutline, btnSolid, inputBase } from '@/lib/styles';
@@ -42,6 +42,11 @@ function readAffiliateCookie(): string | undefined {
   return match ? decodeURIComponent(match[1]!) : undefined;
 }
 
+const JNE_SERVICE_OPTIONS = [
+  { value: 'REG', label: 'REG (Reguler)' },
+  { value: 'YES', label: 'YES (Yakin Esok Sampai)' },
+] as const;
+
 const VOUCHER_ERROR_MESSAGES: Record<string, string> = {
   NOT_FOUND: 'Kode voucher tidak ditemukan.',
   INACTIVE: 'Voucher ini sudah tidak aktif.',
@@ -59,8 +64,6 @@ type Cart = {
   itemCount: number;
 };
 
-type City = { id: string; name: string; province: string; shippingCost: number };
-
 type Receiver = {
   id: string;
   label: string;
@@ -68,9 +71,15 @@ type Receiver = {
   phone: string;
   email: string | null;
   address: string;
-  cityId: string;
+  destinationId: string;
   isDefault: boolean;
-  city: { name: string; shippingCost: number };
+  destination: {
+    provinceName: string;
+    cityName: string;
+    districtName: string;
+    subdistrictName: string;
+    zipCode: string;
+  };
 };
 
 type SessionUser = { id: string; email: string; name: string | null };
@@ -111,7 +120,8 @@ const checkoutSchema = z
     receiverPhone: z.string().optional(),
     receiverEmail: z.string().optional(),
     receiverAddress: z.string().optional(),
-    cityId: z.string().optional(),
+    destinationId: z.string().optional(),
+    service: z.enum(['REG', 'YES']).optional(),
     note: z.string().max(500).optional(),
   })
   .superRefine((data, ctx) => {
@@ -155,8 +165,12 @@ const checkoutSchema = z
     if (!data.receiverAddress) {
       ctx.addIssue({ code: 'custom', path: ['receiverAddress'], message: 'Alamat wajib diisi' });
     }
-    if (!data.cityId) {
-      ctx.addIssue({ code: 'custom', path: ['cityId'], message: 'Kota tujuan wajib dipilih' });
+    if (!data.destinationId) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['destinationId'],
+        message: 'Tujuan pengiriman wajib dipilih',
+      });
     }
   });
 
@@ -165,7 +179,6 @@ type CheckoutFormValues = z.infer<typeof checkoutSchema>;
 export default function CheckoutPage() {
   const router = useRouter();
   const [cart, setCart] = useState<Cart | null>(null);
-  const [cities, setCities] = useState<City[]>([]);
   const [receivers, setReceivers] = useState<Receiver[]>([]);
   const [user, setUser] = useState<SessionUser | null>(null);
   const [ready, setReady] = useState(false);
@@ -185,20 +198,26 @@ export default function CheckoutPage() {
     formState: { errors },
   } = useForm<CheckoutFormValues>({
     resolver: zodResolver(checkoutSchema),
-    defaultValues: { mode: 'manual' },
+    defaultValues: { mode: 'manual', service: 'REG' },
   });
 
   const mode = watch('mode');
   const selectedReceiverId = watch('receiverId');
-  const selectedCityId = watch('cityId');
+  const selectedDestinationId = watch('destinationId');
+  const selectedService = watch('service');
+
+  const [shippingOptions, setShippingOptions] = useState<
+    { service: string; shippingCost: number; etd: string }[]
+  >([]);
+  const [shippingLoading, setShippingLoading] = useState(false);
+  const [shippingError, setShippingError] = useState<string | null>(null);
 
   const receiverPhoneField = register('receiverPhone');
 
   useEffect(() => {
     async function bootstrap() {
-      const [cartResponse, citiesResponse, sessionResponse] = await Promise.all([
+      const [cartResponse, sessionResponse] = await Promise.all([
         fetch('/api/cart'),
-        fetch('/api/shipping/cities'),
         fetch('/api/auth/session'),
       ]);
 
@@ -208,9 +227,6 @@ export default function CheckoutPage() {
         return;
       }
       setCart(cartData);
-
-      const citiesData: { items: City[] } = await citiesResponse.json();
-      setCities(citiesData.items);
 
       const sessionData: { user: SessionUser | null } = await sessionResponse.json();
       setUser(sessionData.user);
@@ -285,14 +301,61 @@ export default function CheckoutPage() {
     setVoucherInput('');
   }
 
-  const shippingCost = (() => {
-    if (mode === 'receiver') {
-      const receiver = receivers.find((item) => item.id === selectedReceiverId);
-      return receiver?.city.shippingCost ?? 0;
+  const activeDestinationId =
+    mode === 'receiver'
+      ? receivers.find((item) => item.id === selectedReceiverId)?.destinationId
+      : selectedDestinationId;
+
+  useEffect(() => {
+    if (!activeDestinationId) {
+      setShippingOptions([]);
+      setShippingError(null);
+      setShippingLoading(false);
+      return;
     }
-    const city = cities.find((item) => item.id === selectedCityId);
-    return city?.shippingCost ?? 0;
-  })();
+
+    let active = true;
+    setShippingLoading(true);
+    setShippingError(null);
+
+    fetch('/api/shipping/tariff', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ destinationId: activeDestinationId }),
+    })
+      .then(async (response) => {
+        const data = await response.json();
+        if (!active) return;
+        if (!response.ok) {
+          setShippingError(data.error ?? 'Gagal menghitung ongkos kirim');
+          setShippingOptions([]);
+          return;
+        }
+        setShippingOptions(data.options);
+        if (
+          !data.options.some((option: { service: string }) => option.service === selectedService)
+        ) {
+          setValue('service', data.options[0]?.service ?? 'REG');
+        }
+      })
+      .catch(() => {
+        if (active) {
+          setShippingError('Gagal menghitung ongkos kirim');
+          setShippingOptions([]);
+        }
+      })
+      .finally(() => {
+        if (active) setShippingLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeDestinationId]);
+
+  const shippingCost =
+    shippingOptions.find((option) => option.service === selectedService)?.shippingCost ?? 0;
 
   const discount = voucherResult && voucherResult.valid ? voucherResult.discountAmount : 0;
   const subtotal = cart?.subtotal ?? 0;
@@ -308,6 +371,7 @@ export default function CheckoutPage() {
       values.mode === 'receiver'
         ? {
             useReceiverId: values.receiverId,
+            service: values.service,
             note: values.note,
             voucherCode: voucherResult && voucherResult.valid ? voucherResult.code : undefined,
             affiliateCode,
@@ -317,7 +381,8 @@ export default function CheckoutPage() {
             receiverPhone: normalizePhone(values.receiverPhone ?? ''),
             receiverEmail: values.receiverEmail?.trim() ? values.receiverEmail.trim() : undefined,
             receiverAddress: values.receiverAddress,
-            cityId: values.cityId,
+            destinationId: values.destinationId,
+            service: values.service,
             note: values.note,
             voucherCode: voucherResult && voucherResult.valid ? voucherResult.code : undefined,
             affiliateCode,
@@ -438,13 +503,37 @@ export default function CheckoutPage() {
                       onChange={() => setValue('receiverId', receiver.id)}
                       className="mt-1"
                     />
-                    <span>
-                      <span className="block font-semibold text-foreground">
+                    <span className="flex flex-col gap-0.5">
+                      <span className="font-semibold text-foreground">
                         {receiver.label} &middot; {receiver.name}
                       </span>
-                      <span className="block text-neutral-500">{receiver.phone}</span>
-                      <span className="block text-neutral-500">
-                        {receiver.address}, {receiver.city.name}
+                      <span className="text-neutral-600">
+                        <span className="font-semibold text-neutral-700">No. Telepon:</span>{' '}
+                        {receiver.phone}
+                      </span>
+                      <span className="text-neutral-600">
+                        <span className="font-semibold text-neutral-700">Alamat:</span>{' '}
+                        {receiver.address}
+                      </span>
+                      <span className="text-neutral-600">
+                        <span className="font-semibold text-neutral-700">Provinsi:</span>{' '}
+                        {receiver.destination.provinceName}
+                      </span>
+                      <span className="text-neutral-600">
+                        <span className="font-semibold text-neutral-700">Kota/Kabupaten:</span>{' '}
+                        {receiver.destination.cityName}
+                      </span>
+                      <span className="text-neutral-600">
+                        <span className="font-semibold text-neutral-700">Kecamatan:</span>{' '}
+                        {receiver.destination.districtName}
+                      </span>
+                      <span className="text-neutral-600">
+                        <span className="font-semibold text-neutral-700">Kelurahan:</span>{' '}
+                        {receiver.destination.subdistrictName}
+                      </span>
+                      <span className="text-neutral-600">
+                        <span className="font-semibold text-neutral-700">Kode Pos:</span>{' '}
+                        {receiver.destination.zipCode}
                       </span>
                     </span>
                   </label>
@@ -501,17 +590,18 @@ export default function CheckoutPage() {
                     <p className="text-xs text-red">{errors.receiverEmail.message}</p>
                   ) : null}
                 </div>
-                <div className="flex flex-col gap-1">
-                  <label className="text-xs font-medium text-neutral-600">Kota / Kabupaten</label>
-                  <CitySelect
-                    cities={cities}
-                    value={selectedCityId ?? ''}
-                    onChange={(cityId) => setValue('cityId', cityId, { shouldValidate: true })}
-                    placeholder="Pilih Kota / Kabupaten"
-                    hasError={Boolean(errors.cityId)}
+                <div className="flex flex-col gap-1 sm:col-span-2">
+                  <label className="text-xs font-medium text-neutral-600">Tujuan Pengiriman</label>
+                  <DestinationSelect
+                    hasError={Boolean(errors.destinationId)}
+                    onChange={(value) =>
+                      setValue('destinationId', value?.destinationId ?? '', {
+                        shouldValidate: true,
+                      })
+                    }
                   />
-                  {errors.cityId ? (
-                    <p className="text-xs text-red">{errors.cityId.message}</p>
+                  {errors.destinationId ? (
+                    <p className="text-xs text-red">{errors.destinationId.message}</p>
                   ) : null}
                 </div>
                 <div className="flex flex-col gap-1 sm:col-span-2">
@@ -553,6 +643,28 @@ export default function CheckoutPage() {
               Buku akan dikirim menggunakan jasa pengiriman{' '}
               <span className="font-semibold">JNE</span>.
             </p>
+          </div>
+
+          <div className="mb-4 flex flex-col gap-1">
+            <label className="text-xs font-medium text-neutral-600">Layanan Pengiriman</label>
+            <select
+              {...register('service')}
+              className={inputBase}
+              disabled={shippingOptions.length === 0}
+            >
+              {shippingOptions.length > 0
+                ? shippingOptions.map((option) => (
+                    <option key={option.service} value={option.service}>
+                      {option.service} &middot; {formatCurrency(option.shippingCost)} &middot;{' '}
+                      {option.etd}
+                    </option>
+                  ))
+                : JNE_SERVICE_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+            </select>
           </div>
 
           {publicVouchers.length > 0 ? (
@@ -640,8 +752,9 @@ export default function CheckoutPage() {
             </div>
             <div className="flex justify-between text-neutral-600">
               <span>Ongkos Kirim</span>
-              <span>{formatCurrency(shippingCost)}</span>
+              <span>{shippingLoading ? 'Menghitung...' : formatCurrency(shippingCost)}</span>
             </div>
+            {shippingError ? <p className="text-xs text-red">{shippingError}</p> : null}
             {discount > 0 ? (
               <div className="flex justify-between text-green">
                 <span>Diskon Voucher</span>
@@ -656,7 +769,13 @@ export default function CheckoutPage() {
 
           {submitError ? <p className="mt-4 text-xs text-red">{submitError}</p> : null}
 
-          <button type="submit" disabled={submitting} className={`${btnSolid} mt-5 w-full`}>
+          <button
+            type="submit"
+            disabled={
+              submitting || shippingLoading || !activeDestinationId || Boolean(shippingError)
+            }
+            className={`${btnSolid} mt-5 w-full`}
+          >
             {submitting ? 'Memproses...' : 'Bayar Sekarang'}
           </button>
           <Link href="/cart" className={`${btnOutline} mt-2 w-full`}>

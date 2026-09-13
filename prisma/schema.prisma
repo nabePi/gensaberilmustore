@@ -344,30 +344,48 @@ model City {
   shippingCost Int
   isActive     Boolean @default(true)
 
-  receivers Receiver[]
-
   @@index([name])
   @@index([isActive])
 }
 
-model Receiver {
-  id        String   @id @default(uuid())
-  userId    String
-  label     String
-  name      String
-  phone     String
-  email     String?
-  address   String
-  cityId    String
-  isDefault Boolean  @default(false)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+model Destination {
+  id               String @id @default(uuid())
+  countryName      String
+  provinceName     String
+  cityName         String
+  districtName     String
+  subdistrictName  String
+  zipCode          String
+  tariffCode       String
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  city City @relation(fields: [cityId], references: [id], onDelete: Restrict)
+  receivers Receiver[]
+  orders    Order[]
+
+  @@index([provinceName])
+  @@index([provinceName, cityName])
+  @@index([provinceName, cityName, districtName])
+  @@index([zipCode])
+  @@index([tariffCode])
+}
+
+model Receiver {
+  id            String   @id @default(uuid())
+  userId        String
+  label         String
+  name          String
+  phone         String
+  email         String?
+  address       String
+  destinationId String
+  isDefault     Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  destination Destination @relation(fields: [destinationId], references: [id], onDelete: Restrict)
 
   @@index([userId, isDefault])
-  @@index([cityId])
+  @@index([destinationId])
 }
 
 model WishlistItem {
@@ -392,7 +410,7 @@ model Order {
   receiverPhone        String
   receiverEmail        String?
   receiverAddress      String
-  receiverCity         String
+  destinationId        String?
   receiverNote         String?
   trackingNumber       String?
   subtotal             Int
@@ -420,6 +438,7 @@ model Order {
   affiliateUser       User?                @relation("OrderToAffiliateUser", fields: [affiliateUserId], references: [id], onDelete: SetNull)
   posCashierUser      User?                @relation("OrderToPosCashierUser", fields: [posCashierUserId], references: [id], onDelete: SetNull)
   voucher             Voucher?             @relation(fields: [voucherId], references: [id], onDelete: SetNull)
+  destination         Destination?         @relation(fields: [destinationId], references: [id], onDelete: SetNull)
   items               OrderItem[]
   history             OrderStatusHistory[]
   affiliateConversion AffiliateConversion?
@@ -432,6 +451,7 @@ model Order {
   @@index([userId])
   @@index([posCashierUserId])
   @@index([voucherId])
+  @@index([destinationId])
 }
 
 model OrderItem {

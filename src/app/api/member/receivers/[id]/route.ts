@@ -7,7 +7,15 @@ import { updateReceiverSchema } from '@/server/member/schema';
 type RouteContext = { params: Promise<{ id: string }> };
 
 const RECEIVER_INCLUDE = {
-  city: { select: { name: true, shippingCost: true } },
+  destination: {
+    select: {
+      provinceName: true,
+      cityName: true,
+      districtName: true,
+      subdistrictName: true,
+      zipCode: true,
+    },
+  },
 } as const;
 
 export const PUT = withAuth<RouteContext>(async (request: NextRequest, { params, user }) => {
@@ -28,14 +36,17 @@ export const PUT = withAuth<RouteContext>(async (request: NextRequest, { params,
     );
   }
 
-  if (parsed.data.cityId) {
-    const city = await prisma.city.findUnique({
-      where: { id: parsed.data.cityId },
+  if (parsed.data.destinationId) {
+    const destination = await prisma.destination.findUnique({
+      where: { id: parsed.data.destinationId },
       select: { id: true },
     });
-    if (!city) {
+    if (!destination) {
       return NextResponse.json(
-        { error: 'Validasi gagal', issues: { cityId: ['Kota tidak ditemukan'] } },
+        {
+          error: 'Validasi gagal',
+          issues: { destinationId: ['Tujuan pengiriman tidak ditemukan'] },
+        },
         { status: 400 },
       );
     }

@@ -10,7 +10,6 @@ import { ADMIN_SESSION_COOKIE_NAME, createSession } from '@/server/auth/session'
 
 const createdEmails: string[] = [];
 const createdCityIds: string[] = [];
-const createdUserIds: string[] = [];
 
 async function createAdminCookie() {
   const email = `test-${randomUUID()}@example.com`;
@@ -52,11 +51,8 @@ function context(id: string) {
 }
 
 afterAll(async () => {
-  await prisma.receiver.deleteMany({ where: { userId: { in: createdUserIds } } });
   await prisma.city.deleteMany({ where: { id: { in: createdCityIds } } });
-  await prisma.user.deleteMany({
-    where: { OR: [{ email: { in: createdEmails } }, { id: { in: createdUserIds } }] },
-  });
+  await prisma.user.deleteMany({ where: { email: { in: createdEmails } } });
 });
 
 describe('PUT /api/admin/shipping/cities/[id]', () => {
@@ -86,33 +82,7 @@ describe('PUT /api/admin/shipping/cities/[id]', () => {
 });
 
 describe('DELETE /api/admin/shipping/cities/[id]', () => {
-  it('returns 409 when the city is still used by a receiver', async () => {
-    const cookie = await createAdminCookie();
-    const city = await createCity();
-
-    const passwordHash = await hashPassword('Password123');
-    const email = `test-${randomUUID()}@example.com`;
-    const buyer = await prisma.user.create({
-      data: { email, passwordHash, name: 'Buyer', role: 'BUYER' },
-    });
-    createdUserIds.push(buyer.id);
-
-    await prisma.receiver.create({
-      data: {
-        userId: buyer.id,
-        label: 'Home',
-        name: 'Buyer',
-        phone: '08123456789',
-        address: 'Addr',
-        cityId: city.id,
-      },
-    });
-
-    const response = await DELETE(buildRequest('DELETE', undefined, cookie), context(city.id));
-    expect(response.status).toBe(409);
-  });
-
-  it('deletes a city with no linked receivers', async () => {
+  it('deletes a city', async () => {
     const cookie = await createAdminCookie();
     const city = await createCity();
 

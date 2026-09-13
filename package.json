@@ -20,6 +20,7 @@
     "db:studio": "prisma studio",
     "db:seed": "tsx prisma/seed.ts",
     "db:import-legacy": "tsx --env-file=.env scripts/import-legacy-users.ts",
+    "db:import-destinations": "tsx --env-file=.env scripts/import-destinations.ts",
     "test": "vitest --run --passWithNoTests",
     "prepare": "husky"
   },
@@ -62,7 +63,8 @@
     "tailwindcss": "^4",
     "tsx": "^4.19.4",
     "typescript": "^5",
-    "vitest": "^4.1.10"
+    "vitest": "^4.1.10",
+    "xlsx": "^0.18.5"
   },
   "lint-staged": {
     "*.{ts,tsx,js,jsx,mjs,cjs}": [

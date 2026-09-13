@@ -15,7 +15,7 @@ const CSV_HEADERS = [
   'source',
   'receiverName',
   'receiverPhone',
-  'receiverCity',
+  'destinationCity',
   'subtotal',
   'shippingCost',
   'total',
@@ -94,7 +94,10 @@ export const GET = withAuth(
       where,
       orderBy: { createdAt: 'desc' },
       take: MAX_EXPORT_ROWS,
-      include: { items: { select: { titleSnapshot: true, quantity: true } } },
+      include: {
+        items: { select: { titleSnapshot: true, quantity: true } },
+        destination: { select: { cityName: true } },
+      },
     });
 
     const rows = orders.map((order) => {
@@ -109,7 +112,7 @@ export const GET = withAuth(
         order.source,
         order.receiverName,
         order.receiverPhone,
-        order.receiverCity,
+        order.destination?.cityName ?? '',
         order.subtotal,
         order.shippingCost,
         order.total,

@@ -70,6 +70,15 @@ export const orderDetailInclude = {
   },
   user: { select: { id: true, name: true, email: true } },
   affiliateUser: { select: { id: true, name: true, email: true } },
+  destination: {
+    select: {
+      provinceName: true,
+      cityName: true,
+      districtName: true,
+      subdistrictName: true,
+      zipCode: true,
+    },
+  },
 } satisfies Prisma.OrderInclude;
 
 type OrderDetail = Prisma.OrderGetPayload<{ include: typeof orderDetailInclude }>;
@@ -88,7 +97,11 @@ export function serializeOrderDetail(order: OrderDetail) {
       phone: order.receiverPhone,
       email: order.receiverEmail,
       address: order.receiverAddress,
-      city: order.receiverCity,
+      province: order.destination?.provinceName ?? null,
+      city: order.destination?.cityName ?? null,
+      district: order.destination?.districtName ?? null,
+      subdistrict: order.destination?.subdistrictName ?? null,
+      zipCode: order.destination?.zipCode ?? null,
       note: order.receiverNote,
     },
     pricing: {

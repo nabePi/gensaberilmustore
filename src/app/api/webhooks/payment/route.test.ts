@@ -44,7 +44,6 @@ async function createOrder(productId: string, grossAmount: number, quantity = 1)
       receiverPhone: '0812',
       receiverEmail: 'test@example.com',
       receiverAddress: 'Addr',
-      receiverCity: 'City',
       subtotal: grossAmount,
       shippingCost: 0,
       discount: 0,

@@ -10,7 +10,7 @@ import { createSession, SESSION_COOKIE_NAME } from '@/server/auth/session';
 
 const createdEmails: string[] = [];
 const createdUserIds: string[] = [];
-const createdCityIds: string[] = [];
+const createdDestinationIds: string[] = [];
 
 async function createMemberCookie() {
   const email = `test-${randomUUID()}@example.com`;
@@ -24,20 +24,23 @@ async function createMemberCookie() {
   return { cookie: `${SESSION_COOKIE_NAME}=${token}`, user };
 }
 
-async function createCity() {
-  const city = await prisma.city.create({
+async function createDestination() {
+  const destination = await prisma.destination.create({
     data: {
-      name: `Test City ${randomUUID()}`,
-      province: 'Test Province',
-      shippingCost: 20000,
-      isActive: true,
+      countryName: 'INDONESIA',
+      provinceName: 'Test Province',
+      cityName: `Test City ${randomUUID()}`,
+      districtName: 'Test District',
+      subdistrictName: 'Test Subdistrict',
+      zipCode: '12345',
+      tariffCode: 'JKT10000',
     },
   });
-  createdCityIds.push(city.id);
-  return city;
+  createdDestinationIds.push(destination.id);
+  return destination;
 }
 
-async function createReceiver(userId: string, cityId: string, isDefault = false) {
+async function createReceiver(userId: string, destinationId: string, isDefault = false) {
   return prisma.receiver.create({
     data: {
       userId,
@@ -45,7 +48,7 @@ async function createReceiver(userId: string, cityId: string, isDefault = false)
       name: 'A',
       phone: '08111',
       address: 'Addr',
-      cityId,
+      destinationId,
       isDefault,
     },
   });
@@ -65,7 +68,7 @@ function context(id: string) {
 
 afterAll(async () => {
   await prisma.receiver.deleteMany({ where: { userId: { in: createdUserIds } } });
-  await prisma.city.deleteMany({ where: { id: { in: createdCityIds } } });
+  await prisma.destination.deleteMany({ where: { id: { in: createdDestinationIds } } });
   await prisma.user.deleteMany({ where: { email: { in: createdEmails } } });
 });
 
@@ -78,8 +81,8 @@ describe('PUT /api/member/receivers/[id]', () => {
   it('returns 404 for a receiver not owned by the user', async () => {
     const { cookie } = await createMemberCookie();
     const { user: otherUser } = await createMemberCookie();
-    const city = await createCity();
-    const receiver = await createReceiver(otherUser.id, city.id);
+    const destination = await createDestination();
+    const receiver = await createReceiver(otherUser.id, destination.id);
 
     const response = await PUT(buildRequest('PUT', { name: 'B' }, cookie), context(receiver.id));
     expect(response.status).toBe(404);
@@ -87,20 +90,20 @@ describe('PUT /api/member/receivers/[id]', () => {
 
   it('rejects an invalid payload', async () => {
     const { cookie, user } = await createMemberCookie();
-    const city = await createCity();
-    const receiver = await createReceiver(user.id, city.id);
+    const destination = await createDestination();
+    const receiver = await createReceiver(user.id, destination.id);
 
     const response = await PUT(buildRequest('PUT', { name: '' }, cookie), context(receiver.id));
     expect(response.status).toBe(400);
   });
 
-  it('rejects a non-existent city', async () => {
+  it('rejects a non-existent destination', async () => {
     const { cookie, user } = await createMemberCookie();
-    const city = await createCity();
-    const receiver = await createReceiver(user.id, city.id);
+    const destination = await createDestination();
+    const receiver = await createReceiver(user.id, destination.id);
 
     const response = await PUT(
-      buildRequest('PUT', { cityId: randomUUID() }, cookie),
+      buildRequest('PUT', { destinationId: randomUUID() }, cookie),
       context(receiver.id),
     );
     expect(response.status).toBe(400);
@@ -108,8 +111,8 @@ describe('PUT /api/member/receivers/[id]', () => {
 
   it('partially updates a receiver', async () => {
     const { cookie, user } = await createMemberCookie();
-    const city = await createCity();
-    const receiver = await createReceiver(user.id, city.id);
+    const destination = await createDestination();
+    const receiver = await createReceiver(user.id, destination.id);
 
     const response = await PUT(
       buildRequest('PUT', { name: 'Updated Name' }, cookie),
@@ -124,9 +127,9 @@ describe('PUT /api/member/receivers/[id]', () => {
 
   it('unsets other receivers as default when isDefault=true', async () => {
     const { cookie, user } = await createMemberCookie();
-    const city = await createCity();
-    const existingDefault = await createReceiver(user.id, city.id, true);
-    const receiver = await createReceiver(user.id, city.id, false);
+    const destination = await createDestination();
+    const existingDefault = await createReceiver(user.id, destination.id, true);
+    const receiver = await createReceiver(user.id, destination.id, false);
 
     const response = await PUT(
       buildRequest('PUT', { isDefault: true }, cookie),
@@ -153,8 +156,8 @@ describe('DELETE /api/member/receivers/[id]', () => {
   it('returns 404 for a receiver not owned by the user', async () => {
     const { cookie } = await createMemberCookie();
     const { user: otherUser } = await createMemberCookie();
-    const city = await createCity();
-    const receiver = await createReceiver(otherUser.id, city.id);
+    const destination = await createDestination();
+    const receiver = await createReceiver(otherUser.id, destination.id);
 
     const response = await DELETE(buildRequest('DELETE', undefined, cookie), context(receiver.id));
     expect(response.status).toBe(404);
@@ -162,8 +165,8 @@ describe('DELETE /api/member/receivers/[id]', () => {
 
   it('deletes a receiver', async () => {
     const { cookie, user } = await createMemberCookie();
-    const city = await createCity();
-    const receiver = await createReceiver(user.id, city.id);
+    const destination = await createDestination();
+    const receiver = await createReceiver(user.id, destination.id);
 
     const response = await DELETE(buildRequest('DELETE', undefined, cookie), context(receiver.id));
     expect(response.status).toBe(204);
@@ -174,10 +177,10 @@ describe('DELETE /api/member/receivers/[id]', () => {
 
   it('promotes the most recently updated remaining receiver to default when the default is deleted', async () => {
     const { cookie, user } = await createMemberCookie();
-    const city = await createCity();
-    const older = await createReceiver(user.id, city.id, false);
-    const newer = await createReceiver(user.id, city.id, false);
-    const defaultReceiver = await createReceiver(user.id, city.id, true);
+    const destination = await createDestination();
+    const older = await createReceiver(user.id, destination.id, false);
+    const newer = await createReceiver(user.id, destination.id, false);
+    const defaultReceiver = await createReceiver(user.id, destination.id, true);
 
     await prisma.receiver.update({ where: { id: newer.id }, data: { label: 'Kantor' } });
 

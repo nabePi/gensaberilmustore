@@ -61,7 +61,6 @@ async function createOrder(
       receiverPhone: '08123456789',
       receiverEmail: 'budi@example.com',
       receiverAddress: 'Addr',
-      receiverCity: 'City',
       subtotal: 10000,
       shippingCost: 5000,
       discount: 0,
