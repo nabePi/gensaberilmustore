@@ -26,7 +26,11 @@ export type OrderDetail = {
     phone: string;
     email: string | null;
     address: string;
+    province: string | null;
     city: string | null;
+    district: string | null;
+    subdistrict: string | null;
+    zipCode: string | null;
     note: string | null;
   };
   pricing: {
@@ -163,10 +167,43 @@ export function OrderDetailModal({
             <div>
               <h3 className="mb-1 text-sm font-semibold text-foreground">Penerima</h3>
               <p className="text-sm text-neutral-600">{order.receiver.name}</p>
-              <p className="text-sm text-neutral-600">{order.receiver.phone}</p>
-              <p className="text-sm text-neutral-600">{order.receiver.address}</p>
+              <p className="text-sm text-neutral-600">
+                <span className="font-semibold text-neutral-700">No. Telepon:</span>{' '}
+                {order.receiver.phone}
+              </p>
+              <p className="text-sm text-neutral-600">
+                <span className="font-semibold text-neutral-700">Alamat:</span>{' '}
+                {order.receiver.address}
+              </p>
+              {order.receiver.province ? (
+                <p className="text-sm text-neutral-600">
+                  <span className="font-semibold text-neutral-700">Provinsi:</span>{' '}
+                  {order.receiver.province}
+                </p>
+              ) : null}
               {order.receiver.city ? (
-                <p className="text-sm text-neutral-600">{order.receiver.city}</p>
+                <p className="text-sm text-neutral-600">
+                  <span className="font-semibold text-neutral-700">Kota/Kabupaten:</span>{' '}
+                  {order.receiver.city}
+                </p>
+              ) : null}
+              {order.receiver.district ? (
+                <p className="text-sm text-neutral-600">
+                  <span className="font-semibold text-neutral-700">Kecamatan:</span>{' '}
+                  {order.receiver.district}
+                </p>
+              ) : null}
+              {order.receiver.subdistrict ? (
+                <p className="text-sm text-neutral-600">
+                  <span className="font-semibold text-neutral-700">Kelurahan:</span>{' '}
+                  {order.receiver.subdistrict}
+                </p>
+              ) : null}
+              {order.receiver.zipCode ? (
+                <p className="text-sm text-neutral-600">
+                  <span className="font-semibold text-neutral-700">Kode Pos:</span>{' '}
+                  {order.receiver.zipCode}
+                </p>
               ) : null}
               {order.trackingNumber ? (
                 <p className="text-sm text-neutral-600">
