@@ -40,6 +40,11 @@ const SEARCH_PLACEHOLDER_INTERVAL_MS = 2500;
 export function SiteHeader({ initialUser }: { initialUser: HeaderUser | null }) {
   const router = useRouter();
   const [user, setUser] = useState<HeaderUser | null>(initialUser);
+  const [prevInitialUser, setPrevInitialUser] = useState(initialUser);
+  if (initialUser !== prevInitialUser) {
+    setPrevInitialUser(initialUser);
+    setUser(initialUser);
+  }
   const [cartCount, setCartCount] = useState(0);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [query, setQuery] = useState('');
