@@ -12,6 +12,7 @@ const createdEmails: string[] = [];
 const createdProductIds: string[] = [];
 const createdOrderIds: string[] = [];
 const createdAffiliateProfileIds: string[] = [];
+const createdDestinationIds: string[] = [];
 
 async function createTestUser(role: 'BUYER' | 'ADMIN' | 'AFFILIATE' = 'BUYER') {
   const email = `test-${randomUUID()}@example.com`;
@@ -47,6 +48,25 @@ async function createProduct(stock = 10) {
   });
   createdProductIds.push(product.id);
   return product;
+}
+
+async function createDestination(
+  overrides: Partial<Parameters<typeof prisma.destination.create>[0]['data']> = {},
+) {
+  const destination = await prisma.destination.create({
+    data: {
+      countryName: 'INDONESIA',
+      provinceName: 'Test Province',
+      cityName: `City ${randomUUID()}`,
+      districtName: 'Test District',
+      subdistrictName: 'Test Subdistrict',
+      zipCode: '12345',
+      tariffCode: 'JKT10000',
+      ...overrides,
+    },
+  });
+  createdDestinationIds.push(destination.id);
+  return destination;
 }
 
 async function createOrder(
@@ -110,6 +130,7 @@ describe('PATCH /api/admin/orders/[id]/status', () => {
     await prisma.orderItem.deleteMany({ where: { orderId: { in: createdOrderIds } } });
     await prisma.order.deleteMany({ where: { id: { in: createdOrderIds } } });
     await prisma.product.deleteMany({ where: { id: { in: createdProductIds } } });
+    await prisma.destination.deleteMany({ where: { id: { in: createdDestinationIds } } });
     await prisma.user.deleteMany({ where: { email: { in: createdEmails } } });
   });
 
@@ -154,6 +175,18 @@ describe('PATCH /api/admin/orders/[id]/status', () => {
     expect(notifications).toHaveLength(1);
     expect(notifications[0]?.channel).toBe('EMAIL');
     expect(notifications[0]?.template).toBe('PAYMENT_RECEIVED');
+  });
+
+  it('does not crash and leaves airwaybillNumber unset when JNE config is missing', async () => {
+    const cookie = await createAdminCookie();
+    const destination = await createDestination();
+    const { order } = await createOrder({ destinationId: destination.id });
+
+    const response = await PATCH(buildRequest({ toStatus: 'PAID' }, cookie), context(order.id));
+    const json = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(json.airwaybillNumber).toBeNull();
   });
 
   it('restores product stock when an order is cancelled', async () => {

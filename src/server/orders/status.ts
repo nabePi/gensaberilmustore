@@ -30,11 +30,7 @@ export async function applyOrderStatusTransition(
   tx: Db,
   order: OrderForStatusTransition,
   toStatus: OrderStatus,
-  {
-    note,
-    changedByUserId,
-    trackingNumber,
-  }: { note?: string | null; changedByUserId?: string | null; trackingNumber?: string | null },
+  { note, changedByUserId }: { note?: string | null; changedByUserId?: string | null },
 ): Promise<Order> {
   if (!isValidOrderStatusTransition(order.status, toStatus)) {
     throw new OrderStatusTransitionError(
@@ -42,12 +38,9 @@ export async function applyOrderStatusTransition(
     );
   }
 
-  const effectiveTrackingNumber =
-    toStatus === 'SHIPPED' ? (trackingNumber ?? order.trackingNumber) : order.trackingNumber;
-
   const updated = await tx.order.update({
     where: { id: order.id },
-    data: { status: toStatus, trackingNumber: effectiveTrackingNumber },
+    data: { status: toStatus },
   });
 
   await tx.orderStatusHistory.create({
@@ -60,7 +53,7 @@ export async function applyOrderStatusTransition(
     },
   });
 
-  await runOrderStatusSideEffects(tx, order, toStatus, effectiveTrackingNumber);
+  await runOrderStatusSideEffects(tx, order, toStatus);
 
   return updated;
 }
@@ -69,7 +62,6 @@ async function runOrderStatusSideEffects(
   tx: Db,
   order: OrderForStatusTransition,
   toStatus: OrderStatus,
-  trackingNumber: string | null,
 ): Promise<void> {
   switch (toStatus) {
     case 'PAID':
@@ -77,7 +69,7 @@ async function runOrderStatusSideEffects(
       await createPendingAffiliateConversion(tx, order);
       break;
     case 'SHIPPED':
-      await queueOrderNotification(tx, order, 'ORDER_SHIPPED', trackingNumber);
+      await queueOrderNotification(tx, order, 'ORDER_SHIPPED', order.airwaybillNumber);
       break;
     case 'COMPLETED':
       await queueOrderNotification(tx, order, 'ORDER_COMPLETED');
@@ -96,7 +88,7 @@ async function queueOrderNotification(
   tx: Db,
   order: OrderForStatusTransition,
   template: NotificationTemplate,
-  trackingNumber?: string | null,
+  airwaybillNumber?: string | null,
 ): Promise<void> {
   if (!order.receiverEmail) return;
 
@@ -104,7 +96,7 @@ async function queueOrderNotification(
     orderNumber: order.orderNumber,
     receiverName: order.receiverName,
     total: order.total,
-    trackingNumber: trackingNumber ?? null,
+    airwaybillNumber: airwaybillNumber ?? null,
   };
 
   await tx.notification.create({

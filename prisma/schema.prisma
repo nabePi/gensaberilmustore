@@ -412,7 +412,9 @@ model Order {
   receiverAddress      String
   destinationId        String?
   receiverNote         String?
-  trackingNumber       String?
+  shippingService      String        @default("REG")
+  weightKg             Int           @default(0)
+  airwaybillNumber     String?
   subtotal             Int
   shippingCost         Int
   discount             Int

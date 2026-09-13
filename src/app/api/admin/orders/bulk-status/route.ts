@@ -4,6 +4,7 @@ import type { NextRequest } from 'next/server';
 import { prisma } from '@/lib/db';
 import { withAuth } from '@/server/auth';
 import { dispatchPendingNotificationsForOrder } from '@/server/notify/dispatch';
+import { generateAirwaybillForOrder } from '@/server/orders/generate-airwaybill';
 import { bulkOrderStatusUpdateSchema } from '@/server/orders/schema';
 import { applyOrderStatusTransition, OrderStatusTransitionError } from '@/server/orders/status';
 
@@ -38,6 +39,9 @@ export const POST = withAuth(
           await applyOrderStatusTransition(tx, order, toStatus, { changedByUserId: user.id });
         });
         await dispatchPendingNotificationsForOrder(orderId);
+        if (toStatus === 'PAID') {
+          await generateAirwaybillForOrder(orderId);
+        }
         success.push(orderId);
       } catch (error) {
         failed.push({

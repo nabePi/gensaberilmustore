@@ -4,6 +4,7 @@ import type { NextRequest } from 'next/server';
 import { prisma } from '@/lib/db';
 import { withAuth } from '@/server/auth';
 import { dispatchPendingNotificationsForOrder } from '@/server/notify/dispatch';
+import { generateAirwaybillForOrder } from '@/server/orders/generate-airwaybill';
 import { orderStatusUpdateSchema } from '@/server/orders/schema';
 import { orderDetailInclude, serializeOrderDetail } from '@/server/orders/serialize';
 import { applyOrderStatusTransition, OrderStatusTransitionError } from '@/server/orders/status';
@@ -34,7 +35,6 @@ export const PATCH = withAuth<RouteContext>(
         applyOrderStatusTransition(tx, order, parsed.data.toStatus, {
           note: parsed.data.note,
           changedByUserId: user.id,
-          trackingNumber: parsed.data.trackingNumber,
         }),
       );
     } catch (error) {
@@ -45,6 +45,10 @@ export const PATCH = withAuth<RouteContext>(
     }
 
     await dispatchPendingNotificationsForOrder(order.id);
+
+    if (parsed.data.toStatus === 'PAID') {
+      await generateAirwaybillForOrder(order.id);
+    }
 
     const updated = await prisma.order.findUnique({ where: { id }, include: orderDetailInclude });
     return NextResponse.json(serializeOrderDetail(updated!));

@@ -53,6 +53,21 @@ const envSchema = z.object({
   JNE_USERNAME: z.string().optional(),
   JNE_API_KEY: z.string().optional(),
   JNE_SENDER_ORIGIN: z.string().optional(),
+
+  // JNE tracking (list/v1/cnote) API
+  JNE_TRACKING_API_URL: z.string().optional(),
+
+  // JNE generate airwaybill (generatecnote) API
+  JNE_GENERATE_CNOTE_API_URL: z.string().optional(),
+  JNE_OLSHOP_BRANCH: z.string().optional(),
+  JNE_SHIPPER_NAME: z.string().optional(),
+  JNE_SHIPPER_ADDR1: z.string().optional(),
+  JNE_SHIPPER_ADDR2: z.string().optional(),
+  JNE_SHIPPER_ADDR3: z.string().optional(),
+  JNE_SHIPPER_CITY: z.string().optional(),
+  JNE_SHIPPER_REGION: z.string().optional(),
+  JNE_SHIPPER_ZIP: z.string().optional(),
+  JNE_SHIPPER_PHONE: z.string().optional(),
 });
 
 const validatedEnvSchema = envSchema
@@ -162,6 +177,19 @@ export const env = {
   jneUsername: rawEnv.JNE_USERNAME,
   jneApiKey: rawEnv.JNE_API_KEY,
   jneSenderOrigin: rawEnv.JNE_SENDER_ORIGIN,
+
+  jneTrackingApiUrl: rawEnv.JNE_TRACKING_API_URL,
+
+  jneGenerateCnoteApiUrl: rawEnv.JNE_GENERATE_CNOTE_API_URL,
+  jneOlshopBranch: rawEnv.JNE_OLSHOP_BRANCH,
+  jneShipperName: rawEnv.JNE_SHIPPER_NAME,
+  jneShipperAddr1: rawEnv.JNE_SHIPPER_ADDR1,
+  jneShipperAddr2: rawEnv.JNE_SHIPPER_ADDR2,
+  jneShipperAddr3: rawEnv.JNE_SHIPPER_ADDR3,
+  jneShipperCity: rawEnv.JNE_SHIPPER_CITY,
+  jneShipperRegion: rawEnv.JNE_SHIPPER_REGION,
+  jneShipperZip: rawEnv.JNE_SHIPPER_ZIP,
+  jneShipperPhone: rawEnv.JNE_SHIPPER_PHONE,
 };
 
 export type Env = typeof env;

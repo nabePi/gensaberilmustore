@@ -209,6 +209,8 @@ export async function POST(request: NextRequest) {
           receiverAddress,
           destinationId: destination.id,
           receiverNote: data.note ?? null,
+          shippingService: data.service,
+          weightKg,
           subtotal,
           shippingCost,
           discount,
