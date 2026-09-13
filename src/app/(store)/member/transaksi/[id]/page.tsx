@@ -19,12 +19,16 @@ type OrderDetail = {
   orderNumber: string;
   status: OrderStatusValue;
   createdAt: string;
-  trackingNumber: string | null;
+  airwaybillNumber: string | null;
   receiver: {
     name: string;
     phone: string;
     address: string;
-    city: string;
+    province: string | null;
+    city: string | null;
+    district: string | null;
+    subdistrict: string | null;
+    zipCode: string | null;
     note: string | null;
   };
   pricing: {
@@ -50,6 +54,16 @@ type OrderDetail = {
   }[];
 };
 
+type JneTrackingHistoryEntry = { date: string; desc: string; code: string };
+
+type JneTracking = {
+  lastStatus: string;
+  podStatus: string;
+  cityName: string | null;
+  estimateDelivery: string | null;
+  history: JneTrackingHistoryEntry[];
+};
+
 export default function MemberTransaksiDetailPage() {
   const params = useParams<{ id: string }>();
   const [order, setOrder] = useState<OrderDetail | null>(null);
@@ -57,6 +71,9 @@ export default function MemberTransaksiDetailPage() {
   const [isNotFound, setIsNotFound] = useState(false);
   const [cancelling, setCancelling] = useState(false);
   const [cancelError, setCancelError] = useState<string | null>(null);
+  const [tracking, setTracking] = useState<JneTracking | null>(null);
+  const [trackingLoading, setTrackingLoading] = useState(false);
+  const [trackingError, setTrackingError] = useState<string | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -79,6 +96,32 @@ export default function MemberTransaksiDetailPage() {
       active = false;
     };
   }, [params.id]);
+
+  useEffect(() => {
+    if (!order?.airwaybillNumber) return;
+
+    let active = true;
+
+    async function loadTracking() {
+      setTrackingLoading(true);
+      setTrackingError(null);
+      const response = await fetch(`/api/orders/${params.id}/tracking`);
+      if (!active) return;
+      const data = await response.json();
+      if (!response.ok) {
+        setTrackingError(data.error ?? 'Gagal memuat informasi tracking');
+        setTrackingLoading(false);
+        return;
+      }
+      setTracking(data);
+      setTrackingLoading(false);
+    }
+
+    loadTracking();
+    return () => {
+      active = false;
+    };
+  }, [params.id, order?.airwaybillNumber]);
 
   async function handleCancel() {
     if (!confirm('Batalkan pesanan ini?')) return;
@@ -117,6 +160,25 @@ export default function MemberTransaksiDetailPage() {
       </div>
     );
   }
+
+  const historyEntries = [
+    ...order.history.map((entry) => ({
+      id: entry.id,
+      label: ORDER_STATUS_LABELS[entry.toStatus as OrderStatusValue] ?? entry.toStatus,
+      note: entry.note,
+      createdAt: entry.createdAt,
+    })),
+    ...(order.status === 'AWAITING_PAYMENT' && order.payment.paymentClaimedAt
+      ? [
+          {
+            id: 'payment-claimed',
+            label: 'Pembayaran Sedang Dicek Admin',
+            note: 'Anda telah mengklaim sudah melakukan pembayaran, mohon tunggu konfirmasi admin.',
+            createdAt: order.payment.paymentClaimedAt,
+          },
+        ]
+      : []),
+  ];
 
   return (
     <div className="flex flex-col gap-6">
@@ -214,33 +276,102 @@ export default function MemberTransaksiDetailPage() {
           <h2 className="mb-3 text-sm font-semibold text-foreground">Alamat Penerima</h2>
           <div className="text-sm text-neutral-600">
             <p className="font-medium text-foreground">{order.receiver.name}</p>
-            <p>{order.receiver.phone}</p>
-            <p className="mt-1">
-              {order.receiver.address}, {order.receiver.city}
+            <p>
+              <span className="font-semibold text-neutral-700">No. Telepon:</span>{' '}
+              {order.receiver.phone}
             </p>
+            <p className="mt-1">
+              <span className="font-semibold text-neutral-700">Alamat:</span>{' '}
+              {order.receiver.address}
+            </p>
+            {order.receiver.province ? (
+              <p>
+                <span className="font-semibold text-neutral-700">Provinsi:</span>{' '}
+                {order.receiver.province}
+              </p>
+            ) : null}
+            {order.receiver.city ? (
+              <p>
+                <span className="font-semibold text-neutral-700">Kota/Kabupaten:</span>{' '}
+                {order.receiver.city}
+              </p>
+            ) : null}
+            {order.receiver.district ? (
+              <p>
+                <span className="font-semibold text-neutral-700">Kecamatan:</span>{' '}
+                {order.receiver.district}
+              </p>
+            ) : null}
+            {order.receiver.subdistrict ? (
+              <p>
+                <span className="font-semibold text-neutral-700">Kelurahan:</span>{' '}
+                {order.receiver.subdistrict}
+              </p>
+            ) : null}
+            {order.receiver.zipCode ? (
+              <p>
+                <span className="font-semibold text-neutral-700">Kode Pos:</span>{' '}
+                {order.receiver.zipCode}
+              </p>
+            ) : null}
             {order.receiver.note ? (
               <p className="mt-1 italic text-neutral-400">Catatan: {order.receiver.note}</p>
             ) : null}
-            {order.trackingNumber ? (
+            {order.airwaybillNumber ? (
               <p className="mt-1">
                 No. Resi:{' '}
-                <span className="font-medium text-foreground">{order.trackingNumber}</span>
+                <span className="font-medium text-foreground">{order.airwaybillNumber}</span>
               </p>
             ) : null}
           </div>
         </div>
       </div>
 
+      {order.airwaybillNumber ? (
+        <div className={`p-4 ${cardBase}`}>
+          <h2 className="mb-3 text-sm font-semibold text-foreground">Lacak Pengiriman</h2>
+          <p className="mb-3 text-xs text-neutral-400">
+            No. Airwaybill:{' '}
+            <span className="font-medium text-neutral-600">{order.airwaybillNumber}</span>
+          </p>
+          {trackingLoading ? (
+            <p className="text-sm text-neutral-500">Memuat informasi tracking...</p>
+          ) : trackingError ? (
+            <p className="text-sm text-neutral-500">{trackingError}</p>
+          ) : tracking ? (
+            <div className="flex flex-col gap-4">
+              <div className="rounded-md bg-neutral-50 p-3 text-sm">
+                <p className="font-medium text-foreground">{tracking.lastStatus}</p>
+                {tracking.estimateDelivery ? (
+                  <p className="mt-1 text-xs text-neutral-500">
+                    Estimasi pengiriman: {tracking.estimateDelivery}
+                  </p>
+                ) : null}
+              </div>
+              <div className="flex flex-col gap-3">
+                {[...tracking.history].reverse().map((entry, index) => (
+                  <div key={`${entry.code}-${entry.date}-${index}`} className="flex gap-3 text-sm">
+                    <div className="mt-1 h-2 w-2 shrink-0 rounded-full bg-brand" />
+                    <div>
+                      <p className="font-medium text-foreground">{entry.desc}</p>
+                      <p className="text-xs text-neutral-500">{entry.date}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : null}
+        </div>
+      ) : null}
+
       <div className={`p-4 ${cardBase}`}>
         <h2 className="mb-3 text-sm font-semibold text-foreground">Riwayat Status</h2>
         <div className="flex flex-col gap-3">
-          {order.history.map((entry) => (
+          {historyEntries.map((entry) => (
             <div key={entry.id} className="flex gap-3 text-sm">
               <div className="mt-1 h-2 w-2 shrink-0 rounded-full bg-brand" />
               <div>
-                <p className="font-medium text-foreground">
-                  {ORDER_STATUS_LABELS[entry.toStatus as OrderStatusValue] ?? entry.toStatus}
-                </p>
+                <p className="font-medium text-foreground">{entry.label}</p>
                 <p className="text-xs text-neutral-500">
                   {new Date(entry.createdAt).toLocaleDateString('id-ID', {
                     day: 'numeric',
