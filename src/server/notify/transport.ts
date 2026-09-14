@@ -1,4 +1,5 @@
 import { env } from '@/env';
+import { SITE_NAME } from '@/lib/site';
 
 const BREVO_SEND_EMAIL_URL = 'https://api.brevo.com/v3/smtp/email';
 
@@ -28,7 +29,7 @@ export async function sendEmail(
         'api-key': env.brevoApiKey,
       },
       body: JSON.stringify({
-        sender: { email: env.notifyFromEmail },
+        sender: { email: env.notifyFromEmail, name: SITE_NAME },
         to: [{ email: recipient }],
         subject,
         htmlContent: html,
