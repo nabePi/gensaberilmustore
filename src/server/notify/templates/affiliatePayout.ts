@@ -1,3 +1,5 @@
+import { renderEmailLayout } from '@/server/notify/templates/layout';
+
 export type AffiliatePayoutPayload = {
   name: string;
   totalAmount: number;
@@ -11,6 +13,11 @@ export function affiliatePayoutEmail(payload: AffiliatePayoutPayload): {
 
   return {
     subject: 'Komisi Afiliasi Anda Telah Dibayarkan',
-    html: `<p>Halo ${payload.name},</p><p>Komisi afiliasi Anda sebesar <strong>${totalFormatted}</strong> telah kami bayarkan ke rekening yang terdaftar.</p><p>Terima kasih atas kerja sama Anda.</p>`,
+    html: renderEmailLayout(
+      'Komisi Afiliasi Dibayarkan',
+      `<p>Halo ${payload.name},</p>
+       <p>Komisi afiliasi Anda sebesar <strong>${totalFormatted}</strong> telah kami bayarkan ke rekening yang terdaftar.</p>
+       <p>Terima kasih atas kerja sama Anda.</p>`,
+    ),
   };
 }
