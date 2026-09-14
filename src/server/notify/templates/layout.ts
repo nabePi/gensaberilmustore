@@ -6,6 +6,13 @@ export const BRAND_COLOR = '#95271b';
 const WHATSAPP_URL = 'https://wa.me/6281384804494';
 const WHATSAPP_DISPLAY = '0813-8480-4494';
 
+const SOCIAL_LINKS: { label: string; url: string; icon: string }[] = [
+  { label: 'X', url: '#', icon: `${SITE_URL}/social-x.png` },
+  { label: 'Instagram', url: '#', icon: `${SITE_URL}/social-instagram.png` },
+  { label: 'Facebook', url: '#', icon: `${SITE_URL}/social-facebook.png` },
+  { label: 'YouTube', url: '#', icon: `${SITE_URL}/social-youtube.png` },
+];
+
 /**
  * Shared HTML shell for all notification emails: logo header, content slot,
  * and a footer with WhatsApp contact + no-reply notice. Uses table-based
@@ -51,6 +58,17 @@ export function renderEmailLayout(heading: string, bodyHtml: string): string {
                     ${WHATSAPP_DISPLAY}
                   </a>
                 </p>
+                <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 auto 16px;">
+                  <tr>
+                    ${SOCIAL_LINKS.map(
+                      (social) => `<td style="padding:0 6px;">
+                        <a href="${social.url}">
+                          <img src="${social.icon}" alt="${social.label}" width="32" height="32" style="display:block;width:32px;height:32px;border-radius:50%;" />
+                        </a>
+                      </td>`,
+                    ).join('')}
+                  </tr>
+                </table>
                 <p style="margin:0;font-size:12px;color:#9ca3af;">
                   Email ini dikirim otomatis, mohon tidak membalas ke alamat email ini.
                 </p>
