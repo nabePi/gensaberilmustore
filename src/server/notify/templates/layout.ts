@@ -1,5 +1,6 @@
-const LOGO_URL =
-  'https://d33tu7komhhdsg.cloudfront.net/fL0bTwfYBTXRta-Ne8XDN_vScOqHAKlW4IHMcivnhbI/auto/0/250/no/1/bG9jYWw6Ly8vYnVzaW5lc3MvMjAyMS0xMi9neTZlZThjZWUwOTI0MGUyNmFhYWNlL2FsYnVtcy9wcm9maWxlL3BkZnRvanBnbWUtMS1jdXRvdXQucG5n.webp';
+import { SITE_URL } from '@/lib/site';
+
+const LOGO_URL = `${SITE_URL}/logo-email.png`;
 
 export const BRAND_COLOR = '#95271b';
 const WHATSAPP_URL = 'https://wa.me/6281384804494';
