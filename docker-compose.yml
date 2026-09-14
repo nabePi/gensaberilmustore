@@ -62,6 +62,25 @@ services:
       R2_PUBLIC_URL: ${R2_PUBLIC_URL}
       # Monitoring
       SENTRY_DSN: ${SENTRY_DSN}
+      # JNE tariff (shipping cost) API
+      JNE_TARIFF_API_URL: ${JNE_TARIFF_API_URL}
+      JNE_USERNAME: ${JNE_USERNAME}
+      JNE_API_KEY: ${JNE_API_KEY}
+      JNE_SENDER_ORIGIN: ${JNE_SENDER_ORIGIN}
+      # JNE tracking (list/v1/cnote) API
+      JNE_TRACKING_API_URL: ${JNE_TRACKING_API_URL}
+      # JNE generate airwaybill (generatecnote) API
+      JNE_GENERATE_CNOTE_API_URL: ${JNE_GENERATE_CNOTE_API_URL}
+      JNE_OLSHOP_BRANCH: ${JNE_OLSHOP_BRANCH}
+      JNE_OLSHOP_CUST: ${JNE_OLSHOP_CUST}
+      JNE_SHIPPER_NAME: ${JNE_SHIPPER_NAME}
+      JNE_SHIPPER_ADDR1: ${JNE_SHIPPER_ADDR1}
+      JNE_SHIPPER_ADDR2: ${JNE_SHIPPER_ADDR2}
+      JNE_SHIPPER_ADDR3: ${JNE_SHIPPER_ADDR3}
+      JNE_SHIPPER_CITY: ${JNE_SHIPPER_CITY}
+      JNE_SHIPPER_REGION: ${JNE_SHIPPER_REGION}
+      JNE_SHIPPER_ZIP: ${JNE_SHIPPER_ZIP}
+      JNE_SHIPPER_PHONE: ${JNE_SHIPPER_PHONE}
     depends_on:
       migrate:
         condition: service_completed_successfully
