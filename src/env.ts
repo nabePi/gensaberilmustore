@@ -33,7 +33,7 @@ const envSchema = z.object({
 
   // Notification placeholders
   FONNTE_TOKEN: z.string().optional(),
-  RESEND_API_KEY: z.string().optional(),
+  BREVO_API_KEY: z.string().optional(),
   NOTIFY_FROM_EMAIL: z.string().email().optional(),
   CRON_SECRET: z.string().optional(),
 
@@ -161,7 +161,7 @@ export const env = {
   midtransSnapEnabled: rawEnv.NEXT_PUBLIC_MIDTRANS_SNAP_ENABLED ?? false,
 
   fonnteToken: rawEnv.FONNTE_TOKEN,
-  resendApiKey: rawEnv.RESEND_API_KEY,
+  brevoApiKey: rawEnv.BREVO_API_KEY,
   notifyFromEmail: rawEnv.NOTIFY_FROM_EMAIL ?? 'no-reply@gensaberilmustore.com',
   cronSecret: rawEnv.CRON_SECRET,
 

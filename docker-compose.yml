@@ -50,7 +50,7 @@ services:
       MIDTRANS_IS_PRODUCTION: ${MIDTRANS_IS_PRODUCTION}
       # WhatsApp / email notifications
       FONNTE_TOKEN: ${FONNTE_TOKEN}
-      RESEND_API_KEY: ${RESEND_API_KEY}
+      BREVO_API_KEY: ${BREVO_API_KEY}
       NOTIFY_FROM_EMAIL: ${NOTIFY_FROM_EMAIL}
       CRON_SECRET: ${CRON_SECRET}
       # File storage: local (default) or r2 (Cloudflare R2)
