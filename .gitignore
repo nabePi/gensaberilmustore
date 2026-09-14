@@ -60,3 +60,4 @@ seed-admin-user.sql
 seed-homepage-sections.sql
 seed-products.sql
 seed-cities.sql
+import_destination.sql

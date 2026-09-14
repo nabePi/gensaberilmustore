@@ -8,7 +8,6 @@ type JneGenerateCnoteResponse =
 
 export type GenerateAirwaybillParams = {
   orderNumber: string;
-  olshopCust: string;
   service: string;
   destinationTariffCode: string;
   receiverName: string;
@@ -55,6 +54,7 @@ export async function generateJneAirwaybill(params: GenerateAirwaybillParams): P
     !env.jneApiKey ||
     !env.jneSenderOrigin ||
     !env.jneOlshopBranch ||
+    !env.jneOlshopCust ||
     !env.jneShipperName ||
     !env.jneShipperAddr1 ||
     !env.jneShipperCity ||
@@ -70,7 +70,7 @@ export async function generateJneAirwaybill(params: GenerateAirwaybillParams): P
     username: env.jneUsername,
     api_key: env.jneApiKey,
     OLSHOP_BRANCH: env.jneOlshopBranch,
-    OLSHOP_CUST: toOlshopCust(params.olshopCust),
+    OLSHOP_CUST: toOlshopCust(env.jneOlshopCust),
     OLSHOP_ORDERID: params.orderNumber,
     OLSHOP_SHIPPER_NAME: env.jneShipperName,
     OLSHOP_SHIPPER_ADDR1: env.jneShipperAddr1,

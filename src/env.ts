@@ -60,6 +60,7 @@ const envSchema = z.object({
   // JNE generate airwaybill (generatecnote) API
   JNE_GENERATE_CNOTE_API_URL: z.string().optional(),
   JNE_OLSHOP_BRANCH: z.string().optional(),
+  JNE_OLSHOP_CUST: z.string().optional(),
   JNE_SHIPPER_NAME: z.string().optional(),
   JNE_SHIPPER_ADDR1: z.string().optional(),
   JNE_SHIPPER_ADDR2: z.string().optional(),
@@ -182,6 +183,7 @@ export const env = {
 
   jneGenerateCnoteApiUrl: rawEnv.JNE_GENERATE_CNOTE_API_URL,
   jneOlshopBranch: rawEnv.JNE_OLSHOP_BRANCH,
+  jneOlshopCust: rawEnv.JNE_OLSHOP_CUST,
   jneShipperName: rawEnv.JNE_SHIPPER_NAME,
   jneShipperAddr1: rawEnv.JNE_SHIPPER_ADDR1,
   jneShipperAddr2: rawEnv.JNE_SHIPPER_ADDR2,

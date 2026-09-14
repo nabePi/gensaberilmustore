@@ -19,7 +19,6 @@ export async function generateAirwaybillForOrder(orderId: string): Promise<void>
 
     const cnoteNo = await generateJneAirwaybill({
       orderNumber: order.orderNumber,
-      olshopCust: order.userId ?? order.receiverPhone,
       service: order.shippingService,
       destinationTariffCode: order.destination.tariffCode,
       receiverName: order.receiverName,
