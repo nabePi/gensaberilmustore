@@ -110,14 +110,17 @@ export async function generateJneAirwaybill(params: GenerateAirwaybillParams): P
         Accept: 'application/json',
       },
       body,
+      signal: AbortSignal.timeout(15_000),
     });
-  } catch {
+  } catch (error) {
+    console.error('Gagal menghubungi layanan airwaybill JNE:', error);
     throw new JneAirwaybillError('Gagal menghubungi layanan airwaybill JNE');
   }
 
   const data: JneGenerateCnoteResponse | null = await response.json().catch(() => null);
 
   if (!data || 'error' in data) {
+    console.error('Respons airwaybill JNE tidak valid:', data);
     throw new JneAirwaybillError(data?.error ?? 'Gagal membuat airwaybill JNE');
   }
 

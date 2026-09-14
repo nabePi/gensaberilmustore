@@ -56,14 +56,17 @@ export async function fetchJneTariffOptions(
         Accept: 'application/json',
       },
       body,
+      signal: AbortSignal.timeout(15_000),
     });
-  } catch {
+  } catch (error) {
+    console.error('Gagal menghubungi layanan tarif JNE:', error);
     throw new JneTariffError('Gagal menghubungi layanan tarif JNE');
   }
 
   const data: JneTariffApiResponse | null = await response.json().catch(() => null);
 
   if (!data || 'error' in data) {
+    console.error('Respons tarif JNE tidak valid:', data);
     throw new JneTariffError(data?.error ?? 'Gagal mengambil tarif JNE');
   }
 
