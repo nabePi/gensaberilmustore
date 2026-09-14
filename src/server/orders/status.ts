@@ -7,6 +7,8 @@ import type {
   PrismaClient,
 } from '@prisma/client';
 
+import { totalWithManualPaymentCode } from '@/server/payment/manual-qris';
+
 export class OrderStatusTransitionError extends Error {}
 
 const ORDER_STATUS_TRANSITIONS: Record<OrderStatus, OrderStatus[]> = {
@@ -65,11 +67,20 @@ async function runOrderStatusSideEffects(
 ): Promise<void> {
   switch (toStatus) {
     case 'PAID':
-      await queueOrderNotification(tx, order, 'PAYMENT_RECEIVED');
+      await queueOrderNotification(tx, order, 'PAYMENT_RECEIVED', {
+        total: order.manualPaymentCode
+          ? totalWithManualPaymentCode(order.total, order.manualPaymentCode)
+          : order.total,
+        paymentMethod: order.paymentMethod,
+        manualPaymentCode: order.manualPaymentCode,
+        verifiedAt: new Date().toISOString(),
+      });
       await createPendingAffiliateConversion(tx, order);
       break;
     case 'SHIPPED':
-      await queueOrderNotification(tx, order, 'ORDER_SHIPPED', order.airwaybillNumber);
+      await queueOrderNotification(tx, order, 'ORDER_SHIPPED', {
+        airwaybillNumber: order.airwaybillNumber,
+      });
       break;
     case 'COMPLETED':
       await queueOrderNotification(tx, order, 'ORDER_COMPLETED');
@@ -88,7 +99,7 @@ async function queueOrderNotification(
   tx: Db,
   order: OrderForStatusTransition,
   template: NotificationTemplate,
-  airwaybillNumber?: string | null,
+  extra?: Record<string, unknown>,
 ): Promise<void> {
   if (!order.receiverEmail) return;
 
@@ -96,7 +107,7 @@ async function queueOrderNotification(
     orderNumber: order.orderNumber,
     receiverName: order.receiverName,
     total: order.total,
-    airwaybillNumber: airwaybillNumber ?? null,
+    ...extra,
   };
 
   await tx.notification.create({
