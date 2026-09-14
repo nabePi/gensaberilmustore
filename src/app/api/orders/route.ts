@@ -271,7 +271,20 @@ export async function POST(request: NextRequest) {
             payloadJson: {
               orderNumber: createdOrder.orderNumber,
               receiverName: createdOrder.receiverName,
-              total: createdOrder.total,
+              items: cart.items.map((item) => {
+                const unitPrice = unitPriceByItemId.get(item.id)!;
+                return {
+                  title: item.product.title,
+                  quantity: item.quantity,
+                  unitPrice,
+                  lineTotal: unitPrice * item.quantity,
+                  imageUrl: item.product.images[0]?.url ?? null,
+                };
+              }),
+              subtotal,
+              shippingCost,
+              discount: voucherDiscount,
+              total,
             },
           },
         });

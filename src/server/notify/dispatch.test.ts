@@ -45,7 +45,15 @@ async function createNotification(
       channel: 'EMAIL',
       recipient: 'buyer@example.com',
       template: 'ORDER_CONFIRMED',
-      payloadJson: { orderNumber: 'ORD-1', receiverName: 'Budi', total: 15000 },
+      payloadJson: {
+        orderNumber: 'ORD-1',
+        receiverName: 'Budi',
+        items: [],
+        subtotal: 15000,
+        shippingCost: 0,
+        discount: 0,
+        total: 15000,
+      },
       ...overrides,
     },
   });

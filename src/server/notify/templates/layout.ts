@@ -6,6 +6,12 @@ export const BRAND_COLOR = '#95271b';
 const WHATSAPP_URL = 'https://wa.me/6281384804494';
 const WHATSAPP_DISPLAY = '0813-8480-4494';
 
+/** Email clients fetch images directly, so relative upload paths need to become absolute URLs. */
+export function resolveEmailImageUrl(url: string | null | undefined): string | null {
+  if (!url) return null;
+  return url.startsWith('http') ? url : `${SITE_URL}${url}`;
+}
+
 const SOCIAL_LINKS: { label: string; url: string; icon: string }[] = [
   { label: 'X', url: '#', icon: `${SITE_URL}/social-x.png` },
   { label: 'Instagram', url: '#', icon: `${SITE_URL}/social-instagram.png` },
