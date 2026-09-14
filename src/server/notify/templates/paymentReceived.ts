@@ -9,7 +9,7 @@ export function paymentReceivedEmail(payload: PaymentReceivedPayload): {
   html: string;
 } {
   return {
-    subject: `Pembayaran Pesanan ${payload.orderNumber} Berhasil`,
+    subject: `Pembayaran Berhasil [${payload.orderNumber}]`,
     html: renderEmailLayout(
       'Pembayaran Berhasil',
       `<p>Pembayaran untuk pesanan <strong>${payload.orderNumber}</strong> berhasil kami terima. Kami akan segera memproses pengiriman.</p>`,

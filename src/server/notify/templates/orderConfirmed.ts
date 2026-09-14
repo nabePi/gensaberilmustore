@@ -67,7 +67,7 @@ export function orderConfirmedEmail(payload: OrderConfirmedPayload): {
   ].join('');
 
   return {
-    subject: `Pesanan ${payload.orderNumber} Diterima`,
+    subject: `Pesanan Diterima [${payload.orderNumber}]`,
     html: renderEmailLayout(
       'Pesanan Diterima',
       `<p>Halo ${payload.receiverName},</p>

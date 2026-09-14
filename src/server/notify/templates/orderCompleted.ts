@@ -9,7 +9,7 @@ export function orderCompletedEmail(payload: OrderCompletedPayload): {
   html: string;
 } {
   return {
-    subject: `Pesanan ${payload.orderNumber} Selesai`,
+    subject: `Pesanan Selesai [${payload.orderNumber}]`,
     html: renderEmailLayout(
       'Pesanan Selesai',
       `<p>Pesanan <strong>${payload.orderNumber}</strong> selesai. Terima kasih telah berbelanja di Gensa Berilmu Store.</p>`,

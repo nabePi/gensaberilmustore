@@ -13,7 +13,7 @@ export function orderShippedEmail(payload: OrderShippedPayload): { subject: stri
     : '';
 
   return {
-    subject: `Pesanan ${payload.orderNumber} Sudah Dikirim`,
+    subject: `Pesanan Sudah Dikirim [${payload.orderNumber}]`,
     html: renderEmailLayout(
       'Pesanan Dikirim',
       `<p>Pesanan <strong>${payload.orderNumber}</strong> sudah dikirim.</p>${trackingLine}`,
