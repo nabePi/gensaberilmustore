@@ -8,9 +8,11 @@ import { PageHeader } from '@/components/admin/ui/PageHeader';
 import { Table, Tbody, Td, TableEmptyState, Th, Thead, Tr } from '@/components/admin/ui/Table';
 import {
   adminBtnOutline,
+  adminBtnOutlineSm,
   adminBtnPrimary,
   adminBtnPrimarySm,
   adminCardBase,
+  adminErrorText,
   adminInputBase,
   adminTextareaBase,
 } from '@/lib/admin/styles';
@@ -55,6 +57,33 @@ function formatPhoneDisplay(value: string): string {
 function isValidEmail(value: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 }
+
+const VOUCHER_ERROR_MESSAGES: Record<string, string> = {
+  NOT_FOUND: 'Kode voucher tidak ditemukan.',
+  INACTIVE: 'Voucher ini sudah tidak aktif.',
+  NOT_STARTED: 'Voucher ini belum berlaku.',
+  EXPIRED: 'Voucher ini sudah kedaluwarsa.',
+  WRONG_CHANNEL: 'Voucher ini tidak berlaku untuk transaksi POS.',
+  MIN_PURCHASE_NOT_MET: 'Total belanja belum memenuhi minimum pembelian untuk voucher ini.',
+  QUOTA_EXCEEDED: 'Kuota voucher ini sudah habis.',
+  USER_LIMIT_REACHED: 'Batas penggunaan voucher ini sudah tercapai.',
+};
+
+type VoucherResult =
+  | { valid: true; voucherId: string; code: string; discountAmount: number }
+  | { valid: false; reason: string };
+
+type PublicVoucher = {
+  id: string;
+  code: string;
+  description: string | null;
+  type: 'PERCENT' | 'FIXED';
+  value: number;
+  maxDiscount: number | null;
+  minPurchase: number;
+  eligible: boolean;
+  discountAmount: number;
+};
 
 function QuantityInput({
   quantity,
@@ -202,6 +231,11 @@ export default function AdminPosPage() {
   const [customerEmail, setCustomerEmail] = useState('');
   const [sendInvoiceEmail, setSendInvoiceEmail] = useState(true);
   const [note, setNote] = useState('');
+  const [voucherInput, setVoucherInput] = useState('');
+  const [voucherResult, setVoucherResult] = useState<VoucherResult | null>(null);
+  const [voucherLoading, setVoucherLoading] = useState(false);
+  const [publicVouchers, setPublicVouchers] = useState<PublicVoucher[]>([]);
+  const [manualDiscountInput, setManualDiscountInput] = useState('');
   const [checkingOut, setCheckingOut] = useState(false);
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
   const snapFailedRef = useRef(false);
@@ -339,6 +373,54 @@ export default function AdminPosPage() {
 
   const cartTotal = cart.reduce((sum, line) => sum + unitPriceOf(line) * line.quantity, 0);
   const cartCount = cart.reduce((sum, line) => sum + line.quantity, 0);
+  const voucherDiscount = voucherResult?.valid ? voucherResult.discountAmount : 0;
+  const manualDiscount = Math.max(0, parseInt(manualDiscountInput, 10) || 0);
+  const totalDiscount = Math.min(cartTotal, voucherDiscount + manualDiscount);
+  const grandTotal = Math.max(0, cartTotal - totalDiscount);
+
+  useEffect(() => {
+    if (cart.length === 0) return;
+    let active = true;
+
+    async function loadPublicVouchers() {
+      const params = new URLSearchParams({ subtotal: String(cartTotal), channel: 'POS' });
+      const response = await fetch(`/api/vouchers/public?${params.toString()}`);
+      if (!response.ok) return;
+      const data: { items: PublicVoucher[] } = await response.json();
+      if (active) setPublicVouchers(data.items);
+    }
+
+    loadPublicVouchers();
+    return () => {
+      active = false;
+    };
+  }, [cart.length, cartTotal]);
+
+  async function applyVoucherCode(code: string) {
+    if (!code.trim() || cart.length === 0) return;
+    setVoucherLoading(true);
+    try {
+      const response = await fetch('/api/vouchers/validate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: code.trim(), subtotal: cartTotal, channel: 'POS' }),
+      });
+      const data: VoucherResult = await response.json();
+      setVoucherResult(data);
+      setVoucherInput(code.trim().toUpperCase());
+    } finally {
+      setVoucherLoading(false);
+    }
+  }
+
+  async function handleVoucherApply() {
+    await applyVoucherCode(voucherInput);
+  }
+
+  function handleVoucherRemove() {
+    setVoucherResult(null);
+    setVoucherInput('');
+  }
 
   async function refreshPaymentStatus(orderId: string) {
     setReceipt((prev) =>
@@ -355,7 +437,7 @@ export default function AdminPosPage() {
 
     const data: { orderStatus: string } = await response.json();
     const paymentStatus: PosReceiptState['paymentStatus'] =
-      data.orderStatus === 'PAID'
+      data.orderStatus === 'PAID' || data.orderStatus === 'COMPLETED'
         ? 'paid'
         : data.orderStatus === 'CANCELLED'
           ? 'cancelled'
@@ -431,6 +513,8 @@ export default function AdminPosPage() {
         customerEmail: customerEmail.trim(),
         note: note.trim() || undefined,
         sendInvoiceEmail,
+        voucherCode: voucherResult?.valid ? voucherResult.code : undefined,
+        manualDiscount,
       }),
     });
 
@@ -449,6 +533,10 @@ export default function AdminPosPage() {
     setCustomerPhone('');
     setCustomerEmail('');
     setNote('');
+    setVoucherInput('');
+    setVoucherResult(null);
+    setPublicVouchers([]);
+    setManualDiscountInput('');
     loadHistory();
 
     if (currentPaymentMethod === 'POS_CASH') {
@@ -656,7 +744,7 @@ export default function AdminPosPage() {
                     type="button"
                     onClick={() => removeFromCart(line.productId)}
                     aria-label={`Hapus ${line.title}`}
-                    className="text-neutral-400 hover:text-red"
+                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-xl font-semibold text-neutral-500 ring-1 ring-inset ring-neutral-300 transition hover:bg-red/10 hover:text-red"
                   >
                     &times;
                   </button>
@@ -665,9 +753,125 @@ export default function AdminPosPage() {
             </div>
           )}
 
-          <div className="flex items-center justify-between border-t border-neutral-200 pt-3">
-            <span className="text-sm font-semibold text-foreground">Total</span>
-            <strong className="text-lg text-brand">{formatCurrency(cartTotal)}</strong>
+          {cart.length > 0 ? (
+            <div className="flex flex-col gap-2 border-t border-neutral-200 pt-3">
+              {publicVouchers.length > 0 ? (
+                <div className="flex flex-col gap-2">
+                  <p className="text-xs font-semibold text-neutral-600">Voucher Tersedia</p>
+                  <div className="flex flex-col gap-2">
+                    {publicVouchers.map((voucher) => {
+                      const selected = voucherResult?.valid && voucherResult.code === voucher.code;
+                      return (
+                        <label
+                          key={voucher.id}
+                          className={`flex cursor-pointer items-start gap-2 rounded-lg border p-3 text-sm ${
+                            selected
+                              ? 'border-brand bg-brand-50'
+                              : 'border-neutral-200 bg-white hover:bg-neutral-50'
+                          } ${!voucher.eligible ? 'opacity-50' : ''}`}
+                        >
+                          <input
+                            type="radio"
+                            name="posPublicVoucher"
+                            className="mt-1"
+                            checked={Boolean(selected)}
+                            disabled={!voucher.eligible || voucherLoading}
+                            onChange={() => applyVoucherCode(voucher.code)}
+                          />
+                          <span className="flex flex-col">
+                            <span className="font-medium text-foreground">{voucher.code}</span>
+                            {voucher.description ? (
+                              <span className="text-xs text-neutral-500">
+                                {voucher.description}
+                              </span>
+                            ) : null}
+                            <span className="text-xs text-neutral-500">
+                              {voucher.eligible
+                                ? `Hemat ${formatCurrency(voucher.discountAmount)}`
+                                : `Minimal belanja ${formatCurrency(voucher.minPurchase)}`}
+                            </span>
+                          </span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                </div>
+              ) : null}
+
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  value={voucherInput}
+                  onChange={(event) => setVoucherInput(event.target.value.toUpperCase())}
+                  placeholder="Kode voucher"
+                  className={adminInputBase}
+                  disabled={Boolean(voucherResult?.valid)}
+                />
+                {voucherResult?.valid ? (
+                  <button type="button" onClick={handleVoucherRemove} className={adminBtnOutlineSm}>
+                    Hapus
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={handleVoucherApply}
+                    disabled={voucherLoading || !voucherInput.trim()}
+                    className={adminBtnOutlineSm}
+                  >
+                    Terapkan
+                  </button>
+                )}
+              </div>
+              {voucherResult && !voucherResult.valid ? (
+                <p className={adminErrorText}>
+                  {VOUCHER_ERROR_MESSAGES[voucherResult.reason] ?? 'Kode voucher tidak valid.'}
+                </p>
+              ) : null}
+              {voucherResult?.valid ? (
+                <p className="text-xs text-green">
+                  Voucher {voucherResult.code} berhasil diterapkan.
+                </p>
+              ) : null}
+
+              <div className="flex flex-col gap-1">
+                <label htmlFor="posManualDiscount" className="text-xs font-medium text-neutral-600">
+                  Potongan Manual (Rp)
+                </label>
+                <input
+                  id="posManualDiscount"
+                  type="number"
+                  min={0}
+                  inputMode="numeric"
+                  placeholder="Contoh: 750 untuk pembulatan"
+                  value={manualDiscountInput}
+                  onChange={(e) => setManualDiscountInput(e.target.value)}
+                  className={adminInputBase}
+                />
+              </div>
+            </div>
+          ) : null}
+
+          <div className="flex flex-col gap-1 border-t border-neutral-200 pt-3">
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-neutral-600">Subtotal</span>
+              <span className="text-sm text-neutral-600">{formatCurrency(cartTotal)}</span>
+            </div>
+            {voucherDiscount > 0 ? (
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-green">Diskon Voucher</span>
+                <span className="text-sm text-green">-{formatCurrency(voucherDiscount)}</span>
+              </div>
+            ) : null}
+            {manualDiscount > 0 ? (
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-green">Potongan Manual</span>
+                <span className="text-sm text-green">-{formatCurrency(manualDiscount)}</span>
+              </div>
+            ) : null}
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-semibold text-foreground">Total</span>
+              <strong className="text-lg text-brand">{formatCurrency(grandTotal)}</strong>
+            </div>
           </div>
 
           <div className="flex flex-col gap-1">

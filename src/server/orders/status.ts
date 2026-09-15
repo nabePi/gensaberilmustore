@@ -12,7 +12,9 @@ import { totalWithManualPaymentCode } from '@/server/payment/manual-qris';
 export class OrderStatusTransitionError extends Error {}
 
 const ORDER_STATUS_TRANSITIONS: Record<OrderStatus, OrderStatus[]> = {
-  AWAITING_PAYMENT: ['PAID', 'CANCELLED'],
+  // POS orders paid via gateway skip straight to COMPLETED since there is no
+  // packing/shipping step for an in-store sale.
+  AWAITING_PAYMENT: ['PAID', 'COMPLETED', 'CANCELLED'],
   PAID: ['PACKED', 'CANCELLED'],
   PACKED: ['SHIPPED', 'CANCELLED'],
   SHIPPED: ['COMPLETED', 'CANCELLED'],

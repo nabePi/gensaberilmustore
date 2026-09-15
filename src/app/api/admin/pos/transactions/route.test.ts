@@ -101,7 +101,7 @@ describe('POST /api/admin/pos/transactions', () => {
 
     const order = await prisma.order.findUnique({ where: { id: json.orderId } });
     expect(order?.source).toBe('POS');
-    expect(order?.status).toBe('PAID');
+    expect(order?.status).toBe('COMPLETED');
     expect(order?.posCashierUserId).toBe(adminId);
     expect(order?.total).toBe(100000);
 

@@ -139,10 +139,11 @@ export const POST = withAuth(
 
         // POS_QRIS is verified on the spot by the cashier (they see the payment succeed
         // right in front of them), so unlike online orders it doesn't need a unique
-        // payment code to disambiguate — it's marked PAID immediately, like cash.
+        // payment code to disambiguate. POS sales also skip packing/shipping entirely,
+        // so once payment is confirmed the order is COMPLETED immediately.
         const initialStatus =
           data.paymentMethod === 'POS_CASH' || data.paymentMethod === 'POS_QRIS'
-            ? 'PAID'
+            ? 'COMPLETED'
             : 'AWAITING_PAYMENT';
 
         const createdOrder = await tx.order.create({
@@ -191,8 +192,8 @@ export const POST = withAuth(
                 fromStatus: initialStatus,
                 toStatus: initialStatus,
                 note:
-                  initialStatus === 'PAID'
-                    ? 'Transaksi POS dibuat'
+                  initialStatus === 'COMPLETED'
+                    ? 'Transaksi POS dibuat dan selesai'
                     : 'Transaksi POS dibuat, menunggu pembayaran gateway',
                 changedByUserId: user.id,
               },

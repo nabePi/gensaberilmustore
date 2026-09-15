@@ -26,7 +26,10 @@ export async function applyMidtransTransactionStatus(
   if (order.status !== 'AWAITING_PAYMENT') return;
 
   if (SETTLED_STATUSES.includes(transactionStatus) && fraudStatus !== 'deny') {
-    await applyOrderStatusTransition(tx, order, 'PAID', {
+    // POS sales don't need packing/shipping, so once the gateway confirms payment
+    // the order is done — unlike online orders, which still need to go through PAID.
+    const targetStatus = order.source === 'POS' ? 'COMPLETED' : 'PAID';
+    await applyOrderStatusTransition(tx, order, targetStatus, {
       note: `Midtrans: ${transactionStatus}`,
     });
     return;
