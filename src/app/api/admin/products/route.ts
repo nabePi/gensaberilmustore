@@ -55,6 +55,8 @@ export const GET = withAuth(
       where.OR = [
         { title: { contains: q, mode: 'insensitive' } },
         { author: { contains: q, mode: 'insensitive' } },
+        { sku: { contains: q, mode: 'insensitive' } },
+        { isbn: { contains: q, mode: 'insensitive' } },
       ];
     }
 
@@ -67,6 +69,7 @@ export const GET = withAuth(
         select: {
           id: true,
           sku: true,
+          isbn: true,
           slug: true,
           title: true,
           author: true,

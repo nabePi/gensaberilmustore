@@ -1,9 +1,10 @@
 'use client';
 
 import Script from 'next/script';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type KeyboardEvent } from 'react';
 
 import { AdminModal } from '@/components/admin/AdminModal';
+import { CameraBarcodeScanner } from '@/components/admin/CameraBarcodeScanner';
 import { PageHeader } from '@/components/admin/ui/PageHeader';
 import { Table, Tbody, Td, TableEmptyState, Th, Thead, Tr } from '@/components/admin/ui/Table';
 import {
@@ -135,6 +136,7 @@ function QuantityInput({
 type CatalogProduct = {
   id: string;
   sku: string;
+  isbn: string | null;
   title: string;
   author: string;
   finalPrice: number;
@@ -217,6 +219,7 @@ export default function AdminPosPage() {
   const [products, setProducts] = useState<CatalogProduct[]>([]);
   const [categories, setCategories] = useState<{ id: string; name: string; depth: number }[]>([]);
   const [q, setQ] = useState('');
+  const [scannerOpen, setScannerOpen] = useState(false);
   const [categoryId, setCategoryId] = useState('');
   const [loadingCatalog, setLoadingCatalog] = useState(true);
 
@@ -353,6 +356,43 @@ export default function AdminPosPage() {
       ];
     });
     showToast(`"${product.title}" ditambahkan ke Pesanan`);
+  }
+
+  async function handleBarcodeScan(code: string) {
+    const params = new URLSearchParams({
+      limit: '5',
+      channel: 'POS',
+      isActive: 'active',
+      q: code,
+    });
+    const response = await fetch(`/api/admin/products?${params.toString()}`);
+    if (!response.ok) return;
+
+    const data: { items: CatalogProduct[] } = await response.json();
+    // ISBN/SKU harus persis sama dengan hasil scan; kalau tidak ada yang persis
+    // tapi hasil pencarian cuma satu produk, anggap itu yang dimaksud.
+    const match =
+      data.items.find((product) => product.sku === code || product.isbn === code) ??
+      (data.items.length === 1 ? data.items[0] : null);
+
+    if (!match) {
+      showToast(`Produk dengan kode "${code}" tidak ditemukan`);
+      return;
+    }
+    if (match.stock <= 0) {
+      showToast(`"${match.title}" stok habis`);
+      return;
+    }
+    addToCart(match);
+  }
+
+  function handleSearchKeyDown(event: KeyboardEvent<HTMLInputElement>) {
+    if (event.key !== 'Enter') return;
+    event.preventDefault();
+    const code = q.trim();
+    if (!code) return;
+    setQ('');
+    void handleBarcodeScan(code);
   }
 
   function updateQuantity(productId: string, quantity: number) {
@@ -604,14 +644,23 @@ export default function AdminPosPage() {
 
       <div className="grid gap-6 lg:grid-cols-[1fr_440px]">
         <div className="flex flex-col gap-3">
-          <div className="grid gap-3 sm:grid-cols-[1fr_220px]">
+          <div className="grid gap-3 sm:grid-cols-[1fr_auto_220px]">
             <input
               type="search"
-              placeholder="Cari produk..."
+              placeholder="Cari produk atau scan ISBN..."
               value={q}
               onChange={(e) => setQ(e.target.value)}
+              onKeyDown={handleSearchKeyDown}
+              autoFocus
               className={adminInputBase}
             />
+            <button
+              type="button"
+              onClick={() => setScannerOpen(true)}
+              className={`${adminBtnOutline} whitespace-nowrap`}
+            >
+              Scan Kamera
+            </button>
             <select
               value={categoryId}
               onChange={(e) => setCategoryId(e.target.value)}
@@ -1034,6 +1083,13 @@ export default function AdminPosPage() {
           </Table>
         )}
       </div>
+
+      {scannerOpen ? (
+        <CameraBarcodeScanner
+          onDetected={(code) => void handleBarcodeScan(code)}
+          onClose={() => setScannerOpen(false)}
+        />
+      ) : null}
 
       {receipt ? (
         <AdminModal title="Struk POS" onClose={() => setReceipt(null)}>
