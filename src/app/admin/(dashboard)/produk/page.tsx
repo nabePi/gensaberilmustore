@@ -73,7 +73,10 @@ export default function AdminProdukPage() {
     if (q.trim()) params.set('q', q.trim());
     if (categoryId) params.set('categoryId', categoryId);
     if (isActive) params.set('isActive', isActive);
-    if (channelFilter) params.set('channelFilter', channelFilter);
+    // WEB/POS harus ikut menampilkan produk BOTH karena BOTH tersedia di kedua channel;
+    // hanya filter "BOTH" itu sendiri yang perlu exact match.
+    if (channelFilter === 'BOTH') params.set('channelFilter', channelFilter);
+    else if (channelFilter) params.set('channel', channelFilter);
 
     const response = await fetch(`/api/admin/products?${params.toString()}`);
     if (response.ok) {
@@ -91,7 +94,8 @@ export default function AdminProdukPage() {
       if (q.trim()) params.set('q', q.trim());
       if (categoryId) params.set('categoryId', categoryId);
       if (isActive) params.set('isActive', isActive);
-      if (channelFilter) params.set('channelFilter', channelFilter);
+      if (channelFilter === 'BOTH') params.set('channelFilter', channelFilter);
+      else if (channelFilter) params.set('channel', channelFilter);
 
       const response = await fetch(`/api/admin/products?${params.toString()}`);
       if (response.ok) {
