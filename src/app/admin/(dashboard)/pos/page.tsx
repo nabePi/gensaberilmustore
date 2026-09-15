@@ -283,7 +283,7 @@ export default function AdminPosPage() {
   useEffect(() => {
     async function load() {
       setLoadingCatalog(true);
-      const params = new URLSearchParams({ limit: '60', channel: 'POS' });
+      const params = new URLSearchParams({ limit: '60', channel: 'POS', isActive: 'active' });
       if (q.trim()) params.set('q', q.trim());
       if (categoryId) params.set('categoryId', categoryId);
 
