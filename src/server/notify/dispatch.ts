@@ -23,6 +23,7 @@ import {
   paymentReceivedEmail,
   PaymentReceivedPayload,
 } from '@/server/notify/templates/paymentReceived';
+import { posInvoiceEmail, PosInvoicePayload } from '@/server/notify/templates/posInvoice';
 import { sendEmail } from '@/server/notify/transport';
 
 export const MAX_NOTIFICATION_ATTEMPTS = 3;
@@ -47,6 +48,8 @@ function renderEmail(
       return affiliateWelcomeEmail(payloadJson as unknown as AffiliateWelcomePayload);
     case 'AFFILIATE_PAYOUT':
       return affiliatePayoutEmail(payloadJson as unknown as AffiliatePayoutPayload);
+    case 'POS_INVOICE':
+      return posInvoiceEmail(payloadJson as unknown as PosInvoicePayload);
     default:
       return null;
   }

@@ -31,6 +31,7 @@ export const createPosTransactionSchema = z.object({
     .optional(),
   manualDiscount: z.number().int().min(0).default(0),
   manualDiscountReason: z.string().trim().min(1).optional(),
+  sendInvoiceEmail: z.boolean().default(true),
 });
 
 export const listPosTransactionsQuerySchema = z.object({

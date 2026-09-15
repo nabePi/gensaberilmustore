@@ -46,10 +46,13 @@ export default async function FulfillmentPrintPage({
       : [];
 
   const orderedById = new Map(orders.map((order) => [order.id, order]));
-  const labels = idList
+  const found = idList
     .map((id) => orderedById.get(id))
     .filter((order): order is NonNullable<typeof order> => Boolean(order))
     .map(serializeOrderDetail);
+
+  const labels = found.filter((order) => order.airwaybillNumber);
+  const skippedCount = found.length - labels.length;
 
   return (
     <div className="mx-auto bg-white p-[3mm] text-neutral-900">
@@ -66,8 +69,16 @@ export default async function FulfillmentPrintPage({
         Gunakan Ctrl/Cmd+P untuk mencetak ulang
       </p>
 
+      {skippedCount > 0 ? (
+        <p className="no-print mb-4 text-sm text-red-600">
+          {skippedCount} pesanan dilewati karena belum punya nomor resi (airwaybill).
+        </p>
+      ) : null}
+
       {labels.length === 0 ? (
-        <p className="text-sm text-neutral-500">Tidak ada pesanan untuk dicetak.</p>
+        <p className="text-sm text-neutral-500">
+          Tidak ada pesanan untuk dicetak. Pastikan nomor resi (airwaybill) sudah tersedia.
+        </p>
       ) : (
         labels.map((order) => (
           <div key={order.id} className="label w-[100mm] border border-neutral-400 p-[2.5mm]">

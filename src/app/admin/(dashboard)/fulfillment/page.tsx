@@ -27,6 +27,7 @@ type FulfillmentOrder = {
   receiverName: string;
   receiverPhone: string;
   source: 'ONLINE' | 'POS';
+  airwaybillNumber: string | null;
 };
 
 const STATUS_FILTER_OPTIONS: { label: string; value: string }[] = [
@@ -133,6 +134,19 @@ export default function AdminFulfillmentPage() {
 
   function handlePrint() {
     if (selected.size === 0) return;
+    const selectedOrders = orders.filter((order) => selected.has(order.id));
+    const withoutAirwaybill = selectedOrders.filter((order) => !order.airwaybillNumber);
+
+    if (withoutAirwaybill.length > 0) {
+      setError(
+        `${withoutAirwaybill.length} pesanan belum punya nomor resi (airwaybill), tidak bisa dicetak: ${withoutAirwaybill
+          .map((order) => order.orderNumber)
+          .join(', ')}`,
+      );
+      return;
+    }
+
+    setError(null);
     const ids = Array.from(selected).join(',');
     window.open(`/admin/fulfillment/print?ids=${ids}`, '_blank');
   }

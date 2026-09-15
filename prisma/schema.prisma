@@ -96,6 +96,7 @@ enum NotificationTemplate {
   PASSWORD_RESET
   AFFILIATE_JOIN
   AFFILIATE_PAYOUT
+  POS_INVOICE
 }
 
 enum NotificationStatus {

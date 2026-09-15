@@ -200,6 +200,7 @@ export default function AdminPosPage() {
   const [customerName, setCustomerName] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
   const [customerEmail, setCustomerEmail] = useState('');
+  const [sendInvoiceEmail, setSendInvoiceEmail] = useState(true);
   const [note, setNote] = useState('');
   const [checkingOut, setCheckingOut] = useState(false);
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
@@ -429,6 +430,7 @@ export default function AdminPosPage() {
         customerPhone: normalizePhone(customerPhone),
         customerEmail: customerEmail.trim(),
         note: note.trim() || undefined,
+        sendInvoiceEmail,
       }),
     });
 
@@ -733,6 +735,20 @@ export default function AdminPosPage() {
               className={adminInputBase}
             />
           </div>
+
+          <label
+            htmlFor="posSendInvoiceEmail"
+            className="flex items-center gap-2 text-sm text-neutral-600"
+          >
+            <input
+              id="posSendInvoiceEmail"
+              type="checkbox"
+              checked={sendInvoiceEmail}
+              onChange={(e) => setSendInvoiceEmail(e.target.checked)}
+              className="h-4 w-4 rounded border-neutral-300"
+            />
+            Kirim invoice ke email
+          </label>
 
           <div className="flex flex-col gap-1">
             <label htmlFor="posNotes" className="text-xs font-medium text-neutral-600">

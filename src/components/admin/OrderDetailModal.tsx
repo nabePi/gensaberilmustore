@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 
 import { AdminModal } from '@/components/admin/AdminModal';
-import { adminBadgeBase, adminBtnPrimarySm } from '@/lib/admin/styles';
+import { adminBadgeBase, adminBtnOutlineSm, adminBtnPrimarySm } from '@/lib/admin/styles';
 import { formatCurrency } from '@/lib/format';
 import { ORDER_STATUS_BADGE_CLASSES, ORDER_STATUS_LABELS } from '@/lib/order-status';
 
@@ -137,9 +137,22 @@ export function OrderDetailModal({
                 {formatOrderDate(order.createdAt)} · {order.source === 'ONLINE' ? 'Online' : 'POS'}
               </p>
             </div>
-            <span className={`${adminBadgeBase} ${ORDER_STATUS_BADGE_CLASSES[order.status]}`}>
-              {ORDER_STATUS_LABELS[order.status]}
-            </span>
+            <div className="flex items-center gap-2">
+              <span className={`${adminBadgeBase} ${ORDER_STATUS_BADGE_CLASSES[order.status]}`}>
+                {ORDER_STATUS_LABELS[order.status]}
+              </span>
+              <button
+                type="button"
+                disabled={!order.airwaybillNumber}
+                title={
+                  order.airwaybillNumber ? undefined : 'Nomor resi (airwaybill) belum tersedia'
+                }
+                onClick={() => window.open(`/admin/fulfillment/print?ids=${order.id}`, '_blank')}
+                className={adminBtnOutlineSm}
+              >
+                Cetak Resi
+              </button>
+            </div>
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">

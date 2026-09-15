@@ -1,8 +1,9 @@
-import type { Prisma } from '@prisma/client';
+import type { PaymentMethod, Prisma } from '@prisma/client';
 import { NextRequest, NextResponse } from 'next/server';
 
 import { prisma } from '@/lib/db';
 import { withAuth } from '@/server/auth';
+import { dispatchPendingNotificationsForOrder } from '@/server/notify/dispatch';
 import { generateUniqueOrderNumber } from '@/server/orders/order-number';
 import { orderListInclude, serializeAdminOrderListItem } from '@/server/orders/serialize';
 import { validateVoucherForOrder, VoucherValidationError } from '@/server/orders/voucher';
@@ -10,6 +11,16 @@ import { createPosTransactionSchema, listPosTransactionsQuerySchema } from '@/se
 import { computeUnitPrice, resolveActiveDiscount } from '@/server/products/pricing';
 
 class PosTransactionError extends Error {}
+
+const PAYMENT_METHOD_LABELS: Record<PaymentMethod, string> = {
+  BANK_TRANSFER: 'Transfer Bank',
+  EWALLET: 'E-Wallet',
+  QRIS: 'QRIS',
+  POS_CASH: 'Tunai',
+  POS_TRANSFER: 'Transfer',
+  POS_QRIS: 'QRIS',
+  POS_GATEWAY: 'Payment Gateway',
+};
 
 export const POST = withAuth(
   async (request: NextRequest, { user }) => {
@@ -200,8 +211,48 @@ export const POST = withAuth(
           });
         }
 
+        if (data.sendInvoiceEmail) {
+          await tx.notification.create({
+            data: {
+              channel: 'EMAIL',
+              recipient: data.customerEmail,
+              template: 'POS_INVOICE',
+              relatedOrderId: createdOrder.id,
+              payloadJson: {
+                orderNumber: createdOrder.orderNumber,
+                receiverName: createdOrder.receiverName,
+                items: data.items.map((item) => {
+                  const product = productById.get(item.productId)!;
+                  const effectiveDiscount = effectiveDiscountByProductId.get(item.productId)!;
+                  const unitPrice = computeUnitPrice(
+                    effectiveDiscount.finalPrice,
+                    item.quantity,
+                    product.wholesalePrice,
+                    product.wholesaleMinQty,
+                  );
+                  return {
+                    title: product.title,
+                    quantity: item.quantity,
+                    unitPrice,
+                    lineTotal: unitPrice * item.quantity,
+                    imageUrl: null,
+                  };
+                }),
+                subtotal,
+                discount,
+                total,
+                paymentMethodLabel: PAYMENT_METHOD_LABELS[data.paymentMethod],
+              },
+            },
+          });
+        }
+
         return createdOrder;
       });
+
+      if (data.sendInvoiceEmail) {
+        await dispatchPendingNotificationsForOrder(order.id);
+      }
 
       return NextResponse.json(
         {

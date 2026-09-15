@@ -41,6 +41,7 @@ export function serializeAdminOrderListItem(order: OrderListItem) {
     receiverPhone: order.receiverPhone,
     source: order.source,
     affiliateCode: order.affiliateCode,
+    airwaybillNumber: order.airwaybillNumber,
   };
 }
 
