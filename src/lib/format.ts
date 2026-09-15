@@ -11,3 +11,10 @@ export function formatCurrency(amount: number): string {
   // render identically regardless of the runtime's ICU data.
   return currencyFormatter.format(amount).replace(/\s/g, '');
 }
+
+export function maskPhone(phone: string): string {
+  if (phone.length <= 7) return phone;
+  const first = phone.slice(0, 4);
+  const last = phone.slice(-3);
+  return `${first}${'*'.repeat(phone.length - 7)}${last}`;
+}

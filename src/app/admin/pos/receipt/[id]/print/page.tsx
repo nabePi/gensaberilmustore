@@ -13,6 +13,9 @@ const PAYMENT_METHOD_LABELS: Record<string, string> = {
   POS_GATEWAY: 'Payment Gateway',
 };
 
+const LOGO_URL =
+  'https://d33tu7komhhdsg.cloudfront.net/fL0bTwfYBTXRta-Ne8XDN_vScOqHAKlW4IHMcivnhbI/auto/0/250/no/1/bG9jYWw6Ly8vYnVzaW5lc3MvMjAyMS0xMi9neTZlZThjZWUwOTI0MGUyNmFhYWNlL2FsYnVtcy9wcm9maWxlL3BkZnRvanBnbWUtMS1jdXRvdXQucG5n.webp';
+
 export default async function PosReceiptPrintPage({ params }: { params: Promise<{ id: string }> }) {
   const user = await getAdminSessionUser();
   if (!user || user.role !== 'ADMIN') {
@@ -28,7 +31,6 @@ export default async function PosReceiptPrintPage({ params }: { params: Promise<
 
   await prisma.order.update({ where: { id }, data: { posReceiptPrintedAt: new Date() } });
 
-  const storeSetting = await prisma.storeSetting.findUnique({ where: { id: 1 } });
   const detail = serializeOrderDetail(order);
 
   return (
@@ -43,13 +45,16 @@ export default async function PosReceiptPrintPage({ params }: { params: Promise<
       </p>
 
       <div className="border-b border-dashed border-neutral-400 pb-2 text-center">
-        <p className="text-sm font-bold">{storeSetting?.name ?? 'GenSa Berilmu'}</p>
-        {storeSetting?.address ? (
-          <p className="text-[10px] text-neutral-500">{storeSetting.address}</p>
-        ) : null}
-        {storeSetting?.phone ? (
-          <p className="text-[10px] text-neutral-500">{storeSetting.phone}</p>
-        ) : null}
+        <img
+          src={LOGO_URL}
+          alt="GenSa Berilmu"
+          className="mx-auto mb-1 h-8 w-auto object-contain"
+        />
+        <p className="text-sm font-bold">PT. Generasi Shalahuddin Berilmu</p>
+        <p className="text-[10px] text-neutral-500">0813-8480-4494</p>
+        <p className="text-[10px] text-neutral-500">Jalan Margonda Raya Gang H. Fatimah</p>
+        <p className="text-[10px] text-neutral-500">Bawah Rt 02/014 No. 8, Kemiri Muka, Beji,</p>
+        <p className="text-[10px] text-neutral-500">Kota Depok, Jawa Barat 16423</p>
       </div>
 
       <div className="border-b border-dashed border-neutral-400 py-2 text-[11px]">
