@@ -160,6 +160,23 @@
   }
 }
 
+@keyframes scan-line-move {
+  0%,
+  100% {
+    top: 4%;
+  }
+  50% {
+    top: 94%;
+  }
+}
+
+@utility animate-scan-line {
+  animation: scan-line-move 2.2s ease-in-out infinite;
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}
+
 body {
   background: var(--color-background);
   color: var(--color-foreground);
