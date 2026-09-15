@@ -642,7 +642,7 @@ export default function AdminPosPage() {
         }
       />
 
-      <div className="grid gap-6 lg:grid-cols-[1fr_440px]">
+      <div className="grid gap-6 lg:grid-cols-[1fr_380px]">
         <div className="flex flex-col gap-3">
           <div className="grid gap-3 sm:grid-cols-[1fr_auto_220px]">
             <input
