@@ -94,9 +94,16 @@ export default async function AdminDashboardPage() {
                     </p>
                   </div>
                   <div className="flex items-center gap-4">
-                    <Badge tone={ORDER_STATUS_BADGE_TONE[item.status]}>
-                      {ORDER_STATUS_LABELS[item.status]}
-                    </Badge>
+                    <div className="flex flex-col items-end gap-1">
+                      <Badge tone={ORDER_STATUS_BADGE_TONE[item.status]}>
+                        {ORDER_STATUS_LABELS[item.status]}
+                      </Badge>
+                      {item.status === 'AWAITING_PAYMENT' && item.paymentClaimedAt ? (
+                        <span className="text-[11px] font-medium text-amber-600">
+                          Diklaim dibayar
+                        </span>
+                      ) : null}
+                    </div>
                     <span className="text-sm font-semibold text-foreground">
                       {formatCurrency(item.total)}
                     </span>
