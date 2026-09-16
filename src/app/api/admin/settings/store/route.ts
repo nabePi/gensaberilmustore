@@ -6,20 +6,10 @@ import { validateStaticQris } from '@/server/payment/qris';
 import { storeSettingUpdateSchema } from '@/server/settings/schema';
 
 export const GET = withAuth(
-  async (_request: NextRequest, { user }) => {
-    const [setting, orderCount, productCount, memberCount] = await Promise.all([
-      prisma.storeSetting.findUnique({ where: { id: 1 } }),
-      prisma.order.count(),
-      prisma.product.count(),
-      prisma.user.count({ where: { role: { not: 'ADMIN' } } }),
-    ]);
+  async () => {
+    const setting = await prisma.storeSetting.findUnique({ where: { id: 1 } });
 
-    return NextResponse.json({
-      setting,
-      admin: { name: user.name, email: user.email },
-      storage: { orderCount, productCount, memberCount },
-      canResetOrders: process.env.NODE_ENV !== 'production',
-    });
+    return NextResponse.json({ setting });
   },
   { role: 'ADMIN' },
 );

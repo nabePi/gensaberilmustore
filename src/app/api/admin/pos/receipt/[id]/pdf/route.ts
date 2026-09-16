@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 import { prisma } from '@/lib/db';
+import { STORE_ADDRESS, STORE_LEGAL_NAME, STORE_PHONE } from '@/lib/site';
 import { withAuth } from '@/server/auth';
 import { orderDetailInclude, serializeOrderDetail } from '@/server/orders/serialize';
 import { buildPosReceiptFilename, generatePosReceiptPdf } from '@/server/pos/receipt-pdf';
@@ -18,23 +19,20 @@ export const GET = withAuth<RouteContext>(
       return NextResponse.json({ error: 'Struk tidak ditemukan' }, { status: 404 });
     }
 
-    const [storeSetting, cashier] = await Promise.all([
-      prisma.storeSetting.findUnique({ where: { id: 1 } }),
-      order.posCashierUserId
-        ? prisma.user.findUnique({
-            where: { id: order.posCashierUserId },
-            select: { name: true, email: true },
-          })
-        : Promise.resolve(null),
-    ]);
+    const cashier = order.posCashierUserId
+      ? await prisma.user.findUnique({
+          where: { id: order.posCashierUserId },
+          select: { name: true, email: true },
+        })
+      : null;
 
     const detail = serializeOrderDetail(order);
     const pdfBuffer = await generatePosReceiptPdf({
       detail,
       cashierName: cashier?.name ?? cashier?.email ?? '-',
-      storeName: storeSetting?.name ?? 'GenSa Berilmu',
-      storeAddress: storeSetting?.address ?? null,
-      storePhone: storeSetting?.phone ?? null,
+      storeName: STORE_LEGAL_NAME,
+      storeAddress: STORE_ADDRESS,
+      storePhone: STORE_PHONE,
     });
 
     const filename = buildPosReceiptFilename(detail);

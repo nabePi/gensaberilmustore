@@ -45,23 +45,6 @@ function buildRequest(method: string, body: unknown, cookie: string) {
   });
 }
 
-function validPayload() {
-  return {
-    name: 'GenSa Berilmu',
-    email: 'toko@example.com',
-    phone: '08123456789',
-    address: 'Jl. Contoh No. 1',
-    defaultShippingCost: 15000,
-    freeShippingMinTotal: 200000,
-    bank1Name: 'BCA',
-    bank1Number: '1234567890',
-    bank1Holder: 'PT GenSa Berilmu',
-    bank2Name: 'Mandiri',
-    bank2Number: '0987654321',
-    bank2Holder: 'PT GenSa Berilmu',
-  };
-}
-
 afterAll(async () => {
   await prisma.user.deleteMany({ where: { email: { in: createdEmails } } });
 });
@@ -72,15 +55,13 @@ describe('GET /api/admin/settings/store', () => {
     expect(response.status).toBe(401);
   });
 
-  it('returns setting, admin info, and storage stats', async () => {
+  it('returns the store setting', async () => {
     const cookie = await createAdminCookie();
     const response = await GET(buildRequest('GET', undefined, cookie));
     const json = await response.json();
 
     expect(response.status).toBe(200);
-    expect(json.admin.email).toBeTruthy();
-    expect(typeof json.storage.orderCount).toBe('number');
-    expect(typeof json.canResetOrders).toBe('boolean');
+    expect(json).toHaveProperty('setting');
   });
 });
 
@@ -90,28 +71,16 @@ describe('PUT /api/admin/settings/store', () => {
     expect(response.status).toBe(401);
   });
 
-  it('rejects invalid email', async () => {
+  it('rejects a commission percent outside 0-100', async () => {
     const cookie = await createAdminCookie();
-    const response = await PUT(
-      buildRequest('PUT', { ...validPayload(), email: 'not-an-email' }, cookie),
-    );
+    const response = await PUT(buildRequest('PUT', { defaultCommissionPercent: 150 }, cookie));
     expect(response.status).toBe(400);
-  });
-
-  it('saves the store setting', async () => {
-    const cookie = await createAdminCookie();
-    const response = await PUT(buildRequest('PUT', validPayload(), cookie));
-    const json = await response.json();
-
-    expect(response.status).toBe(200);
-    expect(json.setting.name).toBe('GenSa Berilmu');
-    expect(json.setting.bank1Holder).toBe('PT GenSa Berilmu');
   });
 
   it('rejects an invalid QRIS static code', async () => {
     const cookie = await createAdminCookie();
     const response = await PUT(
-      buildRequest('PUT', { ...validPayload(), qrisStaticCode: 'bukan-qris' }, cookie),
+      buildRequest('PUT', { defaultCommissionPercent: 5, qrisStaticCode: 'bukan-qris' }, cookie),
     );
     const json = await response.json();
 
@@ -119,14 +88,19 @@ describe('PUT /api/admin/settings/store', () => {
     expect(json.issues.qrisStaticCode[0]).toMatch(/000201/);
   });
 
-  it('saves a valid QRIS static code', async () => {
+  it('saves a valid QRIS static code and commission percent', async () => {
     const cookie = await createAdminCookie();
     const response = await PUT(
-      buildRequest('PUT', { ...validPayload(), qrisStaticCode: validStaticQris() }, cookie),
+      buildRequest(
+        'PUT',
+        { defaultCommissionPercent: 7.5, qrisStaticCode: validStaticQris() },
+        cookie,
+      ),
     );
     const json = await response.json();
 
     expect(response.status).toBe(200);
     expect(json.setting.qrisStaticCode).toBe(validStaticQris());
+    expect(Number(json.setting.defaultCommissionPercent)).toBe(7.5);
   });
 });

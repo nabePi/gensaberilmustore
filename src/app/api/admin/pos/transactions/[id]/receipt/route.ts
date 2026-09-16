@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import { prisma } from '@/lib/db';
+import { STORE_ADDRESS, STORE_LEGAL_NAME, STORE_PHONE } from '@/lib/site';
 import { withAuth } from '@/server/auth';
 import { orderDetailInclude, serializeOrderDetail } from '@/server/orders/serialize';
 
@@ -20,17 +21,9 @@ export const GET = withAuth<RouteContext>(
       await prisma.order.update({ where: { id }, data: { posReceiptPrintedAt: new Date() } });
     }
 
-    const storeSetting = await prisma.storeSetting.findUnique({ where: { id: 1 } });
-
     return NextResponse.json({
       order: serializeOrderDetail(order),
-      store: storeSetting
-        ? {
-            name: storeSetting.name,
-            address: storeSetting.address,
-            phone: storeSetting.phone,
-          }
-        : null,
+      store: { name: STORE_LEGAL_NAME, address: STORE_ADDRESS, phone: STORE_PHONE },
     });
   },
   { role: 'ADMIN' },

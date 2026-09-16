@@ -3,6 +3,7 @@ import { notFound, redirect } from 'next/navigation';
 import { PrintTrigger } from '@/components/admin/PrintTrigger';
 import { prisma } from '@/lib/db';
 import { formatCurrency } from '@/lib/format';
+import { STORE_ADDRESS_LINES, STORE_LEGAL_NAME, STORE_PHONE } from '@/lib/site';
 import { getAdminSessionUser } from '@/server/auth';
 import { orderDetailInclude, serializeOrderDetail } from '@/server/orders/serialize';
 
@@ -50,11 +51,13 @@ export default async function PosReceiptPrintPage({ params }: { params: Promise<
           alt="GenSa Berilmu"
           className="mx-auto mb-1 h-8 w-auto object-contain"
         />
-        <p className="text-sm font-bold">PT. Generasi Shalahuddin Berilmu</p>
-        <p className="text-[10px] text-neutral-500">0813-8480-4494</p>
-        <p className="text-[10px] text-neutral-500">Jalan Margonda Raya Gang H. Fatimah</p>
-        <p className="text-[10px] text-neutral-500">Bawah Rt 02/014 No. 8, Kemiri Muka, Beji,</p>
-        <p className="text-[10px] text-neutral-500">Kota Depok, Jawa Barat 16423</p>
+        <p className="text-sm font-bold">{STORE_LEGAL_NAME}</p>
+        <p className="text-[10px] text-neutral-500">{STORE_PHONE}</p>
+        {STORE_ADDRESS_LINES.map((line) => (
+          <p key={line} className="text-[10px] text-neutral-500">
+            {line}
+          </p>
+        ))}
       </div>
 
       <div className="border-b border-dashed border-neutral-400 py-2 text-[11px]">
