@@ -23,6 +23,7 @@ type StoreSettingForm = {
   bank2Name: string;
   bank2Number: string;
   bank2Holder: string;
+  qrisStaticCode: string;
 };
 
 const EMPTY_FORM: StoreSettingForm = {
@@ -38,6 +39,7 @@ const EMPTY_FORM: StoreSettingForm = {
   bank2Name: '',
   bank2Number: '',
   bank2Holder: '',
+  qrisStaticCode: '',
 };
 
 const RESET_CONFIRM_PHRASE = 'RESET SEMUA PESANAN';
@@ -81,6 +83,7 @@ export default function AdminPengaturanPage() {
             bank2Name: data.setting.bank2Name,
             bank2Number: data.setting.bank2Number,
             bank2Holder: data.setting.bank2Holder,
+            qrisStaticCode: data.setting.qrisStaticCode ?? '',
           });
         }
         setAdmin(data.admin);
@@ -111,7 +114,15 @@ export default function AdminPengaturanPage() {
     });
 
     setSaving(false);
-    setSaveMessage(response.ok ? 'Pengaturan berhasil disimpan!' : 'Gagal menyimpan pengaturan.');
+
+    if (response.ok) {
+      setSaveMessage('Pengaturan berhasil disimpan!');
+      return;
+    }
+
+    const data = await response.json().catch(() => null);
+    const firstIssue = Object.values(data?.issues ?? {})[0] as string[] | undefined;
+    setSaveMessage(firstIssue?.[0] ?? 'Gagal menyimpan pengaturan.');
   }
 
   async function handleConfirmReset() {
@@ -276,6 +287,24 @@ export default function AdminPengaturanPage() {
             />
           </div>
         </div>
+      </div>
+
+      <div className={`flex flex-col gap-3 p-4 ${adminCardBase}`}>
+        <h3 className="font-semibold text-foreground">QRIS Dinamis</h3>
+        <p className="text-xs text-neutral-500">
+          Tempel kode mentah (string, bukan gambar) dari QRIS statis toko. Dapatkan dengan scan QRIS
+          statis cetak/kartu toko pakai aplikasi pembaca QR biasa (bukan aplikasi bank), lalu salin
+          teksnya. Kalau diisi, nominal pembayaran akan otomatis muncul saat pelanggan scan QRIS di
+          checkout dan POS — tidak perlu ketik manual lagi. Kosongkan untuk memakai gambar QRIS
+          statis lama (nominal harus diketik manual oleh pembayar).
+        </p>
+        <textarea
+          rows={3}
+          value={form.qrisStaticCode}
+          onChange={(e) => updateField('qrisStaticCode', e.target.value)}
+          placeholder="00020101021126...6304XXXX"
+          className={`${adminInputBase} font-mono text-xs`}
+        />
       </div>
 
       <div className={`flex flex-col gap-3 p-4 ${adminCardBase}`}>

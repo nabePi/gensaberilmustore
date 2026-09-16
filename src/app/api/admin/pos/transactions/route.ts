@@ -7,6 +7,7 @@ import { dispatchPendingNotificationsForOrder } from '@/server/notify/dispatch';
 import { generateUniqueOrderNumber } from '@/server/orders/order-number';
 import { orderListInclude, serializeAdminOrderListItem } from '@/server/orders/serialize';
 import { validateVoucherForOrder, VoucherValidationError } from '@/server/orders/voucher';
+import { tryGenerateDynamicQrisDataUrl } from '@/server/payment/dynamic-qris';
 import { createPosTransactionSchema, listPosTransactionsQuerySchema } from '@/server/pos/schema';
 import { computeUnitPrice, resolveActiveDiscount } from '@/server/products/pricing';
 
@@ -255,12 +256,22 @@ export const POST = withAuth(
         await dispatchPendingNotificationsForOrder(order.id);
       }
 
+      let qrisImageDataUrl: string | null = null;
+      if (order.paymentMethod === 'POS_QRIS') {
+        const storeSetting = await prisma.storeSetting.findUnique({ where: { id: 1 } });
+        qrisImageDataUrl = await tryGenerateDynamicQrisDataUrl(
+          storeSetting?.qrisStaticCode,
+          order.total,
+        );
+      }
+
       return NextResponse.json(
         {
           orderId: order.id,
           orderNumber: order.orderNumber,
           total: order.total,
           manualPaymentCode: order.manualPaymentCode,
+          qrisImageDataUrl,
         },
         {
           status: 201,

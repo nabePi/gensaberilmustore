@@ -9,6 +9,7 @@ import { formatCurrency } from '@/lib/format';
 import { btnOutline, btnSolid } from '@/lib/styles';
 import { getSessionUser } from '@/server/auth';
 import { applyMidtransTransactionStatus } from '@/server/payment/apply-status';
+import { tryGenerateDynamicQrisDataUrl } from '@/server/payment/dynamic-qris';
 import { totalWithManualPaymentCode } from '@/server/payment/manual-qris';
 import { getStatus } from '@/server/payment/midtrans';
 
@@ -61,6 +62,11 @@ export default async function PaymentSuccessPage({
   if (order.status === 'AWAITING_PAYMENT') {
     if (order.paymentMethod === 'QRIS' && order.manualPaymentCode !== null) {
       const amountDue = totalWithManualPaymentCode(order.total, order.manualPaymentCode);
+      const storeSetting = await prisma.storeSetting.findUnique({ where: { id: 1 } });
+      const dynamicQrisImageDataUrl = await tryGenerateDynamicQrisDataUrl(
+        storeSetting?.qrisStaticCode,
+        amountDue,
+      );
 
       return (
         <QrisPaymentPanel
@@ -70,6 +76,7 @@ export default async function PaymentSuccessPage({
           amountDue={amountDue}
           total={order.total}
           initialClaimedAt={order.paymentClaimedAt?.toISOString() ?? null}
+          dynamicQrisImageDataUrl={dynamicQrisImageDataUrl}
         />
       );
     }

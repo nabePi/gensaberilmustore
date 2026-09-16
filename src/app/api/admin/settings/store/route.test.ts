@@ -7,6 +7,22 @@ import { GET, PUT } from '@/app/api/admin/settings/store/route';
 import { prisma } from '@/lib/db';
 import { hashPassword } from '@/server/auth/password';
 import { ADMIN_SESSION_COOKIE_NAME, createSession } from '@/server/auth/session';
+import { calculateQrisCrc16 } from '@/server/payment/qris';
+
+function buildTlv(tag: string, value: string): string {
+  return `${tag}${value.length.toString().padStart(2, '0')}${value}`;
+}
+
+function validStaticQris() {
+  const withoutCrc =
+    buildTlv('00', '01') +
+    buildTlv('01', '11') +
+    buildTlv('58', 'ID') +
+    buildTlv('59', 'Toko Bahagia') +
+    buildTlv('60', 'JAKARTA') +
+    '6304';
+  return withoutCrc + calculateQrisCrc16(withoutCrc);
+}
 
 const createdEmails: string[] = [];
 
@@ -90,5 +106,27 @@ describe('PUT /api/admin/settings/store', () => {
     expect(response.status).toBe(200);
     expect(json.setting.name).toBe('GenSa Berilmu');
     expect(json.setting.bank1Holder).toBe('PT GenSa Berilmu');
+  });
+
+  it('rejects an invalid QRIS static code', async () => {
+    const cookie = await createAdminCookie();
+    const response = await PUT(
+      buildRequest('PUT', { ...validPayload(), qrisStaticCode: 'bukan-qris' }, cookie),
+    );
+    const json = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(json.issues.qrisStaticCode[0]).toMatch(/000201/);
+  });
+
+  it('saves a valid QRIS static code', async () => {
+    const cookie = await createAdminCookie();
+    const response = await PUT(
+      buildRequest('PUT', { ...validPayload(), qrisStaticCode: validStaticQris() }, cookie),
+    );
+    const json = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(json.setting.qrisStaticCode).toBe(validStaticQris());
   });
 });

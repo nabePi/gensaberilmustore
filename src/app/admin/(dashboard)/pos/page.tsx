@@ -203,6 +203,7 @@ type PosReceiptState = {
   paymentMethod: PosPaymentMethod;
   paymentStatus: 'paid' | 'checking' | 'awaiting' | 'cancelled';
   total?: number;
+  qrisImageDataUrl?: string | null;
 };
 
 function flattenCategories(
@@ -565,7 +566,12 @@ export default function AdminPosPage() {
       return;
     }
 
-    const data: { orderId: string; orderNumber: string; total: number } = await response.json();
+    const data: {
+      orderId: string;
+      orderNumber: string;
+      total: number;
+      qrisImageDataUrl?: string | null;
+    } = await response.json();
     const currentPaymentMethod = paymentMethod;
 
     setCart([]);
@@ -599,6 +605,7 @@ export default function AdminPosPage() {
         paymentMethod: 'POS_QRIS',
         paymentStatus: 'paid',
         total: data.total,
+        qrisImageDataUrl: data.qrisImageDataUrl,
       });
       setCheckingOut(false);
       return;
@@ -1109,13 +1116,18 @@ export default function AdminPosPage() {
           {receipt.paymentMethod === 'POS_QRIS' ? (
             <div className="mb-4 flex flex-col items-center gap-2 text-center">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/qris.jpeg" alt="QRIS Berilmu Bookstore" className="w-56 max-w-full" />
+              <img
+                src={receipt.qrisImageDataUrl ?? '/qris.jpeg'}
+                alt="QRIS Berilmu Bookstore"
+                className="w-56 max-w-full"
+              />
               <p className="text-lg font-bold text-foreground">
                 {formatCurrency(receipt.total ?? 0)}
               </p>
               <p className="max-w-xs text-xs text-neutral-500">
-                Minta pelanggan scan QRIS di atas sejumlah total tersebut. Kasir memverifikasi
-                pembayaran langsung di tempat.
+                {receipt.qrisImageDataUrl
+                  ? 'Minta pelanggan scan QRIS di atas, nominal sudah otomatis terisi.'
+                  : 'Minta pelanggan scan QRIS di atas sejumlah total tersebut. Kasir memverifikasi pembayaran langsung di tempat.'}
               </p>
             </div>
           ) : null}

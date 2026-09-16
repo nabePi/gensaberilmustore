@@ -13,4 +13,9 @@ export const storeSettingUpdateSchema = z.object({
   bank2Name: z.string().trim().min(1),
   bank2Number: z.string().trim().min(1),
   bank2Holder: z.string().trim().min(1),
+  qrisStaticCode: z
+    .string()
+    .trim()
+    .optional()
+    .transform((value) => (value && value.length > 0 ? value : null)),
 });

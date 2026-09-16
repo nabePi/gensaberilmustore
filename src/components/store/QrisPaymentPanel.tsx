@@ -12,6 +12,7 @@ export function QrisPaymentPanel({
   amountDue,
   total,
   initialClaimedAt,
+  dynamicQrisImageDataUrl,
 }: {
   orderId: string;
   orderNumber: string;
@@ -19,6 +20,7 @@ export function QrisPaymentPanel({
   amountDue: number;
   total: number;
   initialClaimedAt: string | null;
+  dynamicQrisImageDataUrl?: string | null;
 }) {
   const [claimedAt, setClaimedAt] = useState(initialClaimedAt);
 
@@ -30,12 +32,17 @@ export function QrisPaymentPanel({
       {claimedAt === null ? (
         <>
           <p className="max-w-md text-sm text-neutral-500">
-            Scan QRIS di bawah ini dan transfer <strong>tepat sejumlah</strong> nominal yang tertera
-            (termasuk 3 digit kode unik) agar pesanan Anda dapat kami verifikasi.
+            {dynamicQrisImageDataUrl
+              ? 'Scan QRIS di bawah ini dengan aplikasi bank/e-wallet Anda. Nominal pembayaran sudah otomatis terisi.'
+              : 'Scan QRIS di bawah ini dan transfer tepat sejumlah nominal yang tertera (termasuk 3 digit kode unik) agar pesanan Anda dapat kami verifikasi.'}
           </p>
           <div className="rounded-lg border border-neutral-200 bg-white p-4">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/qris.jpeg" alt="QRIS Berilmu Bookstore" className="w-72 max-w-full" />
+            <img
+              src={dynamicQrisImageDataUrl ?? '/qris.jpeg'}
+              alt="QRIS Berilmu Bookstore"
+              className="w-72 max-w-full"
+            />
           </div>
         </>
       ) : null}
