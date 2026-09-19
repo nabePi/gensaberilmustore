@@ -97,7 +97,7 @@ export function ProductCard({ product }: { product: ProductCardData }) {
             <img
               src={product.primaryImageUrl}
               alt={product.title}
-              className="h-full w-full object-cover"
+              className={`h-full w-full object-cover ${outOfStock ? 'grayscale' : ''}`}
               onError={handleImageError}
             />
           ) : (
@@ -105,6 +105,13 @@ export function ProductCard({ product }: { product: ProductCardData }) {
               Tanpa Gambar
             </div>
           )}
+          {outOfStock ? (
+            <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+              <span className="rounded-sm bg-white px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-neutral-800">
+                Belum Tersedia
+              </span>
+            </div>
+          ) : null}
         </Link>
       </div>
       <div className="flex flex-1 flex-col gap-[3px] px-2.5 pb-3 pt-2.5">
@@ -129,6 +136,12 @@ export function ProductCard({ product }: { product: ProductCardData }) {
             ) : null}
             <span className="text-sm font-bold text-foreground">
               {formatCurrency(product.finalPrice)}
+            </span>
+            <span className="text-[10px] text-neutral-400">Terjual 100+</span>
+            <span
+              className={`text-[10px] font-semibold ${outOfStock ? 'text-red' : 'text-green'}`}
+            >
+              {outOfStock ? 'Belum Tersedia' : 'Stok Tersedia'}
             </span>
           </div>
           <button
