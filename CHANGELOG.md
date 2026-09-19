@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.2.1](https://github.com/nabePi/gensaberilmustore/compare/v0.2.0...v0.2.1) (2026-09-19)
+
+
+### Bug Fixes
+
+* **member:** tampilkan kode unik QRIS di detail transaksi ([#53](https://github.com/nabePi/gensaberilmustore/issues/53)) ([760fe5a](https://github.com/nabePi/gensaberilmustore/commit/760fe5a892d5deb6bb048e286b5ae2c63245b5f3))
+* **notify:** tampilkan kode unik QRIS di email pesanan diterima ([#54](https://github.com/nabePi/gensaberilmustore/issues/54)) ([08d1125](https://github.com/nabePi/gensaberilmustore/commit/08d1125863ed61dd7b7a53684e5719f7d630cfa2))
+
 ## [0.2.0](https://github.com/nabePi/gensaberilmustore/compare/v0.1.0...v0.2.0) (2026-09-19)
 
 
