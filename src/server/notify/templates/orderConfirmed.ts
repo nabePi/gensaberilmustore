@@ -1,4 +1,5 @@
 import { renderEmailLayout, resolveEmailImageUrl } from '@/server/notify/templates/layout';
+import { formatManualPaymentCode } from '@/server/payment/manual-qris';
 
 export type OrderConfirmedItem = {
   title: string;
@@ -16,6 +17,7 @@ export type OrderConfirmedPayload = {
   shippingCost: number;
   discount: number;
   total: number;
+  manualPaymentCode: number | null;
 };
 
 function formatRupiah(amount: number): string {
@@ -57,13 +59,26 @@ export function orderConfirmedEmail(payload: OrderConfirmedPayload): {
   subject: string;
   html: string;
 } {
+  const totalDue = payload.manualPaymentCode
+    ? payload.total + payload.manualPaymentCode
+    : payload.total;
+
   const summaryRows = [
     renderSummaryRow('Subtotal', formatRupiah(payload.subtotal)),
     renderSummaryRow('Ongkos Kirim', formatRupiah(payload.shippingCost)),
     ...(payload.discount > 0
       ? [renderSummaryRow('Diskon', `-${formatRupiah(payload.discount)}`)]
       : []),
-    renderSummaryRow('Total', formatRupiah(payload.total), { bold: true }),
+    ...(payload.manualPaymentCode
+      ? [renderSummaryRow('Kode Unik', `+${formatManualPaymentCode(payload.manualPaymentCode)}`)]
+      : []),
+    renderSummaryRow(
+      payload.manualPaymentCode ? 'Total + Kode Unik' : 'Total',
+      formatRupiah(totalDue),
+      {
+        bold: true,
+      },
+    ),
   ].join('');
 
   return {

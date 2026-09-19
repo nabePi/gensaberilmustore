@@ -285,6 +285,7 @@ export async function POST(request: NextRequest) {
               shippingCost,
               discount: voucherDiscount,
               total,
+              manualPaymentCode,
             },
           },
         });
