@@ -180,7 +180,7 @@ export function SiteFooter() {
         </div>
       </div>
       <div className="border-t border-neutral-200 py-5 text-center text-[13px] text-neutral-500">
-        © 2025 PT. Generasi Shalahuddin Berilmu
+        © 2026 PT. Generasi Shalahuddin Berilmu
       </div>
     </footer>
   );
