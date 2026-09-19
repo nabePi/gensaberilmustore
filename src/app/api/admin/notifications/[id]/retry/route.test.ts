@@ -71,7 +71,15 @@ describe('POST /api/admin/notifications/[id]/retry', () => {
         template: 'ORDER_CONFIRMED',
         status: 'FAILED',
         attempts: 1,
-        payloadJson: { orderNumber: 'ORD-1', receiverName: 'Budi', total: 15000 },
+        payloadJson: {
+          orderNumber: 'ORD-1',
+          receiverName: 'Budi',
+          items: [],
+          subtotal: 15000,
+          shippingCost: 0,
+          discount: 0,
+          total: 15000,
+        },
       },
     });
     createdNotificationIds.push(notification.id);
