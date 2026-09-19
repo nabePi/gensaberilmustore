@@ -13,6 +13,11 @@ vi.mock('@/server/payment/midtrans', () => ({
   createSnapTransaction: (...args: unknown[]) => createSnapTransaction(...args),
 }));
 
+vi.mock('@/env', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/env')>();
+  return { ...actual, env: { ...actual.env, midtransSnapEnabled: true } };
+});
+
 const { POST } = await import('@/app/api/payment/create/route');
 
 const createdEmails: string[] = [];
