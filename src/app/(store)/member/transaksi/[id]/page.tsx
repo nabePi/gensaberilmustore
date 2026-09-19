@@ -37,7 +37,7 @@ type OrderDetail = {
     discount: number;
     total: number;
   };
-  payment: { method: string; paymentClaimedAt: string | null };
+  payment: { method: string; manualPaymentCode: number | null; paymentClaimedAt: string | null };
   items: {
     id: string;
     title: string;
@@ -264,10 +264,30 @@ export default function MemberTransaksiDetailPage() {
                 <span>-{formatCurrency(order.pricing.discount)}</span>
               </div>
             ) : null}
+            {order.payment.manualPaymentCode !== null ? (
+              <div className="flex justify-between text-neutral-600">
+                <span>Kode Unik</span>
+                <span>+{order.payment.manualPaymentCode.toString().padStart(3, '0')}</span>
+              </div>
+            ) : null}
             <div className="mt-2 flex justify-between border-t border-neutral-200 pt-2 text-sm font-bold text-foreground">
-              <span>Total</span>
-              <span>{formatCurrency(order.pricing.total)}</span>
+              <span>
+                {order.payment.manualPaymentCode !== null ? 'Total + Kode Unik' : 'Total'}
+              </span>
+              <span>
+                {formatCurrency(
+                  order.payment.manualPaymentCode !== null
+                    ? order.pricing.total + order.payment.manualPaymentCode
+                    : order.pricing.total,
+                )}
+              </span>
             </div>
+            {order.payment.manualPaymentCode !== null ? (
+              <p className="text-xs text-neutral-400">
+                ({formatCurrency(order.pricing.total)} + kode unik{' '}
+                {order.payment.manualPaymentCode.toString().padStart(3, '0')})
+              </p>
+            ) : null}
             <p className="mt-1 text-xs text-neutral-400">Metode: {order.payment.method}</p>
           </div>
         </div>
