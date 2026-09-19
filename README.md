@@ -176,3 +176,7 @@ src/
   types/      # Shared TypeScript types
 public/       # Static assets
 ```
+
+## Releases
+
+This project uses [release-please](https://github.com/googleapis/release-please) to automate versioning and changelogs based on [Conventional Commits](https://www.conventionalcommits.org/). Every push to `main` updates an open release PR; merging that PR cuts a new GitHub Release.
