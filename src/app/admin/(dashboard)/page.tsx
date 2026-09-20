@@ -104,9 +104,20 @@ export default async function AdminDashboardPage() {
                         </span>
                       ) : null}
                     </div>
-                    <span className="text-sm font-semibold text-foreground">
-                      {formatCurrency(item.total)}
-                    </span>
+                    <div className="text-right">
+                      <span className="text-sm font-semibold text-foreground">
+                        {formatCurrency(
+                          item.manualPaymentCode !== null
+                            ? item.total + item.manualPaymentCode
+                            : item.total,
+                        )}
+                      </span>
+                      {item.manualPaymentCode !== null ? (
+                        <span className="block text-xs font-normal text-neutral-400">
+                          (+kode unik {item.manualPaymentCode.toString().padStart(3, '0')})
+                        </span>
+                      ) : null}
+                    </div>
                   </div>
                 </Link>
               );

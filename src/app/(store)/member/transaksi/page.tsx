@@ -20,6 +20,7 @@ type OrderListItem = {
   status: OrderStatusValue;
   paymentClaimedAt: string | null;
   total: number;
+  manualPaymentCode: number | null;
   itemCount: number;
   thumbnailUrl: string | null;
   createdAt: string;
@@ -124,7 +125,11 @@ export default function MemberTransaksiPage() {
               </div>
               <div className="flex items-center justify-between gap-4 sm:flex-col sm:items-end">
                 <span className="text-sm font-semibold text-foreground">
-                  {formatCurrency(order.total)}
+                  {formatCurrency(
+                    order.manualPaymentCode !== null
+                      ? order.total + order.manualPaymentCode
+                      : order.total,
+                  )}
                 </span>
                 <Link
                   href={`/member/transaksi/${order.id}`}

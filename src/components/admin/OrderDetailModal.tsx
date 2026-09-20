@@ -208,18 +208,12 @@ export function OrderDetailModal({
               <h3 className="mb-1 text-sm font-semibold text-foreground">Pembayaran</h3>
               <p className="text-sm text-neutral-600">Metode: {order.payment.method}</p>
               {order.payment.manualPaymentCode !== null ? (
-                <>
-                  <p className="text-sm text-neutral-600">
-                    Kode Unik:{' '}
-                    <span className="font-medium text-foreground">
-                      {order.payment.manualPaymentCode.toString().padStart(3, '0')}
-                    </span>
-                  </p>
-                  <p className="text-sm font-semibold text-foreground">
-                    Total + Kode Unik:{' '}
-                    {formatCurrency(order.pricing.total + order.payment.manualPaymentCode)}
-                  </p>
-                </>
+                <p className="text-sm text-neutral-600">
+                  Kode Unik:{' '}
+                  <span className="font-medium text-foreground">
+                    {order.payment.manualPaymentCode.toString().padStart(3, '0')}
+                  </span>
+                </p>
               ) : null}
               {order.status === 'AWAITING_PAYMENT' && order.payment.paymentClaimedAt ? (
                 <p className="text-sm font-medium text-amber-600">
@@ -285,9 +279,23 @@ export function OrderDetailModal({
                 <span>-{formatCurrency(order.pricing.discount)}</span>
               </div>
             ) : null}
+            {order.payment.manualPaymentCode !== null ? (
+              <div className="flex justify-between text-neutral-600">
+                <span>Kode Unik</span>
+                <span>+{order.payment.manualPaymentCode.toString().padStart(3, '0')}</span>
+              </div>
+            ) : null}
             <div className="flex justify-between text-base font-bold text-foreground">
-              <span>Total</span>
-              <span>{formatCurrency(order.pricing.total)}</span>
+              <span>
+                {order.payment.manualPaymentCode !== null ? 'Total + Kode Unik' : 'Total'}
+              </span>
+              <span>
+                {formatCurrency(
+                  order.payment.manualPaymentCode !== null
+                    ? order.pricing.total + order.payment.manualPaymentCode
+                    : order.pricing.total,
+                )}
+              </span>
             </div>
           </div>
 

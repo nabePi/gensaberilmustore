@@ -131,7 +131,11 @@ export default async function MemberDashboardPage() {
                       {getOrderStatusLabel(item.status, item.paymentClaimedAt)}
                     </span>
                     <span className="text-sm font-semibold text-foreground">
-                      {formatCurrency(item.total)}
+                      {formatCurrency(
+                        item.manualPaymentCode !== null
+                          ? item.total + item.manualPaymentCode
+                          : item.total,
+                      )}
                     </span>
                   </div>
                 </Link>
