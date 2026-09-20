@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.2](https://github.com/nabePi/gensaberilmustore/compare/v0.2.1...v0.2.2) (2026-09-20)
+
+
+### Bug Fixes
+
+* **notify:** perbaiki url reset password yang salah tampilkan 0.0.0.0:3000 ([#56](https://github.com/nabePi/gensaberilmustore/issues/56)) ([021b0ec](https://github.com/nabePi/gensaberilmustore/commit/021b0ec9443c7c30eef6778b1829f4ff3eb448cd))
+
 ## [0.2.1](https://github.com/nabePi/gensaberilmustore/compare/v0.2.0...v0.2.1) (2026-09-19)
 
 
