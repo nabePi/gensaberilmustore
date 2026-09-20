@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.3](https://github.com/nabePi/gensaberilmustore/compare/v0.2.2...v0.2.3) (2026-09-20)
+
+
+### Bug Fixes
+
+* **order:** tampilkan kode unik QRIS di dashboard member/admin & detail admin ([#58](https://github.com/nabePi/gensaberilmustore/issues/58)) ([523c4ff](https://github.com/nabePi/gensaberilmustore/commit/523c4fff5c1858d7185065871b36c4113c873332))
+
 ## [0.2.2](https://github.com/nabePi/gensaberilmustore/compare/v0.2.1...v0.2.2) (2026-09-20)
 
 
