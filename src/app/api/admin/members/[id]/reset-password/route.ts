@@ -3,6 +3,7 @@ import { createHash, randomBytes } from 'node:crypto';
 import { NextResponse } from 'next/server';
 
 import { prisma } from '@/lib/db';
+import { SITE_URL } from '@/lib/site';
 import { withAuth } from '@/server/auth';
 import { dispatchNotification } from '@/server/notify/dispatch';
 
@@ -11,7 +12,7 @@ const TOKEN_TTL_MS = 60 * 60 * 1000; // 1 hour
 type RouteContext = { params: Promise<{ id: string }> };
 
 export const POST = withAuth<RouteContext>(
-  async (request, { params }) => {
+  async (_request, { params }) => {
     const { id } = await params;
 
     const member = await prisma.user.findUnique({
@@ -34,10 +35,7 @@ export const POST = withAuth<RouteContext>(
       },
     });
 
-    const resetUrl = new URL(
-      `/reset-password?token=${rawToken}`,
-      request.nextUrl.origin,
-    ).toString();
+    const resetUrl = new URL(`/reset-password?token=${rawToken}`, SITE_URL).toString();
 
     const notification = await prisma.notification.create({
       data: {

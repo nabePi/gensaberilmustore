@@ -41,7 +41,7 @@ export default function KidsPage() {
         <nav aria-label="Navigasi utama">
           <a href="#koleksi">Koleksi Kids</a>
           <a href="#cerita">Intip Keseruannya</a>
-          <a className="parent-link" href="https://gensaberilmu.xyz">
+          <a className="parent-link" href="https://store.gensaberilmu.com">
             GenSa Berilmu <span aria-hidden="true">↗</span>
           </a>
         </nav>
@@ -130,7 +130,7 @@ export default function KidsPage() {
                 </div>
                 <a
                   className="product-cta"
-                  href="https://gensaberilmu.xyz/products/boardbook-belajar-hijaiyah-dalam-sejarah-nabawiyah"
+                  href="https://store.gensaberilmu.com/products/boardbook-belajar-hijaiyah-dalam-sejarah-nabawiyah"
                 >
                   Kenalan dengan bukunya <span aria-hidden="true">↗</span>
                 </a>
@@ -165,7 +165,7 @@ export default function KidsPage() {
                 </div>
                 <a
                   className="product-cta"
-                  href="https://gensaberilmu.xyz/products/komik-the-chronicles-of-ziyad-gsi-230"
+                  href="https://store.gensaberilmu.com/products/komik-the-chronicles-of-ziyad-gsi-230"
                 >
                   Ikuti petualangan Ziyad <span aria-hidden="true">↗</span>
                 </a>
@@ -199,7 +199,7 @@ export default function KidsPage() {
                 </div>
                 <a
                   className="product-cta"
-                  href="https://gensaberilmu.xyz/products/boardgame-treasure-of-palestine"
+                  href="https://store.gensaberilmu.com/products/boardgame-treasure-of-palestine"
                 >
                   Jelajahi permainannya <span aria-hidden="true">↗</span>
                 </a>
@@ -302,7 +302,7 @@ export default function KidsPage() {
             <br />
             Menumbuhkan cinta ilmu, sejak kecil.
           </p>
-          <a href="https://gensaberilmu.xyz">
+          <a href="https://store.gensaberilmu.com">
             Kunjungi GenSa Berilmu <span aria-hidden="true">↗</span>
           </a>
         </div>
