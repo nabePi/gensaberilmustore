@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 
 import { prisma } from '@/lib/db';
+import { SITE_URL } from '@/lib/site';
 import { checkForgotPasswordRateLimit } from '@/server/auth/rate-limit';
 import { dispatchNotification } from '@/server/notify/dispatch';
 
@@ -43,10 +44,7 @@ export async function POST(request: NextRequest) {
         },
       });
 
-      const resetUrl = new URL(
-        `/reset-password?token=${rawToken}`,
-        request.nextUrl.origin,
-      ).toString();
+      const resetUrl = new URL(`/reset-password?token=${rawToken}`, SITE_URL).toString();
 
       const notification = await prisma.notification.create({
         data: {

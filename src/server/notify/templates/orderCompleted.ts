@@ -37,7 +37,7 @@ export function orderCompletedEmail(payload: OrderCompletedPayload): {
 
        <p style="font-size:13px;color:#4b5563;">
          Jangan lupa mampir rutin ke
-         <a href="${SITE_URL}" style="color:${BRAND_COLOR};font-weight:700;text-decoration:none;">gensaberilmu.xyz</a>
+         <a href="${SITE_URL}" style="color:${BRAND_COLOR};font-weight:700;text-decoration:none;">store.gensaberilmu.com</a>
          ya, ada buku baru, promo, dan konten seru seputar sejarah Islam yang kami update terus!
        </p>`,
     ),
