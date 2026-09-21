@@ -11,13 +11,22 @@ export const ORDER_STATUSES = [
   'CANCELLED',
 ] as const;
 
+const emptyToUndefined = (value: unknown) =>
+  typeof value === 'string' && value.trim() === '' ? undefined : value;
+
 export const createOrderSchema = z
   .object({
     receiverName: z.string().trim().min(1, 'Nama penerima wajib diisi').optional(),
     receiverPhone: z.string().trim().min(1, 'Nomor telepon wajib diisi').optional(),
     receiverEmail: z.string().trim().email('Format email tidak valid').optional(),
-    receiverAddress: z.string().trim().min(1, 'Alamat wajib diisi').optional(),
-    destinationId: z.string().uuid('Tujuan pengiriman tidak valid').optional(),
+    receiverAddress: z.preprocess(
+      emptyToUndefined,
+      z.string().trim().min(1, 'Alamat wajib diisi').optional(),
+    ),
+    destinationId: z.preprocess(
+      emptyToUndefined,
+      z.string().uuid('Tujuan pengiriman tidak valid').optional(),
+    ),
     note: z.string().trim().max(500).optional(),
     useReceiverId: z.string().uuid('useReceiverId tidak valid').optional(),
     shippingMethod: z.enum(SHIPPING_METHODS).default('JNE'),
