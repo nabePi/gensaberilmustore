@@ -16,6 +16,7 @@ export type OrderDetail = {
   source: 'ONLINE' | 'POS';
   createdAt: string;
   airwaybillNumber: string | null;
+  shippingMethod: 'JNE' | 'SELF_PICKUP';
   receiver: {
     name: string;
     phone: string;
@@ -141,17 +142,22 @@ export function OrderDetailModal({
               <span className={`${adminBadgeBase} ${ORDER_STATUS_BADGE_CLASSES[order.status]}`}>
                 {ORDER_STATUS_LABELS[order.status]}
               </span>
-              <button
-                type="button"
-                disabled={!order.airwaybillNumber}
-                title={
-                  order.airwaybillNumber ? undefined : 'Nomor resi (airwaybill) belum tersedia'
-                }
-                onClick={() => window.open(`/admin/fulfillment/print?ids=${order.id}`, '_blank')}
-                className={adminBtnOutlineSm}
-              >
-                Cetak Resi
-              </button>
+              <span className={`${adminBadgeBase} bg-neutral-100 text-neutral-600`}>
+                {order.shippingMethod === 'SELF_PICKUP' ? 'Ambil Sendiri' : 'JNE'}
+              </span>
+              {order.shippingMethod === 'JNE' ? (
+                <button
+                  type="button"
+                  disabled={!order.airwaybillNumber}
+                  title={
+                    order.airwaybillNumber ? undefined : 'Nomor resi (airwaybill) belum tersedia'
+                  }
+                  onClick={() => window.open(`/admin/fulfillment/print?ids=${order.id}`, '_blank')}
+                  className={adminBtnOutlineSm}
+                >
+                  Cetak Resi
+                </button>
+              ) : null}
             </div>
           </div>
 

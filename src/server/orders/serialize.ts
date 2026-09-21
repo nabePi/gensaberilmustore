@@ -42,6 +42,7 @@ export function serializeAdminOrderListItem(order: OrderListItem) {
     source: order.source,
     affiliateCode: order.affiliateCode,
     airwaybillNumber: order.airwaybillNumber,
+    shippingMethod: order.shippingMethod,
   };
 }
 
@@ -93,6 +94,7 @@ export function serializeOrderDetail(order: OrderDetail) {
     createdAt: order.createdAt,
     updatedAt: order.updatedAt,
     airwaybillNumber: order.airwaybillNumber,
+    shippingMethod: order.shippingMethod,
     shippingService: order.shippingService,
     weightKg: order.weightKg,
     receiver: {

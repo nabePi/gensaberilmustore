@@ -56,6 +56,11 @@ enum OrderSource {
   POS
 }
 
+enum ShippingMethod {
+  JNE
+  SELF_PICKUP
+}
+
 enum AffiliateConversionStatus {
   PENDING
   APPROVED
@@ -350,14 +355,14 @@ model City {
 }
 
 model Destination {
-  id               String @id @default(uuid())
-  countryName      String
-  provinceName     String
-  cityName         String
-  districtName     String
-  subdistrictName  String
-  zipCode          String
-  tariffCode       String
+  id              String @id @default(uuid())
+  countryName     String
+  provinceName    String
+  cityName        String
+  districtName    String
+  subdistrictName String
+  zipCode         String
+  tariffCode      String
 
   receivers Receiver[]
   orders    Order[]
@@ -404,8 +409,8 @@ model WishlistItem {
 }
 
 model Order {
-  id                   String        @id @default(uuid())
-  orderNumber          String        @unique
+  id                   String         @id @default(uuid())
+  orderNumber          String         @unique
   userId               String?
   receiverName         String
   receiverPhone        String
@@ -413,8 +418,9 @@ model Order {
   receiverAddress      String
   destinationId        String?
   receiverNote         String?
-  shippingService      String        @default("REG")
-  weightKg             Int           @default(0)
+  shippingMethod       ShippingMethod @default(JNE)
+  shippingService      String         @default("REG")
+  weightKg             Int            @default(0)
   airwaybillNumber     String?
   subtotal             Int
   shippingCost         Int
@@ -424,18 +430,18 @@ model Order {
   paymentClaimedAt     DateTime?
   paymentMethod        PaymentMethod
   source               OrderSource
-  status               OrderStatus   @default(AWAITING_PAYMENT)
+  status               OrderStatus    @default(AWAITING_PAYMENT)
   affiliateUserId      String?
   affiliateCode        String?
   posCashierUserId     String?
   posReceiptPrintedAt  DateTime?
   voucherId            String?
   voucherCode          String?
-  voucherDiscount      Int           @default(0)
-  manualDiscount       Int           @default(0)
+  voucherDiscount      Int            @default(0)
+  manualDiscount       Int            @default(0)
   manualDiscountReason String?
-  createdAt            DateTime      @default(now())
-  updatedAt            DateTime      @updatedAt
+  createdAt            DateTime       @default(now())
+  updatedAt            DateTime       @updatedAt
 
   user                User?                @relation("OrderToUser", fields: [userId], references: [id], onDelete: SetNull)
   affiliateUser       User?                @relation("OrderToAffiliateUser", fields: [affiliateUserId], references: [id], onDelete: SetNull)
@@ -491,15 +497,15 @@ model OrderStatusHistory {
 }
 
 model AffiliateProfile {
-  id                String   @id @default(uuid())
-  userId            String   @unique
-  code              String   @unique
+  id                String                  @id @default(uuid())
+  userId            String                  @unique
+  code              String                  @unique
   payoutBankName    String
   payoutBankAccount String
   payoutBankHolder  String
-  isActive          Boolean  @default(true)
+  isActive          Boolean                 @default(true)
   status            AffiliateApprovalStatus @default(PENDING)
-  joinedAt          DateTime @default(now())
+  joinedAt          DateTime                @default(now())
 
   user              User                        @relation(fields: [userId], references: [id], onDelete: Cascade)
   productSelections AffiliateProductSelection[]
