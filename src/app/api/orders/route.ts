@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
     let receiverPhone: string;
     let receiverEmail: string | null;
     let receiverAddress: string;
-    let destinationId: string;
+    let destinationId: string | null;
 
     if (data.useReceiverId) {
       if (!user) {
@@ -73,11 +73,13 @@ export async function POST(request: NextRequest) {
       receiverPhone = data.receiverPhone!;
       receiverEmail = data.receiverEmail ?? null;
       receiverAddress = data.receiverAddress!;
-      destinationId = data.destinationId!;
+      destinationId = data.shippingMethod === 'JNE' ? (data.destinationId ?? null) : null;
     }
 
-    const destination = await prisma.destination.findUnique({ where: { id: destinationId } });
-    if (!destination) {
+    const destination = destinationId
+      ? await prisma.destination.findUnique({ where: { id: destinationId } })
+      : null;
+    if (data.shippingMethod === 'JNE' && !destination) {
       throw new OrderCreationError('Tujuan pengiriman tidak valid');
     }
 
@@ -85,7 +87,7 @@ export async function POST(request: NextRequest) {
     let shippingCost = 0;
     if (data.shippingMethod === 'JNE') {
       try {
-        const tariff = await getShippingCost(destination.tariffCode, weightKg, data.service);
+        const tariff = await getShippingCost(destination!.tariffCode, weightKg, data.service);
         shippingCost = tariff.price;
       } catch (error) {
         if (error instanceof JneTariffError) {
@@ -209,7 +211,7 @@ export async function POST(request: NextRequest) {
           receiverPhone,
           receiverEmail,
           receiverAddress,
-          destinationId: destination.id,
+          destinationId: destination?.id ?? null,
           receiverNote: data.note ?? null,
           shippingMethod: data.shippingMethod,
           shippingService: data.service,
