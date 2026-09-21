@@ -29,7 +29,10 @@ export const createOrderSchema = z
   .refine(
     (value) =>
       value.useReceiverId !== undefined ||
-      (value.receiverName && value.receiverPhone && value.receiverAddress && value.destinationId),
+      (value.receiverName &&
+        value.receiverPhone &&
+        value.receiverAddress &&
+        (value.shippingMethod !== 'JNE' || value.destinationId)),
     {
       message: 'Data penerima wajib diisi, atau gunakan useReceiverId',
       path: ['receiverName'],
