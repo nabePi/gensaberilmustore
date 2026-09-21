@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.3.0](https://github.com/nabePi/gensaberilmustore/compare/v0.2.3...v0.3.0) (2026-09-21)
+
+
+### Features
+
+* **checkout:** sembunyikan alamat lengkap untuk ambil sendiri ([#63](https://github.com/nabePi/gensaberilmustore/issues/63)) ([b0824e2](https://github.com/nabePi/gensaberilmustore/commit/b0824e2a51d6db5bba57a4592354e95338392099))
+* **checkout:** tambah opsi ambil sendiri (self pickup) selain JNE ([#60](https://github.com/nabePi/gensaberilmustore/issues/60)) ([0f97c9d](https://github.com/nabePi/gensaberilmustore/commit/0f97c9dbd47de23f5a26cf0a73a930a8c8539e13))
+* **checkout:** tampilkan alamat toko & sembunyikan tujuan pengiriman untuk ambil sendiri ([#62](https://github.com/nabePi/gensaberilmustore/issues/62)) ([d558e20](https://github.com/nabePi/gensaberilmustore/commit/d558e20710de6b83e1e4f2874ff1fd600786104a))
+* **payment:** tambah metode transfer bank manual di checkout ([#65](https://github.com/nabePi/gensaberilmustore/issues/65)) ([a4ea3f4](https://github.com/nabePi/gensaberilmustore/commit/a4ea3f4012d196dce0e219c142558a754175f1f7))
+
+
+### Bug Fixes
+
+* **checkout:** perbaiki validasi gagal saat submit checkout ambil sendiri ([#64](https://github.com/nabePi/gensaberilmustore/issues/64)) ([8fcfdda](https://github.com/nabePi/gensaberilmustore/commit/8fcfdda3bec7b6ea048d36967245a1d53d88ae82))
+
 ## [0.2.3](https://github.com/nabePi/gensaberilmustore/compare/v0.2.2...v0.2.3) (2026-09-20)
 
 
