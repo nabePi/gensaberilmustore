@@ -82,15 +82,17 @@ export async function POST(request: NextRequest) {
     }
 
     const weightKg = computeCartWeightKg(cart);
-    let shippingCost: number;
-    try {
-      const tariff = await getShippingCost(destination.tariffCode, weightKg, data.service);
-      shippingCost = tariff.price;
-    } catch (error) {
-      if (error instanceof JneTariffError) {
-        throw new OrderCreationError(error.message);
+    let shippingCost = 0;
+    if (data.shippingMethod === 'JNE') {
+      try {
+        const tariff = await getShippingCost(destination.tariffCode, weightKg, data.service);
+        shippingCost = tariff.price;
+      } catch (error) {
+        if (error instanceof JneTariffError) {
+          throw new OrderCreationError(error.message);
+        }
+        throw error;
       }
-      throw error;
     }
 
     for (const item of cart.items) {
@@ -209,6 +211,7 @@ export async function POST(request: NextRequest) {
           receiverAddress,
           destinationId: destination.id,
           receiverNote: data.note ?? null,
+          shippingMethod: data.shippingMethod,
           shippingService: data.service,
           weightKg,
           subtotal,

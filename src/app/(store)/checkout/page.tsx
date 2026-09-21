@@ -47,6 +47,11 @@ const JNE_SERVICE_OPTIONS = [
   { value: 'YES', label: 'YES (Yakin Esok Sampai)' },
 ] as const;
 
+const SHIPPING_METHOD_OPTIONS = [
+  { value: 'JNE', label: 'JNE' },
+  { value: 'SELF_PICKUP', label: 'Ambil Sendiri' },
+] as const;
+
 const VOUCHER_ERROR_MESSAGES: Record<string, string> = {
   NOT_FOUND: 'Kode voucher tidak ditemukan.',
   INACTIVE: 'Voucher ini sudah tidak aktif.',
@@ -121,6 +126,7 @@ const checkoutSchema = z
     receiverEmail: z.string().optional(),
     receiverAddress: z.string().optional(),
     destinationId: z.string().optional(),
+    shippingMethod: z.enum(['JNE', 'SELF_PICKUP']),
     service: z.enum(['REG', 'YES']).optional(),
     note: z.string().max(500).optional(),
   })
@@ -198,13 +204,14 @@ export default function CheckoutPage() {
     formState: { errors },
   } = useForm<CheckoutFormValues>({
     resolver: zodResolver(checkoutSchema),
-    defaultValues: { mode: 'manual', service: 'REG' },
+    defaultValues: { mode: 'manual', shippingMethod: 'JNE', service: 'REG' },
   });
 
   const mode = watch('mode');
   const selectedReceiverId = watch('receiverId');
   const selectedDestinationId = watch('destinationId');
   const selectedService = watch('service');
+  const selectedShippingMethod = watch('shippingMethod');
 
   const [shippingOptions, setShippingOptions] = useState<
     { service: string; shippingCost: number; etd: string }[]
@@ -307,7 +314,7 @@ export default function CheckoutPage() {
       : selectedDestinationId;
 
   useEffect(() => {
-    if (!activeDestinationId) {
+    if (!activeDestinationId || selectedShippingMethod === 'SELF_PICKUP') {
       setShippingOptions([]);
       setShippingError(null);
       setShippingLoading(false);
@@ -352,10 +359,12 @@ export default function CheckoutPage() {
       active = false;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeDestinationId]);
+  }, [activeDestinationId, selectedShippingMethod]);
 
   const shippingCost =
-    shippingOptions.find((option) => option.service === selectedService)?.shippingCost ?? 0;
+    selectedShippingMethod === 'SELF_PICKUP'
+      ? 0
+      : (shippingOptions.find((option) => option.service === selectedService)?.shippingCost ?? 0);
 
   const discount = voucherResult && voucherResult.valid ? voucherResult.discountAmount : 0;
   const subtotal = cart?.subtotal ?? 0;
@@ -371,6 +380,7 @@ export default function CheckoutPage() {
       values.mode === 'receiver'
         ? {
             useReceiverId: values.receiverId,
+            shippingMethod: values.shippingMethod,
             service: values.service,
             note: values.note,
             voucherCode: voucherResult && voucherResult.valid ? voucherResult.code : undefined,
@@ -382,6 +392,7 @@ export default function CheckoutPage() {
             receiverEmail: values.receiverEmail?.trim() ? values.receiverEmail.trim() : undefined,
             receiverAddress: values.receiverAddress,
             destinationId: values.destinationId,
+            shippingMethod: values.shippingMethod,
             service: values.service,
             note: values.note,
             voucherCode: voucherResult && voucherResult.valid ? voucherResult.code : undefined,
@@ -637,35 +648,70 @@ export default function CheckoutPage() {
             ))}
           </div>
 
-          <div className="mb-4 flex items-center gap-3 rounded-sm border border-neutral-200 bg-neutral-50 p-3">
-            <img src="/jne.png" alt="JNE" className="h-8 w-auto shrink-0 object-contain" />
-            <p className="text-xs text-neutral-600">
-              Buku akan dikirim menggunakan jasa pengiriman{' '}
-              <span className="font-semibold">JNE</span>.
-            </p>
+          <div className="mb-4 flex flex-col gap-2">
+            <label className="text-xs font-medium text-neutral-600">Metode Pengiriman</label>
+            <div className="grid grid-cols-2 gap-2">
+              {SHIPPING_METHOD_OPTIONS.map((option) => (
+                <label
+                  key={option.value}
+                  className={`flex cursor-pointer items-center justify-center gap-2 rounded-sm border p-2.5 text-xs font-medium ${
+                    selectedShippingMethod === option.value
+                      ? 'border-brand bg-brand-50 text-brand'
+                      : 'border-neutral-200 text-neutral-600 hover:bg-neutral-50'
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    value={option.value}
+                    checked={selectedShippingMethod === option.value}
+                    onChange={() => setValue('shippingMethod', option.value)}
+                    className="sr-only"
+                  />
+                  {option.label}
+                </label>
+              ))}
+            </div>
           </div>
 
-          <div className="mb-4 flex flex-col gap-1">
-            <label className="text-xs font-medium text-neutral-600">Layanan Pengiriman</label>
-            <select
-              {...register('service')}
-              className={inputBase}
-              disabled={shippingOptions.length === 0}
-            >
-              {shippingOptions.length > 0
-                ? shippingOptions.map((option) => (
-                    <option key={option.service} value={option.service}>
-                      {option.service} &middot; {formatCurrency(option.shippingCost)} &middot;{' '}
-                      {option.etd}
-                    </option>
-                  ))
-                : JNE_SERVICE_OPTIONS.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-            </select>
-          </div>
+          {selectedShippingMethod === 'JNE' ? (
+            <>
+              <div className="mb-4 flex items-center gap-3 rounded-sm border border-neutral-200 bg-neutral-50 p-3">
+                <img src="/jne.png" alt="JNE" className="h-8 w-auto shrink-0 object-contain" />
+                <p className="text-xs text-neutral-600">
+                  Buku akan dikirim menggunakan jasa pengiriman{' '}
+                  <span className="font-semibold">JNE</span>.
+                </p>
+              </div>
+
+              <div className="mb-4 flex flex-col gap-1">
+                <label className="text-xs font-medium text-neutral-600">Layanan Pengiriman</label>
+                <select
+                  {...register('service')}
+                  className={inputBase}
+                  disabled={shippingOptions.length === 0}
+                >
+                  {shippingOptions.length > 0
+                    ? shippingOptions.map((option) => (
+                        <option key={option.service} value={option.service}>
+                          {option.service} &middot; {formatCurrency(option.shippingCost)} &middot;{' '}
+                          {option.etd}
+                        </option>
+                      ))
+                    : JNE_SERVICE_OPTIONS.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                </select>
+              </div>
+            </>
+          ) : (
+            <div className="mb-4 rounded-sm border border-neutral-200 bg-neutral-50 p-3">
+              <p className="text-xs text-neutral-600">
+                Pesanan bisa diambil langsung di toko. Tidak ada ongkos kirim untuk metode ini.
+              </p>
+            </div>
+          )}
 
           {publicVouchers.length > 0 ? (
             <div className="mb-4 flex flex-col gap-2">
@@ -772,7 +818,9 @@ export default function CheckoutPage() {
           <button
             type="submit"
             disabled={
-              submitting || shippingLoading || !activeDestinationId || Boolean(shippingError)
+              submitting ||
+              !activeDestinationId ||
+              (selectedShippingMethod === 'JNE' && (shippingLoading || Boolean(shippingError)))
             }
             className={`${btnSolid} mt-5 w-full`}
           >

@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
 export const ONLINE_PAYMENT_METHODS = ['BANK_TRANSFER', 'EWALLET', 'QRIS'] as const;
+export const SHIPPING_METHODS = ['JNE', 'SELF_PICKUP'] as const;
 export const ORDER_STATUSES = [
   'AWAITING_PAYMENT',
   'PAID',
@@ -19,6 +20,7 @@ export const createOrderSchema = z
     destinationId: z.string().uuid('Tujuan pengiriman tidak valid').optional(),
     note: z.string().trim().max(500).optional(),
     useReceiverId: z.string().uuid('useReceiverId tidak valid').optional(),
+    shippingMethod: z.enum(SHIPPING_METHODS).default('JNE'),
     service: z.enum(['REG', 'YES']).default('REG'),
     paymentMethod: z.enum(ONLINE_PAYMENT_METHODS).default('BANK_TRANSFER'),
     affiliateCode: z.string().trim().min(1).optional(),

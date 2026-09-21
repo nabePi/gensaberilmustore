@@ -5,6 +5,8 @@ import { generateJneAirwaybill } from '@/server/shipping/jne-airwaybill';
  * Best-effort side effect run after an order is marked PAID: generates a JNE
  * airwaybill (resi) and stores it on the order. Never throws, so a JNE
  * outage or missing config never blocks the admin's status-change action.
+ * Skipped entirely for orders picked up by the buyer (SELF_PICKUP) — there is
+ * no shipment to generate a resi for.
  */
 export async function generateAirwaybillForOrder(orderId: string): Promise<void> {
   try {
@@ -13,7 +15,9 @@ export async function generateAirwaybillForOrder(orderId: string): Promise<void>
       include: { items: true, destination: true },
     });
 
-    if (!order || !order.destination || order.airwaybillNumber) return;
+    if (!order || !order.destination || order.airwaybillNumber || order.shippingMethod !== 'JNE') {
+      return;
+    }
 
     const quantity = order.items.reduce((sum, item) => sum + item.quantity, 0);
 

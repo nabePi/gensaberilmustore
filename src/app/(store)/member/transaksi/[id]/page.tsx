@@ -20,6 +20,7 @@ type OrderDetail = {
   status: OrderStatusValue;
   createdAt: string;
   airwaybillNumber: string | null;
+  shippingMethod: 'JNE' | 'SELF_PICKUP';
   receiver: {
     name: string;
     phone: string;
@@ -253,6 +254,10 @@ export default function MemberTransaksiDetailPage() {
             <div className="flex justify-between text-neutral-600">
               <span>Subtotal</span>
               <span>{formatCurrency(order.pricing.subtotal)}</span>
+            </div>
+            <div className="flex justify-between text-neutral-600">
+              <span>Metode Pengiriman</span>
+              <span>{order.shippingMethod === 'SELF_PICKUP' ? 'Ambil Sendiri' : 'JNE'}</span>
             </div>
             <div className="flex justify-between text-neutral-600">
               <span>Ongkos Kirim</span>
