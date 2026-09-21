@@ -72,7 +72,7 @@ export async function POST(request: NextRequest) {
       receiverName = data.receiverName!;
       receiverPhone = data.receiverPhone!;
       receiverEmail = data.receiverEmail ?? null;
-      receiverAddress = data.receiverAddress!;
+      receiverAddress = data.receiverAddress ?? 'Ambil sendiri di toko';
       destinationId = data.shippingMethod === 'JNE' ? (data.destinationId ?? null) : null;
     }
 

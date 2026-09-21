@@ -173,7 +173,7 @@ const checkoutSchema = z
         message: 'Format email tidak valid',
       });
     }
-    if (!data.receiverAddress) {
+    if (data.shippingMethod === 'JNE' && !data.receiverAddress) {
       ctx.addIssue({ code: 'custom', path: ['receiverAddress'], message: 'Alamat wajib diisi' });
     }
     if (data.shippingMethod === 'JNE' && !data.destinationId) {
@@ -624,15 +624,17 @@ export default function CheckoutPage() {
                     ) : null}
                   </div>
                 ) : null}
-                <div className="flex flex-col gap-1 sm:col-span-2">
-                  <label className="text-xs font-medium text-neutral-600">
-                    Alamat Lengkap <span className="text-red">*</span>
-                  </label>
-                  <textarea {...register('receiverAddress')} rows={3} className={inputBase} />
-                  {errors.receiverAddress ? (
-                    <p className="text-xs text-red">{errors.receiverAddress.message}</p>
-                  ) : null}
-                </div>
+                {selectedShippingMethod === 'JNE' ? (
+                  <div className="flex flex-col gap-1 sm:col-span-2">
+                    <label className="text-xs font-medium text-neutral-600">
+                      Alamat Lengkap <span className="text-red">*</span>
+                    </label>
+                    <textarea {...register('receiverAddress')} rows={3} className={inputBase} />
+                    {errors.receiverAddress ? (
+                      <p className="text-xs text-red">{errors.receiverAddress.message}</p>
+                    ) : null}
+                  </div>
+                ) : null}
               </div>
             )}
 
