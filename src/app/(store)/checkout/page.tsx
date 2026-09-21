@@ -52,6 +52,11 @@ const SHIPPING_METHOD_OPTIONS = [
   { value: 'SELF_PICKUP', label: 'Ambil Sendiri' },
 ] as const;
 
+const PAYMENT_METHOD_OPTIONS = [
+  { value: 'QRIS', label: 'QRIS' },
+  { value: 'BANK_TRANSFER', label: 'Transfer Bank Manual' },
+] as const;
+
 const STORE_PICKUP_ADDRESS = {
   text: 'Jalan Margonda Raya Gang H. Fatimah Bawah Rt 02/014 No. 8, Kemiri Muka, Beji, Kota Depok, Jawa Barat 16423',
   mapsUrl: 'https://goo.gl/maps/892nKq5dhNm',
@@ -133,6 +138,7 @@ const checkoutSchema = z
     destinationId: z.string().optional(),
     shippingMethod: z.enum(['JNE', 'SELF_PICKUP']),
     service: z.enum(['REG', 'YES']).optional(),
+    paymentMethod: z.enum(['QRIS', 'BANK_TRANSFER']),
     note: z.string().max(500).optional(),
   })
   .superRefine((data, ctx) => {
@@ -209,7 +215,7 @@ export default function CheckoutPage() {
     formState: { errors },
   } = useForm<CheckoutFormValues>({
     resolver: zodResolver(checkoutSchema),
-    defaultValues: { mode: 'manual', shippingMethod: 'JNE', service: 'REG' },
+    defaultValues: { mode: 'manual', shippingMethod: 'JNE', service: 'REG', paymentMethod: 'QRIS' },
   });
 
   const mode = watch('mode');
@@ -217,6 +223,7 @@ export default function CheckoutPage() {
   const selectedDestinationId = watch('destinationId');
   const selectedService = watch('service');
   const selectedShippingMethod = watch('shippingMethod');
+  const selectedPaymentMethod = watch('paymentMethod');
 
   const [shippingOptions, setShippingOptions] = useState<
     { service: string; shippingCost: number; etd: string }[]
@@ -387,6 +394,7 @@ export default function CheckoutPage() {
             useReceiverId: values.receiverId,
             shippingMethod: values.shippingMethod,
             service: values.service,
+            paymentMethod: values.paymentMethod,
             note: values.note,
             voucherCode: voucherResult && voucherResult.valid ? voucherResult.code : undefined,
             affiliateCode,
@@ -399,6 +407,7 @@ export default function CheckoutPage() {
             destinationId: values.destinationId,
             shippingMethod: values.shippingMethod,
             service: values.service,
+            paymentMethod: values.paymentMethod,
             note: values.note,
             voucherCode: voucherResult && voucherResult.valid ? voucherResult.code : undefined,
             affiliateCode,
@@ -733,6 +742,37 @@ export default function CheckoutPage() {
               </a>
             </div>
           )}
+
+          <div className="mb-4 flex flex-col gap-2">
+            <label className="text-xs font-medium text-neutral-600">Metode Pembayaran</label>
+            <div className="grid grid-cols-2 gap-2">
+              {PAYMENT_METHOD_OPTIONS.map((option) => (
+                <label
+                  key={option.value}
+                  className={`flex cursor-pointer items-center justify-center gap-2 rounded-sm border p-2.5 text-xs font-medium ${
+                    selectedPaymentMethod === option.value
+                      ? 'border-brand bg-brand-50 text-brand'
+                      : 'border-neutral-200 text-neutral-600 hover:bg-neutral-50'
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    value={option.value}
+                    checked={selectedPaymentMethod === option.value}
+                    onChange={() => setValue('paymentMethod', option.value)}
+                    className="sr-only"
+                  />
+                  {option.label}
+                </label>
+              ))}
+            </div>
+            {selectedPaymentMethod === 'BANK_TRANSFER' ? (
+              <p className="text-xs text-neutral-500">
+                Anda akan mentransfer manual ke rekening toko dan mengunggah bukti pembayaran
+                setelah pesanan dibuat.
+              </p>
+            ) : null}
+          </div>
 
           {publicVouchers.length > 0 ? (
             <div className="mb-4 flex flex-col gap-2">

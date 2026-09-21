@@ -121,6 +121,7 @@ export function serializeOrderDetail(order: OrderDetail) {
       method: order.paymentMethod,
       manualPaymentCode: order.manualPaymentCode,
       paymentClaimedAt: order.paymentClaimedAt,
+      proofUrl: order.paymentProofUrl,
     },
     voucher: order.voucherCode
       ? { code: order.voucherCode, discount: order.voucherDiscount }
