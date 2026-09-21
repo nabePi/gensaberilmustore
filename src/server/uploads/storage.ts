@@ -8,6 +8,7 @@ import { deleteFromR2, isR2Enabled, uploadToR2 } from '@/server/uploads/r2';
 const UPLOADS_ROOT = path.join(process.cwd(), 'public', 'uploads', 'products');
 const AVATAR_UPLOADS_ROOT = path.join(process.cwd(), 'public', 'uploads', 'avatars');
 const MISC_UPLOADS_ROOT = path.join(process.cwd(), 'public', 'uploads', 'misc');
+const PAYMENT_PROOF_UPLOADS_ROOT = path.join(process.cwd(), 'public', 'uploads', 'payment-proofs');
 
 async function saveLocal(dir: string, publicPrefix: string, bytes: Uint8Array, extension: string) {
   await mkdir(dir, { recursive: true });
@@ -84,4 +85,29 @@ export async function saveGenericImage(bytes: Uint8Array, extension: string): Pr
   }
 
   return saveLocal(MISC_UPLOADS_ROOT, '/uploads/misc', bytes, extension);
+}
+
+export async function savePaymentProofImage(
+  orderId: string,
+  bytes: Uint8Array,
+  extension: string,
+): Promise<string> {
+  if (isR2Enabled()) {
+    const key = `payment-proofs/${orderId}/${randomUUID()}.${extension}`;
+    return uploadToR2(key, bytes, mimeForExtension(extension));
+  }
+
+  return saveLocal(
+    path.join(PAYMENT_PROOF_UPLOADS_ROOT, orderId),
+    `/uploads/payment-proofs/${orderId}`,
+    bytes,
+    extension,
+  );
+}
+
+export async function deletePaymentProofImageFile(publicUrl: string): Promise<void> {
+  if (isR2Enabled()) {
+    return deleteFromR2(publicUrl);
+  }
+  return deleteLocal(publicUrl);
 }

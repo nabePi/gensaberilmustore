@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
+import { BankTransferPaymentPanel } from '@/components/store/BankTransferPaymentPanel';
 import { ClaimPaymentButton } from '@/components/store/ClaimPaymentButton';
 import { QrisPaymentPanel } from '@/components/store/QrisPaymentPanel';
 import { env } from '@/env';
@@ -77,6 +78,22 @@ export default async function PaymentSuccessPage({
           total={order.total}
           initialClaimedAt={order.paymentClaimedAt?.toISOString() ?? null}
           dynamicQrisImageDataUrl={dynamicQrisImageDataUrl}
+        />
+      );
+    }
+
+    if (order.paymentMethod === 'BANK_TRANSFER' && order.manualPaymentCode !== null) {
+      const amountDue = totalWithManualPaymentCode(order.total, order.manualPaymentCode);
+
+      return (
+        <BankTransferPaymentPanel
+          orderId={order.id}
+          orderNumber={order.orderNumber}
+          manualPaymentCodeFormatted={order.manualPaymentCode.toString().padStart(3, '0')}
+          amountDue={amountDue}
+          total={order.total}
+          initialClaimedAt={order.paymentClaimedAt?.toISOString() ?? null}
+          initialProofUrl={order.paymentProofUrl}
         />
       );
     }

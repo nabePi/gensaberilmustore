@@ -37,7 +37,12 @@ export type OrderDetail = {
     discount: number;
     total: number;
   };
-  payment: { method: string; manualPaymentCode: number | null; paymentClaimedAt: string | null };
+  payment: {
+    method: string;
+    manualPaymentCode: number | null;
+    paymentClaimedAt: string | null;
+    proofUrl: string | null;
+  };
   voucher: { code: string; discount: number } | null;
   affiliate: { code: string; user: { id: string; name: string | null } | null } | null;
   member: { id: string; name: string | null; email: string } | null;
@@ -226,6 +231,19 @@ export function OrderDetailModal({
                   Pembeli mengklaim sudah transfer pada{' '}
                   {formatOrderDate(order.payment.paymentClaimedAt)}
                 </p>
+              ) : null}
+              {order.payment.proofUrl ? (
+                <div className="mt-2">
+                  <p className="mb-1 text-sm font-semibold text-neutral-700">Bukti Pembayaran</p>
+                  <a href={order.payment.proofUrl} target="_blank" rel="noopener noreferrer">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={order.payment.proofUrl}
+                      alt="Bukti pembayaran"
+                      className="h-32 w-full max-w-[200px] rounded-md border border-neutral-200 object-cover hover:opacity-90"
+                    />
+                  </a>
+                </div>
               ) : null}
               {order.member ? (
                 <p className="text-sm text-neutral-600">

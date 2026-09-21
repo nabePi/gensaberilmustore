@@ -409,39 +409,41 @@ model WishlistItem {
 }
 
 model Order {
-  id                   String         @id @default(uuid())
-  orderNumber          String         @unique
-  userId               String?
-  receiverName         String
-  receiverPhone        String
-  receiverEmail        String?
-  receiverAddress      String
-  destinationId        String?
-  receiverNote         String?
-  shippingMethod       ShippingMethod @default(JNE)
-  shippingService      String         @default("REG")
-  weightKg             Int            @default(0)
-  airwaybillNumber     String?
-  subtotal             Int
-  shippingCost         Int
-  discount             Int
-  total                Int
-  manualPaymentCode    Int?
-  paymentClaimedAt     DateTime?
-  paymentMethod        PaymentMethod
-  source               OrderSource
-  status               OrderStatus    @default(AWAITING_PAYMENT)
-  affiliateUserId      String?
-  affiliateCode        String?
-  posCashierUserId     String?
-  posReceiptPrintedAt  DateTime?
-  voucherId            String?
-  voucherCode          String?
-  voucherDiscount      Int            @default(0)
-  manualDiscount       Int            @default(0)
-  manualDiscountReason String?
-  createdAt            DateTime       @default(now())
-  updatedAt            DateTime       @updatedAt
+  id                     String         @id @default(uuid())
+  orderNumber            String         @unique
+  userId                 String?
+  receiverName           String
+  receiverPhone          String
+  receiverEmail          String?
+  receiverAddress        String
+  destinationId          String?
+  receiverNote           String?
+  shippingMethod         ShippingMethod @default(JNE)
+  shippingService        String         @default("REG")
+  weightKg               Int            @default(0)
+  airwaybillNumber       String?
+  subtotal               Int
+  shippingCost           Int
+  discount               Int
+  total                  Int
+  manualPaymentCode      Int?
+  paymentClaimedAt       DateTime?
+  paymentProofUrl        String?
+  paymentProofUploadedAt DateTime?
+  paymentMethod          PaymentMethod
+  source                 OrderSource
+  status                 OrderStatus    @default(AWAITING_PAYMENT)
+  affiliateUserId        String?
+  affiliateCode          String?
+  posCashierUserId       String?
+  posReceiptPrintedAt    DateTime?
+  voucherId              String?
+  voucherCode            String?
+  voucherDiscount        Int            @default(0)
+  manualDiscount         Int            @default(0)
+  manualDiscountReason   String?
+  createdAt              DateTime       @default(now())
+  updatedAt              DateTime       @updatedAt
 
   user                User?                @relation("OrderToUser", fields: [userId], references: [id], onDelete: SetNull)
   affiliateUser       User?                @relation("OrderToAffiliateUser", fields: [affiliateUserId], references: [id], onDelete: SetNull)

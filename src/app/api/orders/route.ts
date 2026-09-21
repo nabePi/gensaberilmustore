@@ -221,7 +221,7 @@ export async function POST(request: NextRequest) {
           discount,
           total,
           manualPaymentCode,
-          paymentMethod: manualPaymentCode !== null ? 'QRIS' : data.paymentMethod,
+          paymentMethod: data.paymentMethod,
           source: 'ONLINE',
           affiliateUserId,
           affiliateCode,
