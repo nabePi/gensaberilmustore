@@ -52,6 +52,11 @@ const SHIPPING_METHOD_OPTIONS = [
   { value: 'SELF_PICKUP', label: 'Ambil Sendiri' },
 ] as const;
 
+const STORE_PICKUP_ADDRESS = {
+  text: 'Jalan Margonda Raya Gang H. Fatimah Bawah Rt 02/014 No. 8, Kemiri Muka, Beji, Kota Depok, Jawa Barat 16423',
+  mapsUrl: 'https://goo.gl/maps/892nKq5dhNm',
+};
+
 const VOUCHER_ERROR_MESSAGES: Record<string, string> = {
   NOT_FOUND: 'Kode voucher tidak ditemukan.',
   INACTIVE: 'Voucher ini sudah tidak aktif.',
@@ -171,7 +176,7 @@ const checkoutSchema = z
     if (!data.receiverAddress) {
       ctx.addIssue({ code: 'custom', path: ['receiverAddress'], message: 'Alamat wajib diisi' });
     }
-    if (!data.destinationId) {
+    if (data.shippingMethod === 'JNE' && !data.destinationId) {
       ctx.addIssue({
         code: 'custom',
         path: ['destinationId'],
@@ -601,20 +606,24 @@ export default function CheckoutPage() {
                     <p className="text-xs text-red">{errors.receiverEmail.message}</p>
                   ) : null}
                 </div>
-                <div className="flex flex-col gap-1 sm:col-span-2">
-                  <label className="text-xs font-medium text-neutral-600">Tujuan Pengiriman</label>
-                  <DestinationSelect
-                    hasError={Boolean(errors.destinationId)}
-                    onChange={(value) =>
-                      setValue('destinationId', value?.destinationId ?? '', {
-                        shouldValidate: true,
-                      })
-                    }
-                  />
-                  {errors.destinationId ? (
-                    <p className="text-xs text-red">{errors.destinationId.message}</p>
-                  ) : null}
-                </div>
+                {selectedShippingMethod === 'JNE' ? (
+                  <div className="flex flex-col gap-1 sm:col-span-2">
+                    <label className="text-xs font-medium text-neutral-600">
+                      Tujuan Pengiriman
+                    </label>
+                    <DestinationSelect
+                      hasError={Boolean(errors.destinationId)}
+                      onChange={(value) =>
+                        setValue('destinationId', value?.destinationId ?? '', {
+                          shouldValidate: true,
+                        })
+                      }
+                    />
+                    {errors.destinationId ? (
+                      <p className="text-xs text-red">{errors.destinationId.message}</p>
+                    ) : null}
+                  </div>
+                ) : null}
                 <div className="flex flex-col gap-1 sm:col-span-2">
                   <label className="text-xs font-medium text-neutral-600">
                     Alamat Lengkap <span className="text-red">*</span>
@@ -706,10 +715,20 @@ export default function CheckoutPage() {
               </div>
             </>
           ) : (
-            <div className="mb-4 rounded-sm border border-neutral-200 bg-neutral-50 p-3">
+            <div className="mb-4 flex flex-col gap-1.5 rounded-sm border border-neutral-200 bg-neutral-50 p-3">
               <p className="text-xs text-neutral-600">
-                Pesanan bisa diambil langsung di toko. Tidak ada ongkos kirim untuk metode ini.
+                Pesanan bisa diambil langsung di toko Gensa Berilmu. Tidak ada ongkos kirim untuk
+                metode ini.
               </p>
+              <p className="text-xs font-semibold text-foreground">{STORE_PICKUP_ADDRESS.text}</p>
+              <a
+                href={STORE_PICKUP_ADDRESS.mapsUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs font-medium text-brand hover:underline"
+              >
+                Lihat lokasi di Google Maps
+              </a>
             </div>
           )}
 
@@ -819,8 +838,8 @@ export default function CheckoutPage() {
             type="submit"
             disabled={
               submitting ||
-              !activeDestinationId ||
-              (selectedShippingMethod === 'JNE' && (shippingLoading || Boolean(shippingError)))
+              (selectedShippingMethod === 'JNE' &&
+                (!activeDestinationId || shippingLoading || Boolean(shippingError)))
             }
             className={`${btnSolid} mt-5 w-full`}
           >
