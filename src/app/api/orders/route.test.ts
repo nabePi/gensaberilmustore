@@ -18,6 +18,7 @@ vi.mock('@/server/shipping/jne-tariff', () => ({
     etdThru: '3',
   }),
   JneTariffError: class JneTariffError extends Error {},
+  JNE_SERVICE_OPTIONS: ['REG', 'YES', 'JTR'],
 }));
 
 const { GET, POST } = await import('@/app/api/orders/route');
