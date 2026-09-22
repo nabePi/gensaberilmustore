@@ -20,7 +20,8 @@ type OrderDetail = {
   status: OrderStatusValue;
   createdAt: string;
   airwaybillNumber: string | null;
-  shippingMethod: 'JNE' | 'SELF_PICKUP';
+  shippingMethod: 'JNE' | 'SELF_PICKUP' | 'OTHER';
+  shippingService: string;
   receiver: {
     name: string;
     phone: string;
@@ -257,7 +258,13 @@ export default function MemberTransaksiDetailPage() {
             </div>
             <div className="flex justify-between text-neutral-600">
               <span>Metode Pengiriman</span>
-              <span>{order.shippingMethod === 'SELF_PICKUP' ? 'Ambil Sendiri' : 'JNE'}</span>
+              <span>
+                {order.shippingMethod === 'SELF_PICKUP'
+                  ? 'Ambil Sendiri'
+                  : order.shippingMethod === 'OTHER'
+                    ? order.shippingService
+                    : 'JNE'}
+              </span>
             </div>
             <div className="flex justify-between text-neutral-600">
               <span>Ongkos Kirim</span>
