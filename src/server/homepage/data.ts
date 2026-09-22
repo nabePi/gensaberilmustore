@@ -3,6 +3,7 @@ import type { Prisma } from '@prisma/client';
 import type { ProductCardData } from '@/components/product/ProductCard';
 import { prisma } from '@/lib/db';
 import { resolveActiveDiscount } from '@/server/products/pricing';
+import { getSoldCounts } from '@/server/products/sold-count';
 
 const FALLBACK_SECTION_TAKE = 8;
 
@@ -52,7 +53,7 @@ const cardSelect = {
 
 type CardRow = Prisma.ProductGetPayload<{ select: typeof cardSelect }>;
 
-function toCardData(product: CardRow): ProductCardData {
+function toCardData(product: CardRow, soldCount: number): ProductCardData {
   const { discountPercent, finalPrice } = product.isPreOrderActive
     ? product
     : resolveActiveDiscount(product);
@@ -70,6 +71,7 @@ function toCardData(product: CardRow): ProductCardData {
     ribbonType: product.ribbonType as ProductCardData['ribbonType'],
     ribbonText: product.ribbonText,
     primaryImageUrl: product.images[0]?.url ?? null,
+    soldCount,
   };
 }
 
@@ -97,7 +99,8 @@ async function getFallbackProducts(): Promise<ProductCardData[]> {
     take: FALLBACK_SECTION_TAKE,
     select: cardSelect,
   });
-  return rows.map(toCardData);
+  const soldCounts = await getSoldCounts(rows.map((row) => row.id));
+  return rows.map((row) => toCardData(row, soldCounts[row.id] ?? 0));
 }
 
 async function getSectionProducts(sectionId: string): Promise<ProductCardData[]> {
@@ -111,12 +114,14 @@ async function getSectionProducts(sectionId: string): Promise<ProductCardData[]>
     return getFallbackProducts();
   }
 
-  return rows
+  const products = rows
     .map((row) => row.product)
     .filter(
       (product) => product.isActive && (product.channel === 'WEB' || product.channel === 'BOTH'),
-    )
-    .map(toCardData);
+    );
+
+  const soldCounts = await getSoldCounts(products.map((product) => product.id));
+  return products.map((product) => toCardData(product, soldCounts[product.id] ?? 0));
 }
 
 export async function getHomepageData() {

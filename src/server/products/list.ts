@@ -4,6 +4,7 @@ import type { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { resolveActiveDiscount } from '@/server/products/pricing';
 import type { listProductsQuerySchema } from '@/server/products/schema';
+import { getSoldCounts } from '@/server/products/sold-count';
 import { buildTsQuery } from '@/server/products/text-search';
 
 export type ListProductsFilters = z.infer<typeof listProductsQuerySchema>;
@@ -88,12 +89,15 @@ export async function listProducts(filters: ListProductsFilters) {
     prisma.product.count({ where }),
   ]);
 
+  const soldCounts = await getSoldCounts(items.map((item) => item.id));
+
   return {
     items: items.map(({ images, categories, ...product }) => ({
       ...product,
       ...(product.isPreOrderActive ? {} : resolveActiveDiscount(product)),
       primaryImageUrl: images[0]?.url ?? null,
       categories: categories.map(({ category: c }) => c.name),
+      soldCount: soldCounts[product.id] ?? 0,
     })),
     total,
     page,

@@ -3,6 +3,7 @@ import { cache } from 'react';
 
 import { prisma } from '@/lib/db';
 import { resolveActiveDiscount } from '@/server/products/pricing';
+import { getSoldCounts } from '@/server/products/sold-count';
 
 const RELATED_PRODUCTS_TAKE = 8;
 
@@ -89,6 +90,8 @@ export const getProductDetail = cache(async (slug: string) => {
 
   const { imprint, categories, tags, ...rest } = product;
 
+  const soldCounts = await getSoldCounts(relatedProducts.map((related) => related.id));
+
   return {
     ...rest,
     ...(rest.isPreOrderActive ? {} : resolveActiveDiscount(rest)),
@@ -99,6 +102,7 @@ export const getProductDetail = cache(async (slug: string) => {
       ...relatedProduct,
       ...(relatedProduct.isPreOrderActive ? {} : resolveActiveDiscount(relatedProduct)),
       primaryImageUrl: images[0]?.url ?? null,
+      soldCount: soldCounts[relatedProduct.id] ?? 0,
     })),
   };
 });

@@ -21,7 +21,14 @@ export type ProductCardData = {
   ribbonType?: 'NEW' | 'BEST' | 'DISCOUNT' | null;
   ribbonText?: string | null;
   primaryImageUrl: string | null;
+  soldCount?: number;
 };
+
+function formatSoldCount(count: number): string {
+  if (count >= 1000) return `${Math.floor(count / 1000)}rb+`;
+  if (count >= 100) return `${Math.floor(count / 100) * 100}+`;
+  return `${count}`;
+}
 
 const RIBBON_STYLES: Record<string, string> = {
   NEW: 'bg-navy text-white',
@@ -137,10 +144,12 @@ export function ProductCard({ product }: { product: ProductCardData }) {
             <span className="text-sm font-bold text-foreground">
               {formatCurrency(product.finalPrice)}
             </span>
-            <span className="text-[10px] text-neutral-400">Terjual 100+</span>
-            <span
-              className={`text-[10px] font-semibold ${outOfStock ? 'text-red' : 'text-green'}`}
-            >
+            {product.soldCount ? (
+              <span className="text-[10px] text-neutral-400">
+                Terjual {formatSoldCount(product.soldCount)}
+              </span>
+            ) : null}
+            <span className={`text-[10px] font-semibold ${outOfStock ? 'text-red' : 'text-green'}`}>
               {outOfStock ? 'Belum Tersedia' : 'Stok Tersedia'}
             </span>
           </div>
