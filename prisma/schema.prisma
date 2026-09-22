@@ -59,6 +59,7 @@ enum OrderSource {
 enum ShippingMethod {
   JNE
   SELF_PICKUP
+  OTHER
 }
 
 enum AffiliateConversionStatus {

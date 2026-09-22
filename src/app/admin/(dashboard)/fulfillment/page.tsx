@@ -28,7 +28,7 @@ type FulfillmentOrder = {
   receiverPhone: string;
   source: 'ONLINE' | 'POS';
   airwaybillNumber: string | null;
-  shippingMethod: 'JNE' | 'SELF_PICKUP';
+  shippingMethod: 'JNE' | 'SELF_PICKUP' | 'OTHER';
 };
 
 const STATUS_FILTER_OPTIONS: { label: string; value: string }[] = [

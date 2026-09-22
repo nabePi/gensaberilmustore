@@ -16,7 +16,8 @@ export type OrderDetail = {
   source: 'ONLINE' | 'POS';
   createdAt: string;
   airwaybillNumber: string | null;
-  shippingMethod: 'JNE' | 'SELF_PICKUP';
+  shippingMethod: 'JNE' | 'SELF_PICKUP' | 'OTHER';
+  shippingService: string;
   receiver: {
     name: string;
     phone: string;
@@ -148,7 +149,11 @@ export function OrderDetailModal({
                 {ORDER_STATUS_LABELS[order.status]}
               </span>
               <span className={`${adminBadgeBase} bg-neutral-100 text-neutral-600`}>
-                {order.shippingMethod === 'SELF_PICKUP' ? 'Ambil Sendiri' : 'JNE'}
+                {order.shippingMethod === 'SELF_PICKUP'
+                  ? 'Ambil Sendiri'
+                  : order.shippingMethod === 'OTHER'
+                    ? order.shippingService
+                    : 'JNE'}
               </span>
               {order.shippingMethod === 'JNE' ? (
                 <button
