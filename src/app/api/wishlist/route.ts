@@ -5,6 +5,7 @@ import type { ProductCardData } from '@/components/product/ProductCard';
 import { prisma } from '@/lib/db';
 import { withAuth } from '@/server/auth';
 import { resolveActiveDiscount } from '@/server/products/pricing';
+import { getSoldCounts } from '@/server/products/sold-count';
 import { addWishlistItemSchema } from '@/server/wishlist/schema';
 
 const cardSelect = {
@@ -29,7 +30,7 @@ const cardSelect = {
 
 type CardRow = Prisma.ProductGetPayload<{ select: typeof cardSelect }>;
 
-function toCardData(product: CardRow): ProductCardData {
+function toCardData(product: CardRow, soldCount: number): ProductCardData {
   const { discountPercent, finalPrice } = product.isPreOrderActive
     ? product
     : resolveActiveDiscount(product);
@@ -47,6 +48,7 @@ function toCardData(product: CardRow): ProductCardData {
     ribbonType: product.ribbonType as ProductCardData['ribbonType'],
     ribbonText: product.ribbonText,
     primaryImageUrl: product.images[0]?.url ?? null,
+    soldCount,
   };
 }
 
@@ -57,7 +59,11 @@ export const GET = withAuth(async (_request: NextRequest, { user }) => {
     select: { product: { select: cardSelect } },
   });
 
-  return NextResponse.json({ items: wishlistItems.map((item) => toCardData(item.product)) });
+  const soldCounts = await getSoldCounts(wishlistItems.map((item) => item.product.id));
+
+  return NextResponse.json({
+    items: wishlistItems.map((item) => toCardData(item.product, soldCounts[item.product.id] ?? 0)),
+  });
 });
 
 export const POST = withAuth(async (request: NextRequest, { user }) => {
