@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.4.0](https://github.com/nabePi/gensaberilmustore/compare/v0.3.0...v0.4.0) (2026-09-22)
+
+
+### Features
+
+* **order:** tambah shipping method OTHER untuk migrasi data pesanan lama ([#66](https://github.com/nabePi/gensaberilmustore/issues/66)) ([c2c31b3](https://github.com/nabePi/gensaberilmustore/commit/c2c31b337824e9aabc682465a4cb68f4f2dbae99))
+* **product:** hitung jumlah terjual di product card dari data order ([#68](https://github.com/nabePi/gensaberilmustore/issues/68)) ([3440085](https://github.com/nabePi/gensaberilmustore/commit/344008537cac0ef1b67f5b282c7390656ac9748a))
+
 ## [0.3.0](https://github.com/nabePi/gensaberilmustore/compare/v0.2.3...v0.3.0) (2026-09-21)
 
 
