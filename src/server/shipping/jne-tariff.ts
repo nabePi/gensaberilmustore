@@ -79,7 +79,7 @@ export async function fetchJneTariffOptions(
   }));
 }
 
-export const JNE_SERVICE_OPTIONS = ['REG', 'YES'] as const;
+export const JNE_SERVICE_OPTIONS = ['REG', 'YES', 'JTR'] as const;
 export type JneServiceOption = (typeof JNE_SERVICE_OPTIONS)[number];
 
 /** Picks the standard "REG" (regular) service as the default shipping option. */

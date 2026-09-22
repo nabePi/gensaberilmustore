@@ -45,6 +45,7 @@ function readAffiliateCookie(): string | undefined {
 const JNE_SERVICE_OPTIONS = [
   { value: 'REG', label: 'REG (Reguler)' },
   { value: 'YES', label: 'YES (Yakin Esok Sampai)' },
+  { value: 'JTR', label: 'JTR (Trucking)' },
 ] as const;
 
 const SHIPPING_METHOD_OPTIONS = [
@@ -137,7 +138,7 @@ const checkoutSchema = z
     receiverAddress: z.string().optional(),
     destinationId: z.string().optional(),
     shippingMethod: z.enum(['JNE', 'SELF_PICKUP']),
-    service: z.enum(['REG', 'YES']).optional(),
+    service: z.enum(['REG', 'YES', 'JTR']).optional(),
     paymentMethod: z.enum(['QRIS', 'BANK_TRANSFER']),
     note: z.string().max(500).optional(),
   })

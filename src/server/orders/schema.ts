@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+import { JNE_SERVICE_OPTIONS } from '@/server/shipping/jne-tariff';
+
 export const ONLINE_PAYMENT_METHODS = ['BANK_TRANSFER', 'EWALLET', 'QRIS'] as const;
 export const SHIPPING_METHODS = ['JNE', 'SELF_PICKUP'] as const;
 export const ORDER_STATUSES = [
@@ -30,7 +32,7 @@ export const createOrderSchema = z
     note: z.string().trim().max(500).optional(),
     useReceiverId: z.string().uuid('useReceiverId tidak valid').optional(),
     shippingMethod: z.enum(SHIPPING_METHODS).default('JNE'),
-    service: z.enum(['REG', 'YES']).default('REG'),
+    service: z.enum(JNE_SERVICE_OPTIONS).default('REG'),
     paymentMethod: z.enum(ONLINE_PAYMENT_METHODS).default('BANK_TRANSFER'),
     affiliateCode: z.string().trim().min(1).optional(),
     voucherCode: z.string().trim().min(1).optional(),
