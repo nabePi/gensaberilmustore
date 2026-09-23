@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.1](https://github.com/nabePi/gensaberilmustore/compare/v0.5.0...v0.5.1) (2026-09-23)
+
+
+### Bug Fixes
+
+* **shipping:** detailkan log error generate airwaybill JNE ([#73](https://github.com/nabePi/gensaberilmustore/issues/73)) ([3217d06](https://github.com/nabePi/gensaberilmustore/commit/3217d06b023773a6a3c28ef92e52170762f394da))
+
 ## [0.5.0](https://github.com/nabePi/gensaberilmustore/compare/v0.4.0...v0.5.0) (2026-09-23)
 
 
