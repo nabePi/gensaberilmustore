@@ -6,6 +6,7 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
 import { DestinationSelect } from '@/components/ui/DestinationSelect';
+import { blockNewlineKeyDown, sanitizeAddress } from '@/lib/address';
 import { btnOutline, btnSolid, cardBase, inputBase } from '@/lib/styles';
 
 const PHONE_PREFIX = '62';
@@ -48,7 +49,7 @@ const receiverFormSchema = z.object({
   label: z.string().trim().min(1, 'Label wajib diisi'),
   name: z.string().trim().min(1, 'Nama wajib diisi'),
   phone: z.string().trim().min(1, 'Nomor telepon wajib diisi'),
-  address: z.string().trim().min(1, 'Alamat wajib diisi'),
+  address: z.string().transform(sanitizeAddress).pipe(z.string().min(1, 'Alamat wajib diisi')),
   destinationId: z.string().uuid('Tujuan pengiriman wajib dipilih'),
   isDefault: z.boolean(),
 });
@@ -174,7 +175,12 @@ function ReceiverModal({
           </div>
           <div className="flex flex-col gap-1">
             <label className="text-sm font-medium text-neutral-600">Alamat Lengkap</label>
-            <textarea {...register('address')} rows={3} className={inputBase} />
+            <textarea
+              {...register('address')}
+              onKeyDown={blockNewlineKeyDown}
+              rows={3}
+              className={inputBase}
+            />
             {errors.address ? <p className="text-xs text-red">{errors.address.message}</p> : null}
           </div>
           <label className="flex items-center gap-2 text-sm text-neutral-600">

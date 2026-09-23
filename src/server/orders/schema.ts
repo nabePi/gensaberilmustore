@@ -1,5 +1,6 @@
 import { z } from 'zod';
 
+import { sanitizeAddress } from '@/lib/address';
 import { isAllowedJneService } from '@/server/shipping/jne-tariff';
 
 export const ONLINE_PAYMENT_METHODS = ['BANK_TRANSFER', 'EWALLET', 'QRIS'] as const;
@@ -22,8 +23,8 @@ export const createOrderSchema = z
     receiverPhone: z.string().trim().min(1, 'Nomor telepon wajib diisi').optional(),
     receiverEmail: z.string().trim().email('Format email tidak valid').optional(),
     receiverAddress: z.preprocess(
-      emptyToUndefined,
-      z.string().trim().min(1, 'Alamat wajib diisi').optional(),
+      (value) => emptyToUndefined(typeof value === 'string' ? sanitizeAddress(value) : value),
+      z.string().min(1, 'Alamat wajib diisi').optional(),
     ),
     destinationId: z.preprocess(
       emptyToUndefined,
