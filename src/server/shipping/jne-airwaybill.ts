@@ -43,6 +43,17 @@ function toOlshopCust(value: string): string {
   return value.slice(0, 10);
 }
 
+/** Renders a copy-pasteable curl reproduction of the request, for debugging. */
+function buildCurlCommand(url: string, body: URLSearchParams): string {
+  const escapedBody = body.toString().replace(/'/g, `'\\''`);
+  return [
+    `curl -X POST '${url}'`,
+    `  -H 'Content-Type: application/x-www-form-urlencoded'`,
+    `  -H 'Accept: application/json'`,
+    `  --data '${escapedBody}'`,
+  ].join(' \\\n');
+}
+
 /**
  * Calls JNE's Generate Airwaybill (generatecnote) API to create a shipment
  * and obtain the resi/airwaybill (cnote) number for an order.
@@ -101,6 +112,8 @@ export async function generateJneAirwaybill(params: GenerateAirwaybillParams): P
     OLSHOP_COD_AMOUNT: '0',
   });
 
+  const curl = buildCurlCommand(env.jneGenerateCnoteApiUrl, body);
+
   let response: Response;
   try {
     response = await fetch(env.jneGenerateCnoteApiUrl, {
@@ -113,19 +126,48 @@ export async function generateJneAirwaybill(params: GenerateAirwaybillParams): P
       signal: AbortSignal.timeout(15_000),
     });
   } catch (error) {
-    console.error('Gagal menghubungi layanan airwaybill JNE:', error);
+    console.error('Gagal menghubungi layanan airwaybill JNE:', {
+      url: env.jneGenerateCnoteApiUrl,
+      orderNumber: params.orderNumber,
+      error,
+      curl,
+    });
     throw new JneAirwaybillError('Gagal menghubungi layanan airwaybill JNE');
   }
 
-  const data: JneGenerateCnoteResponse | null = await response.json().catch(() => null);
+  const rawBody = await response.text();
+  let data: JneGenerateCnoteResponse | null = null;
+  try {
+    data = JSON.parse(rawBody) as JneGenerateCnoteResponse;
+  } catch {
+    data = null;
+  }
 
   if (!data || 'error' in data) {
-    console.error('Respons airwaybill JNE tidak valid:', data);
-    throw new JneAirwaybillError(data?.error ?? 'Gagal membuat airwaybill JNE');
+    console.error('Respons airwaybill JNE tidak valid:', {
+      url: env.jneGenerateCnoteApiUrl,
+      orderNumber: params.orderNumber,
+      httpStatus: response.status,
+      httpStatusText: response.statusText,
+      rawBody,
+      curl,
+    });
+    throw new JneAirwaybillError(
+      (data && 'error' in data ? data.error : undefined) ??
+        `Gagal membuat airwaybill JNE (HTTP ${response.status} ${response.statusText})`,
+    );
   }
 
   const detail = data.detail[0];
   if (!detail || detail.status.toLowerCase() !== 'sukses' || !detail.cnote_no) {
+    console.error('Airwaybill JNE gagal dibuat:', {
+      url: env.jneGenerateCnoteApiUrl,
+      orderNumber: params.orderNumber,
+      httpStatus: response.status,
+      detail,
+      rawBody,
+      curl,
+    });
     throw new JneAirwaybillError(detail?.reason ?? 'Gagal membuat airwaybill JNE');
   }
 
