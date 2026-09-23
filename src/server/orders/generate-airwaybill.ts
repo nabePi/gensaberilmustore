@@ -51,7 +51,10 @@ export async function generateAirwaybillForOrder(
     return { ok: true };
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Gagal membuat airwaybill JNE';
-    console.error(`Gagal membuat airwaybill JNE untuk order ${orderId}:`, message);
+    console.error(`Gagal membuat airwaybill JNE untuk order ${orderId}:`, {
+      message,
+      stack: error instanceof Error ? error.stack : undefined,
+    });
     return { ok: false, error: message };
   }
 }
