@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.2](https://github.com/nabePi/gensaberilmustore/compare/v0.5.1...v0.5.2) (2026-09-23)
+
+
+### Bug Fixes
+
+* **order:** bersihkan alamat penerima dari newline agar resi JNE tidak gagal ([#75](https://github.com/nabePi/gensaberilmustore/issues/75)) ([d56babc](https://github.com/nabePi/gensaberilmustore/commit/d56babc4e97bef57bb3a6b2c67f3699771febfe8))
+
 ## [0.5.1](https://github.com/nabePi/gensaberilmustore/compare/v0.5.0...v0.5.1) (2026-09-23)
 
 
