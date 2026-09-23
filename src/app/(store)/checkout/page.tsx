@@ -138,7 +138,7 @@ const checkoutSchema = z
     receiverAddress: z.string().optional(),
     destinationId: z.string().optional(),
     shippingMethod: z.enum(['JNE', 'SELF_PICKUP']),
-    service: z.enum(['REG', 'YES', 'JTR']).optional(),
+    service: z.string().optional(),
     paymentMethod: z.enum(['QRIS', 'BANK_TRANSFER']),
     note: z.string().max(500).optional(),
   })
