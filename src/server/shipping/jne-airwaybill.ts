@@ -1,4 +1,5 @@
 import { env } from '@/env';
+import { sanitizeAddress } from '@/lib/address';
 
 export class JneAirwaybillError extends Error {}
 
@@ -25,7 +26,7 @@ export type GenerateAirwaybillParams = {
 const ADDRESS_CHUNK_LENGTH = 30;
 
 function splitAddress(address: string): [string, string, string] {
-  const clean = address.trim();
+  const clean = sanitizeAddress(address);
   const parts: string[] = [];
   for (let i = 0; i < clean.length && parts.length < 3; i += ADDRESS_CHUNK_LENGTH) {
     parts.push(clean.slice(i, i + ADDRESS_CHUNK_LENGTH));

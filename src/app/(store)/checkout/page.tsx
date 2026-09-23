@@ -9,6 +9,7 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
 import { DestinationSelect } from '@/components/ui/DestinationSelect';
+import { blockNewlineKeyDown, sanitizeAddress } from '@/lib/address';
 import { dispatchCartUpdated } from '@/lib/cart-events';
 import { formatCurrency } from '@/lib/format';
 import { btnOutline, btnSolid, inputBase } from '@/lib/styles';
@@ -135,7 +136,10 @@ const checkoutSchema = z
     receiverName: z.string().optional(),
     receiverPhone: z.string().optional(),
     receiverEmail: z.string().optional(),
-    receiverAddress: z.string().optional(),
+    receiverAddress: z
+      .string()
+      .optional()
+      .transform((value) => (value ? sanitizeAddress(value) : value)),
     destinationId: z.string().optional(),
     shippingMethod: z.enum(['JNE', 'SELF_PICKUP']),
     service: z.string().optional(),
@@ -639,7 +643,12 @@ export default function CheckoutPage() {
                     <label className="text-xs font-medium text-neutral-600">
                       Alamat Lengkap <span className="text-red">*</span>
                     </label>
-                    <textarea {...register('receiverAddress')} rows={3} className={inputBase} />
+                    <textarea
+                      {...register('receiverAddress')}
+                      onKeyDown={blockNewlineKeyDown}
+                      rows={3}
+                      className={inputBase}
+                    />
                     {errors.receiverAddress ? (
                       <p className="text-xs text-red">{errors.receiverAddress.message}</p>
                     ) : null}
