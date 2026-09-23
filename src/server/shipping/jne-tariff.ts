@@ -79,8 +79,16 @@ export async function fetchJneTariffOptions(
   }));
 }
 
-export const JNE_SERVICE_OPTIONS = ['REG', 'YES', 'JTR'] as const;
-export type JneServiceOption = (typeof JNE_SERVICE_OPTIONS)[number];
+export type JneServiceOption = string;
+
+/**
+ * Whether a `service_display` value from the JNE tariff API is one we support.
+ * REG/YES are matched exactly, but trucking (JTR) is returned with a weight-tier
+ * suffix (e.g. "JTR<130"), so it's matched by prefix instead.
+ */
+export function isAllowedJneService(serviceDisplay: string): boolean {
+  return serviceDisplay === 'REG' || serviceDisplay === 'YES' || serviceDisplay.startsWith('JTR');
+}
 
 /** Picks the standard "REG" (regular) service as the default shipping option. */
 export function pickDefaultTariffOption(options: JneTariffOption[]): JneTariffOption | null {
