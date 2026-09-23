@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.5.0](https://github.com/nabePi/gensaberilmustore/compare/v0.4.0...v0.5.0) (2026-09-23)
+
+
+### Features
+
+* **admin:** tambah tombol fallback generate resi JNE ([#72](https://github.com/nabePi/gensaberilmustore/issues/72)) ([4226706](https://github.com/nabePi/gensaberilmustore/commit/42267066617edb7740534b1c684958ec1b5406c9))
+* **checkout:** tambah layanan JTR untuk kurir JNE ([#69](https://github.com/nabePi/gensaberilmustore/issues/69)) ([893494e](https://github.com/nabePi/gensaberilmustore/commit/893494e15b070ef97403d31709ec3766d31d3b59))
+
+
+### Bug Fixes
+
+* **shipping:** cocokkan layanan JTR JNE pakai prefix, bukan exact match ([#71](https://github.com/nabePi/gensaberilmustore/issues/71)) ([d42f4a7](https://github.com/nabePi/gensaberilmustore/commit/d42f4a78872c47bbe35c5e5901496758633f5617))
+
 ## [0.4.0](https://github.com/nabePi/gensaberilmustore/compare/v0.3.0...v0.4.0) (2026-09-22)
 
 
