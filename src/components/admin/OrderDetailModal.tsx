@@ -98,6 +98,8 @@ export function OrderDetailModal({
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [generatingAirwaybill, setGeneratingAirwaybill] = useState(false);
+  const [airwaybillError, setAirwaybillError] = useState<string | null>(null);
 
   useEffect(() => {
     async function loadOrder() {
@@ -128,6 +130,21 @@ export function OrderDetailModal({
     }
     setOrder(data);
     setUpdating(false);
+    onStatusChanged?.(data);
+  }
+
+  async function handleGenerateAirwaybill() {
+    setAirwaybillError(null);
+    setGeneratingAirwaybill(true);
+    const response = await fetch(`/api/admin/orders/${orderId}/airwaybill`, { method: 'POST' });
+    const data = await response.json();
+    if (!response.ok) {
+      setAirwaybillError(data.error ?? 'Gagal membuat resi');
+      setGeneratingAirwaybill(false);
+      return;
+    }
+    setOrder(data);
+    setGeneratingAirwaybill(false);
     onStatusChanged?.(data);
   }
 
@@ -168,8 +185,22 @@ export function OrderDetailModal({
                   Cetak Resi
                 </button>
               ) : null}
+              {order.shippingMethod === 'JNE' && order.status !== 'AWAITING_PAYMENT' ? (
+                <button
+                  type="button"
+                  disabled={!!order.airwaybillNumber || generatingAirwaybill}
+                  title={
+                    order.airwaybillNumber ? 'Nomor resi (airwaybill) sudah dibuat' : undefined
+                  }
+                  onClick={handleGenerateAirwaybill}
+                  className={adminBtnOutlineSm}
+                >
+                  {generatingAirwaybill ? 'Membuat Resi...' : 'Generate Resi'}
+                </button>
+              ) : null}
             </div>
           </div>
+          {airwaybillError ? <p className="text-sm text-red">{airwaybillError}</p> : null}
 
           <div className="grid gap-4 sm:grid-cols-2">
             <div>

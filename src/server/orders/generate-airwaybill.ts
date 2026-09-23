@@ -1,14 +1,20 @@
 import { prisma } from '@/lib/db';
 import { generateJneAirwaybill } from '@/server/shipping/jne-airwaybill';
 
+export type GenerateAirwaybillResult = { ok: true } | { ok: false; error: string };
+
 /**
  * Best-effort side effect run after an order is marked PAID: generates a JNE
  * airwaybill (resi) and stores it on the order. Never throws, so a JNE
- * outage or missing config never blocks the admin's status-change action.
+ * outage or missing config never blocks the admin's status-change action —
+ * callers that need to surface the failure (e.g. a manual retry) can inspect
+ * the returned result instead.
  * Skipped entirely for orders picked up by the buyer (SELF_PICKUP) — there is
  * no shipment to generate a resi for.
  */
-export async function generateAirwaybillForOrder(orderId: string): Promise<void> {
+export async function generateAirwaybillForOrder(
+  orderId: string,
+): Promise<GenerateAirwaybillResult> {
   try {
     const order = await prisma.order.findUnique({
       where: { id: orderId },
@@ -16,7 +22,7 @@ export async function generateAirwaybillForOrder(orderId: string): Promise<void>
     });
 
     if (!order || !order.destination || order.airwaybillNumber || order.shippingMethod !== 'JNE') {
-      return;
+      return { ok: true };
     }
 
     const quantity = order.items.reduce((sum, item) => sum + item.quantity, 0);
@@ -41,10 +47,11 @@ export async function generateAirwaybillForOrder(orderId: string): Promise<void>
       where: { id: order.id },
       data: { airwaybillNumber: cnoteNo },
     });
+
+    return { ok: true };
   } catch (error) {
-    console.error(
-      `Gagal membuat airwaybill JNE untuk order ${orderId}:`,
-      error instanceof Error ? error.message : error,
-    );
+    const message = error instanceof Error ? error.message : 'Gagal membuat airwaybill JNE';
+    console.error(`Gagal membuat airwaybill JNE untuk order ${orderId}:`, message);
+    return { ok: false, error: message };
   }
 }
