@@ -5,7 +5,7 @@ import { prisma } from '@/lib/db';
 import { computeCartWeightKg, resolveCart } from '@/server/cart/cart';
 import {
   fetchJneTariffOptions,
-  JNE_SERVICE_OPTIONS,
+  isAllowedJneService,
   JneTariffError,
 } from '@/server/shipping/jne-tariff';
 import { tariffQuerySchema } from '@/server/shipping/schema';
@@ -41,9 +41,7 @@ export async function POST(request: NextRequest) {
     const options = await fetchJneTariffOptions(destination.tariffCode, weightKg);
     return NextResponse.json({
       options: options
-        .filter((option) =>
-          (JNE_SERVICE_OPTIONS as readonly string[]).includes(option.serviceDisplay),
-        )
+        .filter((option) => isAllowedJneService(option.serviceDisplay))
         .map((option) => ({
           service: option.serviceDisplay,
           shippingCost: option.price,
