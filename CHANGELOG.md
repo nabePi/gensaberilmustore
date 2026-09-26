@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.1](https://github.com/nabePi/gensaberilmustore/compare/v0.6.0...v0.6.1) (2026-09-26)
+
+
+### Bug Fixes
+
+* **admin:** tampilkan jam pada riwayat status pesanan ([#80](https://github.com/nabePi/gensaberilmustore/issues/80)) ([032c5e6](https://github.com/nabePi/gensaberilmustore/commit/032c5e6c0911277a752756e0273fb75ed72cd41b))
+
 ## [0.6.0](https://github.com/nabePi/gensaberilmustore/compare/v0.5.2...v0.6.0) (2026-09-26)
 
 
