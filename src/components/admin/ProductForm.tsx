@@ -3,7 +3,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import type { ReactNode } from 'react';
 import { useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { type Path, useForm } from 'react-hook-form';
 import { z } from 'zod';
 
 import { Card } from '@/components/admin/ui/Card';
@@ -64,7 +64,7 @@ const productFormSchema = z
     title: z.string().trim().min(1, 'Judul wajib diisi'),
     subtitle: z.string().trim().optional(),
     author: z.string().trim().min(1, 'Penulis wajib diisi'),
-    publisher: z.string().trim().optional(),
+    publisher: z.preprocess(emptyToUndefined, z.string().trim().min(1).optional()),
     description: z.string().trim().min(1, 'Deskripsi wajib diisi'),
     price: z.coerce.number().int().positive('Harga harus lebih dari 0'),
     costPrice: z.preprocess(
@@ -114,6 +114,36 @@ const productFormSchema = z
 type ProductFormInput = z.input<typeof productFormSchema>;
 type ProductFormValues = z.output<typeof productFormSchema>;
 
+const PRODUCT_FORM_FIELD_NAMES = new Set<Path<ProductFormInput>>([
+  'sku',
+  'isbn',
+  'title',
+  'subtitle',
+  'author',
+  'publisher',
+  'description',
+  'price',
+  'costPrice',
+  'preOrderPrice',
+  'isPreOrderActive',
+  'wholesalePrice',
+  'wholesaleMinQty',
+  'discountPercent',
+  'stock',
+  'weightGram',
+  'pageCount',
+  'coverType',
+  'publishYear',
+  'isActive',
+  'channel',
+]);
+
+/** Field names the server may reject that aren't tracked by the form itself. */
+const NON_FORM_FIELD_LABELS: Record<string, string> = {
+  categoryIds: 'Kategori',
+  tagIds: 'Tag',
+};
+
 export function ProductForm({
   product,
   categories,
@@ -141,6 +171,7 @@ export function ProductForm({
   const {
     register,
     handleSubmit,
+    setError,
     formState: { errors },
   } = useForm<ProductFormInput, unknown, ProductFormValues>({
     resolver: zodResolver(productFormSchema),
@@ -278,7 +309,28 @@ export function ProductForm({
     const data = await response.json();
 
     if (!response.ok) {
-      setApiError(data.error ?? 'Gagal menyimpan produk');
+      const issues: Record<string, string[] | undefined> | undefined = data.issues;
+      if (issues) {
+        const unmappedMessages: string[] = [];
+        for (const [field, messages] of Object.entries(issues)) {
+          const message = messages?.[0];
+          if (!message) continue;
+
+          if (PRODUCT_FORM_FIELD_NAMES.has(field as Path<ProductFormInput>)) {
+            setError(field as Path<ProductFormInput>, { type: 'server', message });
+          } else {
+            const label = NON_FORM_FIELD_LABELS[field] ?? field;
+            unmappedMessages.push(`${label}: ${message}`);
+          }
+        }
+        setApiError(
+          unmappedMessages.length > 0
+            ? unmappedMessages.join('; ')
+            : 'Ada input yang belum sesuai, periksa kembali field yang ditandai merah di bawah',
+        );
+      } else {
+        setApiError(data.error ?? 'Gagal menyimpan produk');
+      }
       setSubmitting(false);
       return;
     }
