@@ -85,7 +85,7 @@ export function formatOrderDate(value: string) {
   });
 }
 
-function formatOrderDateTime(value: string) {
+export function formatOrderDateTime(value: string) {
   const date = new Date(value);
   const time = date.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
   return `${formatOrderDate(value)} ${time}`;

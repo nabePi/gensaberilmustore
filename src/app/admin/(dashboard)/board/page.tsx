@@ -15,7 +15,7 @@ import { useEffect, useMemo, useState } from 'react';
 
 import {
   OrderDetailModal,
-  formatOrderDate,
+  formatOrderDateTime,
   type OrderStatusValue,
 } from '@/components/admin/OrderDetailModal';
 import { PageHeader } from '@/components/admin/ui/PageHeader';
@@ -108,7 +108,7 @@ function OrderCard({ order }: { order: BoardOrder }) {
         </span>
         <span className="font-semibold text-foreground">{formatCurrency(order.total)}</span>
       </div>
-      <p className="mt-1 text-[11px] text-neutral-400">{formatOrderDate(order.createdAt)}</p>
+      <p className="mt-1 text-[11px] text-neutral-400">{formatOrderDateTime(order.createdAt)}</p>
     </div>
   );
 }
