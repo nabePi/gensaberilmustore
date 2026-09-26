@@ -85,6 +85,12 @@ export function formatOrderDate(value: string) {
   });
 }
 
+function formatOrderDateTime(value: string) {
+  const date = new Date(value);
+  const time = date.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+  return `${formatOrderDate(value)} ${time}`;
+}
+
 export function OrderDetailModal({
   orderId,
   onClose,
@@ -376,7 +382,7 @@ export function OrderDetailModal({
                   <span className="font-medium text-foreground">
                     {ORDER_STATUS_LABELS[entry.toStatus]}
                   </span>{' '}
-                  · {formatOrderDate(entry.createdAt)}
+                  · {formatOrderDateTime(entry.createdAt)}
                   {entry.changedByUser ? ` · oleh ${entry.changedByUser.name}` : ''}
                   {entry.note ? ` · ${entry.note}` : ''}
                 </div>
