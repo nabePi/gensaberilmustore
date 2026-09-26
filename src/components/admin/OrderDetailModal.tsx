@@ -82,13 +82,18 @@ export function formatOrderDate(value: string) {
     day: 'numeric',
     month: 'long',
     year: 'numeric',
+    timeZone: 'Asia/Jakarta',
   });
 }
 
 export function formatOrderDateTime(value: string) {
   const date = new Date(value);
-  const time = date.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
-  return `${formatOrderDate(value)} ${time}`;
+  const time = date.toLocaleTimeString('id-ID', {
+    hour: '2-digit',
+    minute: '2-digit',
+    timeZone: 'Asia/Jakarta',
+  });
+  return `${formatOrderDate(value)} ${time} WIB`;
 }
 
 export function OrderDetailModal({
