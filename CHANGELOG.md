@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.6.0](https://github.com/nabePi/gensaberilmustore/compare/v0.5.2...v0.6.0) (2026-09-26)
+
+
+### Features
+
+* **fulfillment:** tambah cetak label untuk pesanan ambil sendiri ([#79](https://github.com/nabePi/gensaberilmustore/issues/79)) ([1be97b2](https://github.com/nabePi/gensaberilmustore/commit/1be97b20a3eeb84e7e1c540b68cd54246a74af5d))
+
+
+### Bug Fixes
+
+* **admin:** tampilkan error validasi produk per field ([#77](https://github.com/nabePi/gensaberilmustore/issues/77)) ([22191f2](https://github.com/nabePi/gensaberilmustore/commit/22191f297d66018f19a145fe66455bfc360a760f))
+
 ## [0.5.2](https://github.com/nabePi/gensaberilmustore/compare/v0.5.1...v0.5.2) (2026-09-23)
 
 
