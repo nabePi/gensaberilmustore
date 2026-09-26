@@ -198,6 +198,15 @@ export function OrderDetailModal({
                   {generatingAirwaybill ? 'Membuat Resi...' : 'Generate Resi'}
                 </button>
               ) : null}
+              {order.shippingMethod === 'SELF_PICKUP' ? (
+                <button
+                  type="button"
+                  onClick={() => window.open(`/admin/fulfillment/print?ids=${order.id}`, '_blank')}
+                  className={adminBtnOutlineSm}
+                >
+                  Cetak Label
+                </button>
+              ) : null}
             </div>
           </div>
           {airwaybillError ? <p className="text-sm text-red">{airwaybillError}</p> : null}
