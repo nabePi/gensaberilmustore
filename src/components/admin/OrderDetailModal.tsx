@@ -82,7 +82,18 @@ export function formatOrderDate(value: string) {
     day: 'numeric',
     month: 'long',
     year: 'numeric',
+    timeZone: 'Asia/Jakarta',
   });
+}
+
+export function formatOrderDateTime(value: string) {
+  const date = new Date(value);
+  const time = date.toLocaleTimeString('id-ID', {
+    hour: '2-digit',
+    minute: '2-digit',
+    timeZone: 'Asia/Jakarta',
+  });
+  return `${formatOrderDate(value)} ${time} WIB`;
 }
 
 export function OrderDetailModal({
@@ -376,7 +387,7 @@ export function OrderDetailModal({
                   <span className="font-medium text-foreground">
                     {ORDER_STATUS_LABELS[entry.toStatus]}
                   </span>{' '}
-                  · {formatOrderDate(entry.createdAt)}
+                  · {formatOrderDateTime(entry.createdAt)}
                   {entry.changedByUser ? ` · oleh ${entry.changedByUser.name}` : ''}
                   {entry.note ? ` · ${entry.note}` : ''}
                 </div>
