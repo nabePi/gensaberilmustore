@@ -64,6 +64,7 @@ export const homepageSectionDetailUpdateSchema = z
     backgroundColor: hexColorSchema,
     titleColor: hexColorSchema,
     type: z.enum(HOMEPAGE_SECTION_TYPES).default('REGULAR'),
+    categoryId: z.string().trim().min(1).nullable().optional(),
     products: z.array(homepageSectionProductSchema).default([]),
   })
   .superRefine((data, ctx) => {

@@ -33,6 +33,7 @@ type SectionDetail = {
   backgroundColor: string | null;
   titleColor: string | null;
   type: SectionType;
+  categoryId: string | null;
   products: {
     productId: string;
     title: string;
@@ -41,6 +42,22 @@ type SectionDetail = {
     discountEndDate: string | null;
   }[];
 };
+
+type CategoryNode = {
+  id: string;
+  name: string;
+  productCount: number;
+  children: CategoryNode[];
+};
+
+type CategoryOption = { id: string; label: string; productCount: number };
+
+function flattenCategories(nodes: CategoryNode[], depth = 0): CategoryOption[] {
+  return nodes.flatMap((node) => [
+    { id: node.id, label: `${'— '.repeat(depth)}${node.name}`, productCount: node.productCount },
+    ...flattenCategories(node.children, depth + 1),
+  ]);
+}
 
 function formatSaveError(data: unknown): string {
   if (data && typeof data === 'object' && 'issues' in data) {
@@ -77,6 +94,8 @@ export default function AdminKonfigurasiSectionDetailPage() {
   const [backgroundColor, setBackgroundColor] = useState('');
   const [titleColor, setTitleColor] = useState('');
   const [type, setType] = useState<SectionType>('REGULAR');
+  const [categoryId, setCategoryId] = useState('');
+  const [categories, setCategories] = useState<CategoryOption[]>([]);
   const [products, setProducts] = useState<SectionProductForm[]>([]);
 
   useEffect(() => {
@@ -96,6 +115,7 @@ export default function AdminKonfigurasiSectionDetailPage() {
       setBackgroundColor(data.backgroundColor ?? '');
       setTitleColor(data.titleColor ?? '');
       setType(data.type);
+      setCategoryId(data.categoryId ?? '');
       setProducts(
         data.products.map((p) => ({
           productId: p.productId,
@@ -109,6 +129,16 @@ export default function AdminKonfigurasiSectionDetailPage() {
     }
     load();
   }, [params.id]);
+
+  useEffect(() => {
+    async function loadCategories() {
+      const response = await fetch('/api/admin/categories');
+      if (!response.ok) return;
+      const data: { categories: CategoryNode[] } = await response.json();
+      setCategories(flattenCategories(data.categories));
+    }
+    loadCategories();
+  }, []);
 
   function handlePick(product: ProductCardOption) {
     setProducts((prev) => [
@@ -146,6 +176,7 @@ export default function AdminKonfigurasiSectionDetailPage() {
         backgroundColor,
         titleColor,
         type,
+        categoryId: categoryId || null,
         products: products.map((p) => ({
           productId: p.productId,
           ...(type === 'PROMO'
@@ -288,6 +319,26 @@ export default function AdminKonfigurasiSectionDetailPage() {
       </div>
 
       <div className={`flex flex-col gap-3 p-4 ${adminCardBase}`}>
+        <div className="flex flex-col gap-1">
+          <label className="text-xs font-medium text-neutral-600">Kategori (opsional)</label>
+          <select
+            value={categoryId}
+            onChange={(e) => setCategoryId(e.target.value)}
+            className={adminInputBase}
+          >
+            <option value="">Tanpa kategori</option>
+            {categories.map((category) => (
+              <option key={category.id} value={category.id}>
+                {category.label} ({category.productCount})
+              </option>
+            ))}
+          </select>
+          <p className="text-xs text-neutral-400">
+            Jika dipilih, semua buku dalam kategori ini otomatis tampil di section. Buku yang
+            ditambahkan manual di bawah tetap ditampilkan, dan buku yang sama hanya muncul sekali.
+          </p>
+        </div>
+
         <div className="flex items-center justify-between">
           <p className="text-sm font-semibold text-foreground">Buku di Section Ini</p>
           <button type="button" onClick={() => setPickerOpen(true)} className={adminBtnOutlineSm}>
