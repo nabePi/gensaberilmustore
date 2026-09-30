@@ -103,22 +103,41 @@ async function getFallbackProducts(): Promise<ProductCardData[]> {
   return rows.map((row) => toCardData(row, soldCounts[row.id] ?? 0));
 }
 
-async function getSectionProducts(sectionId: string): Promise<ProductCardData[]> {
-  const rows = await prisma.homepageSectionProduct.findMany({
-    where: { sectionId },
-    orderBy: { position: 'asc' },
-    select: { product: { select: cardSelect } },
-  });
+async function getSectionProducts(
+  sectionId: string,
+  categoryId: string | null,
+): Promise<ProductCardData[]> {
+  const [manualRows, categoryRows] = await Promise.all([
+    prisma.homepageSectionProduct.findMany({
+      where: { sectionId },
+      orderBy: { position: 'asc' },
+      select: { product: { select: cardSelect } },
+    }),
+    categoryId
+      ? prisma.categoryProduct.findMany({
+          where: { categoryId },
+          orderBy: { product: { createdAt: 'desc' } },
+          select: { product: { select: cardSelect } },
+        })
+      : Promise.resolve([]),
+  ]);
 
-  if (rows.length === 0) {
+  // Manual picks come first; category products fill in, skipping any already picked.
+  const seen = new Set<string>();
+  const merged: CardRow[] = [];
+  for (const row of [...manualRows, ...categoryRows]) {
+    if (seen.has(row.product.id)) continue;
+    seen.add(row.product.id);
+    merged.push(row.product);
+  }
+
+  if (merged.length === 0) {
     return getFallbackProducts();
   }
 
-  const products = rows
-    .map((row) => row.product)
-    .filter(
-      (product) => product.isActive && (product.channel === 'WEB' || product.channel === 'BOTH'),
-    );
+  const products = merged.filter(
+    (product) => product.isActive && (product.channel === 'WEB' || product.channel === 'BOTH'),
+  );
 
   const soldCounts = await getSoldCounts(products.map((product) => product.id));
   return products.map((product) => toCardData(product, soldCounts[product.id] ?? 0));
@@ -139,14 +158,15 @@ export async function getHomepageData() {
         promoImageUrl: true,
         backgroundColor: true,
         titleColor: true,
+        categoryId: true,
       },
     }),
   ]);
 
   const sectionsWithProducts = await Promise.all(
-    sections.map(async (section) => ({
+    sections.map(async ({ categoryId, ...section }) => ({
       ...section,
-      products: await getSectionProducts(section.id),
+      products: await getSectionProducts(section.id, categoryId),
     })),
   );
 

@@ -100,6 +100,19 @@ export const PUT = withAuth<RouteContext>(
       }
     }
 
+    if (sectionData.categoryId) {
+      const category = await prisma.category.findUnique({
+        where: { id: sectionData.categoryId },
+        select: { id: true },
+      });
+      if (!category) {
+        return NextResponse.json(
+          { error: 'Validasi gagal', issues: { categoryId: ['Kategori tidak ditemukan'] } },
+          { status: 400 },
+        );
+      }
+    }
+
     await prisma.$transaction(async (tx) => {
       await tx.homepageSection.update({
         where: { id },
@@ -111,6 +124,7 @@ export const PUT = withAuth<RouteContext>(
           backgroundColor: sectionData.backgroundColor || null,
           titleColor: sectionData.titleColor || null,
           type: sectionData.type,
+          categoryId: sectionData.categoryId || null,
         },
       });
 
