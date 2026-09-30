@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.7.0](https://github.com/nabePi/gensaberilmustore/compare/v0.6.0...v0.7.0) (2026-09-30)
+
+
+### Features
+
+* **homepage:** tambah pilihan kategori di section beranda ([#82](https://github.com/nabePi/gensaberilmustore/issues/82)) ([685a792](https://github.com/nabePi/gensaberilmustore/commit/685a79285f07eec65bab202aa5f6f554b84e5e1b))
+* **products:** filter halaman produk berdasarkan section beranda ([f9a08b3](https://github.com/nabePi/gensaberilmustore/commit/f9a08b30abeb7b84563efdddc838b0e51d356a41))
+
+
+### Bug Fixes
+
+* **admin:** tampilkan jam pada riwayat status pesanan ([#80](https://github.com/nabePi/gensaberilmustore/issues/80)) ([032c5e6](https://github.com/nabePi/gensaberilmustore/commit/032c5e6c0911277a752756e0273fb75ed72cd41b))
+
 ## [0.6.0](https://github.com/nabePi/gensaberilmustore/compare/v0.5.2...v0.6.0) (2026-09-26)
 
 
