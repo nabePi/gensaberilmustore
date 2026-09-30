@@ -102,7 +102,6 @@ export const listProductsQuerySchema = z
     q: z.string().trim().min(1).optional(),
     category: z.string().trim().min(1).optional(),
     tag: z.string().trim().min(1).optional(),
-    section: z.string().trim().min(1).optional(),
     minPrice: z.coerce.number().int().min(0).optional(),
     maxPrice: z.coerce.number().int().min(0).optional(),
     inStock: z.enum(['true', 'false']).optional(),

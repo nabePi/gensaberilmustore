@@ -40,7 +40,6 @@ function buildFilterQueryString(filters: ResolvedFilters) {
   const params = new URLSearchParams();
   if (filters.q) params.set('q', filters.q);
   if (filters.category) params.set('category', filters.category);
-  if (filters.section) params.set('section', filters.section);
   if (filters.minPrice !== undefined) params.set('minPrice', String(filters.minPrice));
   if (filters.maxPrice !== undefined) params.set('maxPrice', String(filters.maxPrice));
   if (filters.inStock) params.set('inStock', filters.inStock);
@@ -58,7 +57,6 @@ function FilterForm({
   return (
     <form method="get" action="/products" className="flex flex-col gap-6">
       {filters.q ? <input type="hidden" name="q" value={filters.q} /> : null}
-      {filters.section ? <input type="hidden" name="section" value={filters.section} /> : null}
 
       <div>
         <h3 className="mb-3 text-sm font-bold text-foreground">Kategori</h3>
@@ -132,13 +130,7 @@ function FilterForm({
           Terapkan Filter
         </button>
         <Link
-          href={
-            filters.section
-              ? `/products?section=${encodeURIComponent(filters.section)}`
-              : filters.q
-                ? `/products?q=${encodeURIComponent(filters.q)}`
-                : '/products'
-          }
+          href={filters.q ? `/products?q=${encodeURIComponent(filters.q)}` : '/products'}
           className={`${btnOutline} flex-1`}
         >
           Reset
@@ -156,17 +148,10 @@ export async function generateMetadata({
   const params = await searchParams;
   const categorySlug = first(params.category);
   const q = first(params.q);
-  const sectionKey = first(params.section);
   const page = first(params.page);
 
   let title = 'Semua Produk';
-  if (sectionKey) {
-    const section = await prisma.homepageSection.findFirst({
-      where: { key: sectionKey, isEnabled: true },
-      select: { title: true },
-    });
-    if (section) title = section.title;
-  } else if (q) {
+  if (q) {
     title = `Hasil pencarian "${q}"`;
   } else if (categorySlug) {
     const category = await prisma.category.findFirst({
@@ -179,7 +164,6 @@ export async function generateMetadata({
   const canonical = categorySlug ? `/products?category=${categorySlug}` : '/products';
   const isFiltered = Boolean(
     q ||
-    sectionKey ||
     first(params.minPrice) ||
     first(params.maxPrice) ||
     first(params.sort) ||
@@ -206,7 +190,6 @@ export default async function ProductsPage({
     limit: first(params.limit),
     q: first(params.q),
     category: first(params.category),
-    section: first(params.section),
     minPrice: first(params.minPrice),
     maxPrice: first(params.maxPrice),
     inStock: first(params.inStock),
@@ -215,22 +198,16 @@ export default async function ProductsPage({
 
   const filters = parsed.success ? parsed.data : listProductsQuerySchema.parse({});
 
-  const [{ items, total, page, limit }, categories, section] = await Promise.all([
+  const [{ items, total, page, limit }, categories] = await Promise.all([
     listProducts(filters),
     getCategories(),
-    filters.section
-      ? prisma.homepageSection.findFirst({
-          where: { key: filters.section, isEnabled: true },
-          select: { title: true },
-        })
-      : null,
   ]);
 
   return (
     <div className="container-prototype py-8">
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-foreground">
-          {filters.q ? `Hasil untuk "${filters.q}"` : (section?.title ?? 'Semua Produk')}
+          {filters.q ? `Hasil untuk "${filters.q}"` : 'Semua Produk'}
         </h1>
         <p className="mt-1 text-sm text-neutral-500">{total} produk ditemukan</p>
       </div>

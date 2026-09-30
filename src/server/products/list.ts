@@ -9,33 +9,10 @@ import { buildTsQuery } from '@/server/products/text-search';
 
 export type ListProductsFilters = z.infer<typeof listProductsQuerySchema>;
 
-// Products of an enabled homepage section: manual picks plus the section's category, deduped.
-export async function getSectionProductIds(key: string): Promise<string[] | null> {
-  const section = await prisma.homepageSection.findFirst({
-    where: { key, isEnabled: true },
-    select: {
-      products: { select: { productId: true } },
-      category: { select: { products: { select: { productId: true } } } },
-    },
-  });
-  if (!section) return null;
-
-  return [
-    ...new Set([
-      ...section.products.map((row) => row.productId),
-      ...(section.category?.products.map((row) => row.productId) ?? []),
-    ]),
-  ];
-}
-
 export async function listProducts(filters: ListProductsFilters) {
-  const { page, limit, q, category, tag, section, minPrice, maxPrice, inStock, sort } = filters;
+  const { page, limit, q, category, tag, minPrice, maxPrice, inStock, sort } = filters;
 
   const where: Prisma.ProductWhereInput = { isActive: true, channel: { in: ['WEB', 'BOTH'] } };
-
-  if (section) {
-    where.id = { in: (await getSectionProductIds(section)) ?? [] };
-  }
 
   if (category) {
     where.categories = { some: { category: { slug: category } } };
