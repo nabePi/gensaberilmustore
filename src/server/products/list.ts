@@ -96,6 +96,7 @@ export async function listProducts(filters: ListProductsFilters) {
         price: true,
         discountPercent: true,
         discountEndDate: true,
+        discountPrice: true,
         finalPrice: true,
         isPreOrderActive: true,
         stock: true,

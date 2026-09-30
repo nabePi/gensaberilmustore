@@ -243,6 +243,7 @@ model Product {
   wholesaleMinQty  Int?
   discountPercent  Int            @default(0)
   discountEndDate  DateTime?
+  discountPrice    Int?
   finalPrice       Int
   stock            Int            @default(0)
   weightGram       Int

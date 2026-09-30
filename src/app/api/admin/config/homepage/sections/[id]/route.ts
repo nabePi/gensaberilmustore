@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { withAuth } from '@/server/auth';
 import { homepageSectionDetailUpdateSchema } from '@/server/config/schema';
+import { minFixedPrice, percentFromFixedPrice } from '@/server/products/pricing';
 
 type RouteContext = { params: Promise<{ id: string }> };
 
@@ -25,6 +26,7 @@ async function getSectionDetail(id: string) {
               sku: true,
               price: true,
               discountPercent: true,
+              discountPrice: true,
               discountEndDate: true,
               images: {
                 orderBy: [{ isPrimary: 'desc' }, { position: 'asc' }],
@@ -48,8 +50,11 @@ async function getSectionDetail(id: string) {
       productId: p.productId,
       title: p.product.title,
       sku: p.product.sku,
+      price: p.product.price,
+      discountType: p.product.discountPrice != null ? 'FIXED' : 'PERCENT',
       primaryImageUrl: p.product.images[0]?.url ?? null,
       discountPercent: p.product.discountPercent,
+      discountPrice: p.product.discountPrice,
       discountEndDate: toDateInput(p.product.discountEndDate),
     })),
   };
@@ -88,13 +93,36 @@ export const PUT = withAuth<RouteContext>(
 
     const { products, ...sectionData } = parsed.data;
 
+    const productPrices = new Map<string, number>();
     if (products.length > 0) {
-      const foundCount = await prisma.product.count({
+      const found = await prisma.product.findMany({
         where: { id: { in: products.map((p) => p.productId) } },
+        select: { id: true, price: true },
       });
-      if (foundCount !== products.length) {
+      if (found.length !== products.length) {
         return NextResponse.json(
           { error: 'Validasi gagal', issues: { products: ['Beberapa produk tidak ditemukan'] } },
+          { status: 400 },
+        );
+      }
+      for (const row of found) productPrices.set(row.id, row.price);
+    }
+
+    if (sectionData.type === 'PROMO') {
+      const fixedPriceIssues: string[] = [];
+      for (const product of products) {
+        if (product.discountType !== 'FIXED') continue;
+        const price = productPrices.get(product.productId)!;
+        const fixedPrice = product.discountPrice!;
+        if (fixedPrice >= price) {
+          fixedPriceIssues.push('Harga promo harus lebih kecil dari harga normal');
+        } else if (fixedPrice < minFixedPrice(price)) {
+          fixedPriceIssues.push('Harga promo maksimal diskon 90% dari harga normal');
+        }
+      }
+      if (fixedPriceIssues.length > 0) {
+        return NextResponse.json(
+          { error: 'Validasi gagal', issues: { products: [...new Set(fixedPriceIssues)] } },
           { status: 400 },
         );
       }
@@ -146,10 +174,19 @@ export const PUT = withAuth<RouteContext>(
       // its discount - the discount belongs to the product independent of curation.
       if (sectionData.type === 'PROMO') {
         for (const product of products) {
+          // A fixed price is stored as-is; discountPercent keeps the derived percent so
+          // badges and order snapshots stay meaningful.
+          const isFixed = product.discountType === 'FIXED';
           await tx.product.update({
             where: { id: product.productId },
             data: {
-              discountPercent: product.discountPercent,
+              discountPercent: isFixed
+                ? percentFromFixedPrice(
+                    productPrices.get(product.productId)!,
+                    product.discountPrice!,
+                  )
+                : product.discountPercent,
+              discountPrice: isFixed ? product.discountPrice : null,
               discountEndDate: new Date(`${product.discountEndDate}T23:59:59.999`),
             },
           });

@@ -17,11 +17,16 @@ import { handleImageError } from '@/lib/image';
 
 type SectionType = 'REGULAR' | 'PROMO';
 
+type DiscountType = 'PERCENT' | 'FIXED';
+
 type SectionProductForm = {
   productId: string;
   title: string;
   primaryImageUrl: string | null;
+  price: number;
+  discountType: DiscountType;
   discountPercent: number | '';
+  discountPrice: number | '';
   discountEndDate: string;
 };
 
@@ -38,7 +43,10 @@ type SectionDetail = {
     productId: string;
     title: string;
     primaryImageUrl: string | null;
+    price: number;
+    discountType: DiscountType;
     discountPercent: number;
+    discountPrice: number | null;
     discountEndDate: string | null;
   }[];
 };
@@ -57,6 +65,10 @@ function flattenCategories(nodes: CategoryNode[], depth = 0): CategoryOption[] {
     { id: node.id, label: `${'— '.repeat(depth)}${node.name}`, productCount: node.productCount },
     ...flattenCategories(node.children, depth + 1),
   ]);
+}
+
+function formatRupiah(value: number): string {
+  return `Rp${value.toLocaleString('id-ID')}`;
 }
 
 function formatSaveError(data: unknown): string {
@@ -121,7 +133,11 @@ export default function AdminKonfigurasiSectionDetailPage() {
           productId: p.productId,
           title: p.title,
           primaryImageUrl: p.primaryImageUrl,
-          discountPercent: p.discountPercent,
+          price: p.price,
+          discountType: p.discountType,
+          // A product with no active discount has percent 0; leave the field empty then.
+          discountPercent: p.discountPercent > 0 ? p.discountPercent : '',
+          discountPrice: p.discountPrice ?? '',
           discountEndDate: p.discountEndDate ?? '',
         })),
       );
@@ -147,7 +163,10 @@ export default function AdminKonfigurasiSectionDetailPage() {
         productId: product.id,
         title: product.title,
         primaryImageUrl: product.primaryImageUrl,
+        price: product.price,
+        discountType: product.discountPrice != null ? 'FIXED' : 'PERCENT',
         discountPercent: product.discountPercent,
+        discountPrice: product.discountPrice ?? '',
         discountEndDate: product.discountEndDate?.slice(0, 10) ?? '',
       },
     ]);
@@ -181,7 +200,10 @@ export default function AdminKonfigurasiSectionDetailPage() {
           productId: p.productId,
           ...(type === 'PROMO'
             ? {
-                discountPercent: p.discountPercent === '' ? undefined : p.discountPercent,
+                discountType: p.discountType,
+                ...(p.discountType === 'FIXED'
+                  ? { discountPrice: p.discountPrice === '' ? undefined : p.discountPrice }
+                  : { discountPercent: p.discountPercent === '' ? undefined : p.discountPercent }),
                 discountEndDate: p.discountEndDate || undefined,
               }
             : {}),
@@ -371,22 +393,57 @@ export default function AdminKonfigurasiSectionDetailPage() {
                 </div>
 
                 {type === 'PROMO' ? (
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-end gap-2">
                     <div className="flex flex-col gap-1">
-                      <label className="text-xs text-neutral-500">Diskon (%)</label>
-                      <input
-                        type="number"
-                        min={1}
-                        max={90}
-                        value={product.discountPercent}
+                      <label className="text-xs text-neutral-500">Potongan</label>
+                      <select
+                        value={product.discountType}
                         onChange={(e) =>
                           updateProduct(product.productId, {
-                            discountPercent: e.target.value === '' ? '' : Number(e.target.value),
+                            discountType: e.target.value as DiscountType,
                           })
                         }
-                        className={`${adminInputBase} h-9 w-20`}
-                      />
+                        className={`${adminInputBase} h-9`}
+                      >
+                        <option value="PERCENT">Persentase (%)</option>
+                        <option value="FIXED">Harga tetap (Rp)</option>
+                      </select>
                     </div>
+                    {product.discountType === 'FIXED' ? (
+                      <div className="flex flex-col gap-1">
+                        <label className="text-xs text-neutral-500">
+                          Harga promo (normal {formatRupiah(product.price)})
+                        </label>
+                        <input
+                          type="number"
+                          min={1}
+                          max={product.price - 1}
+                          value={product.discountPrice}
+                          onChange={(e) =>
+                            updateProduct(product.productId, {
+                              discountPrice: e.target.value === '' ? '' : Number(e.target.value),
+                            })
+                          }
+                          className={`${adminInputBase} h-9 w-36`}
+                        />
+                      </div>
+                    ) : (
+                      <div className="flex flex-col gap-1">
+                        <label className="text-xs text-neutral-500">Diskon (%)</label>
+                        <input
+                          type="number"
+                          min={1}
+                          max={90}
+                          value={product.discountPercent}
+                          onChange={(e) =>
+                            updateProduct(product.productId, {
+                              discountPercent: e.target.value === '' ? '' : Number(e.target.value),
+                            })
+                          }
+                          className={`${adminInputBase} h-9 w-20`}
+                        />
+                      </div>
+                    )}
                     <div className="flex flex-col gap-1">
                       <label className="text-xs text-neutral-500">Berakhir</label>
                       <input

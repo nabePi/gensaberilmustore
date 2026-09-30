@@ -79,6 +79,14 @@ export const PUT = withAuth<RouteContext>(
       }
     }
 
+    // A fixed promo price (set from a PROMO section) survives edits that leave the discount and
+    // price untouched; changing either makes the percent authoritative again.
+    const keepFixedPrice =
+      existing.discountPrice != null &&
+      (data.discountPercent === undefined || data.discountPercent === existing.discountPercent) &&
+      (data.price === undefined || data.price === existing.price);
+    const clearFixedPrice = existing.discountPrice != null && !keepFixedPrice;
+
     const finalPriceUpdate =
       data.price !== undefined ||
       data.discountPercent !== undefined ||
@@ -90,6 +98,7 @@ export const PUT = withAuth<RouteContext>(
               data.discountPercent ?? existing.discountPercent,
               data.isPreOrderActive ?? existing.isPreOrderActive,
               data.preOrderPrice ?? existing.preOrderPrice,
+              keepFixedPrice ? existing.discountPrice : null,
             ),
           }
         : {};
@@ -133,6 +142,7 @@ export const PUT = withAuth<RouteContext>(
             ...data,
             ...(publisher !== undefined ? { imprint: publisher } : {}),
             ...finalPriceUpdate,
+            ...(clearFixedPrice ? { discountPrice: null } : {}),
             ...slugUpdate,
           },
           include: {
