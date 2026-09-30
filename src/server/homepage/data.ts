@@ -38,6 +38,7 @@ const cardSelect = {
   finalPrice: true,
   discountPercent: true,
   discountEndDate: true,
+  discountPrice: true,
   isPreOrderActive: true,
   stock: true,
   isActive: true,

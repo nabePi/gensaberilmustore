@@ -51,7 +51,9 @@ const dateInputSchema = z
 
 export const homepageSectionProductSchema = z.object({
   productId: z.string().uuid(),
+  discountType: z.enum(['PERCENT', 'FIXED']).default('PERCENT'),
   discountPercent: z.number().int().min(1).max(90).optional(),
+  discountPrice: z.number().int().min(1).optional(),
   discountEndDate: dateInputSchema.optional(),
 });
 
@@ -84,7 +86,15 @@ export const homepageSectionDetailUpdateSchema = z
 
       if (data.type !== 'PROMO') return;
 
-      if (product.discountPercent == null) {
+      if (product.discountType === 'FIXED') {
+        if (product.discountPrice == null) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ['products', index, 'discountPrice'],
+            message: 'Harga promo wajib diisi',
+          });
+        }
+      } else if (product.discountPercent == null) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
           path: ['products', index, 'discountPercent'],

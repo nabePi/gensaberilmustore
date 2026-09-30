@@ -81,6 +81,7 @@ export const GET = withAuth(
           wholesaleMinQty: true,
           discountPercent: true,
           discountEndDate: true,
+          discountPrice: true,
           finalPrice: true,
           stock: true,
           isActive: true,

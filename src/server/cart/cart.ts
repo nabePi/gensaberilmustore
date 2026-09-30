@@ -27,6 +27,7 @@ const cartInclude = {
           finalPrice: true,
           discountPercent: true,
           discountEndDate: true,
+          discountPrice: true,
           isPreOrderActive: true,
           wholesalePrice: true,
           wholesaleMinQty: true,
@@ -48,6 +49,7 @@ function resolveFinalPrice(product: {
   finalPrice: number;
   discountPercent: number;
   discountEndDate: Date | null;
+  discountPrice: number | null;
   isPreOrderActive: boolean;
 }): number {
   return product.isPreOrderActive ? product.finalPrice : resolveActiveDiscount(product).finalPrice;

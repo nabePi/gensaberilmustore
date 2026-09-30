@@ -21,6 +21,7 @@ export const getProductDetail = cache(async (slug: string) => {
       finalPrice: true,
       discountPercent: true,
       discountEndDate: true,
+      discountPrice: true,
       isPreOrderActive: true,
       wholesalePrice: true,
       wholesaleMinQty: true,
@@ -56,6 +57,7 @@ export const getProductDetail = cache(async (slug: string) => {
     finalPrice: true,
     discountPercent: true,
     discountEndDate: true,
+    discountPrice: true,
     isPreOrderActive: true,
     images: {
       orderBy: [{ isPrimary: 'desc' }, { position: 'asc' }],

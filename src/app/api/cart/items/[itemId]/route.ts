@@ -46,6 +46,7 @@ export async function PATCH(
           finalPrice: true,
           discountPercent: true,
           discountEndDate: true,
+          discountPrice: true,
           isPreOrderActive: true,
           wholesalePrice: true,
           wholesaleMinQty: true,

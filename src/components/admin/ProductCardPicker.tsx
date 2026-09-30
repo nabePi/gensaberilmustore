@@ -11,7 +11,9 @@ export type ProductCardOption = {
   title: string;
   author: string;
   primaryImageUrl: string | null;
+  price: number;
   discountPercent: number;
+  discountPrice: number | null;
   discountEndDate: string | null;
 };
 
