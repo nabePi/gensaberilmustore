@@ -115,9 +115,9 @@ export const PUT = withAuth<RouteContext>(
         const price = productPrices.get(product.productId)!;
         const fixedPrice = product.discountPrice!;
         if (fixedPrice >= price) {
-          fixedPriceIssues.push('Harga promo harus lebih kecil dari harga normal');
+          fixedPriceIssues.push('Potongan harus lebih dari 0');
         } else if (fixedPrice < minFixedPrice(price)) {
-          fixedPriceIssues.push('Harga promo maksimal diskon 90% dari harga normal');
+          fixedPriceIssues.push('Potongan maksimal 90% dari harga normal');
         }
       }
       if (fixedPriceIssues.length > 0) {
