@@ -15,6 +15,8 @@ type CartItem = {
   imageUrl: string | null;
   priceSnapshot: number;
   normalPrice: number;
+  listPrice: number;
+  promo: { type: 'percent'; percent: number } | { type: 'fixed'; saving: number } | null;
   isWholesale: boolean;
   wholesaleMinQty: number | null;
   quantity: number;
@@ -128,25 +130,30 @@ export default function CartPage() {
                   >
                     {item.title}
                   </Link>
-                  {item.isWholesale ? (
-                    <div className="flex flex-col">
+                  <div className="flex flex-col">
+                    {item.promo || item.isWholesale ? (
                       <span className="text-xs text-neutral-400 line-through">
-                        {formatCurrency(item.normalPrice)}
+                        {formatCurrency(item.promo ? item.listPrice : item.normalPrice)}
                       </span>
-                      <div className="flex items-center gap-1.5">
-                        <p className="text-sm font-bold text-brand">
-                          {formatCurrency(item.priceSnapshot)}
-                        </p>
+                    ) : null}
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <p className="text-sm font-bold text-brand">
+                        {formatCurrency(item.priceSnapshot)}
+                      </p>
+                      {item.promo ? (
+                        <span className="rounded-sm bg-red px-1.5 py-0.5 text-[10px] font-bold text-white">
+                          {item.promo.type === 'fixed'
+                            ? `Hemat ${formatCurrency(item.promo.saving)}`
+                            : `-${item.promo.percent}%`}
+                        </span>
+                      ) : null}
+                      {item.isWholesale ? (
                         <span className="rounded-sm bg-navy/10 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-navy">
                           Harga Grosir
                         </span>
-                      </div>
+                      ) : null}
                     </div>
-                  ) : (
-                    <p className="text-sm font-bold text-brand">
-                      {formatCurrency(item.priceSnapshot)}
-                    </p>
-                  )}
+                  </div>
 
                   <div className="mt-2 flex items-center justify-between">
                     <div className="flex items-center rounded-sm border border-neutral-200">
