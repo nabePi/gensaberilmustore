@@ -14,6 +14,7 @@ import {
   adminInputBase,
 } from '@/lib/admin/styles';
 import { handleImageError } from '@/lib/image';
+import { minFixedPrice } from '@/server/products/pricing';
 
 type SectionType = 'REGULAR' | 'PROMO';
 
@@ -412,20 +413,30 @@ export default function AdminKonfigurasiSectionDetailPage() {
                     {product.discountType === 'FIXED' ? (
                       <div className="flex flex-col gap-1">
                         <label className="text-xs text-neutral-500">
-                          Harga promo (normal {formatRupiah(product.price)})
+                          Potongan Rp (normal {formatRupiah(product.price)})
                         </label>
                         <input
                           type="number"
                           min={1}
-                          max={product.price - 1}
-                          value={product.discountPrice}
+                          max={product.price - minFixedPrice(product.price)}
+                          value={
+                            product.discountPrice === ''
+                              ? ''
+                              : product.price - product.discountPrice
+                          }
                           onChange={(e) =>
                             updateProduct(product.productId, {
-                              discountPrice: e.target.value === '' ? '' : Number(e.target.value),
+                              discountPrice:
+                                e.target.value === '' ? '' : product.price - Number(e.target.value),
                             })
                           }
                           className={`${adminInputBase} h-9 w-36`}
                         />
+                        {product.discountPrice !== '' ? (
+                          <span className="text-xs text-neutral-500">
+                            Harga jadi {formatRupiah(product.discountPrice)}
+                          </span>
+                        ) : null}
                       </div>
                     ) : (
                       <div className="flex flex-col gap-1">
