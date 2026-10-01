@@ -76,7 +76,16 @@ const VOUCHER_ERROR_MESSAGES: Record<string, string> = {
 };
 
 type Cart = {
-  items: { id: string; title: string; quantity: number; lineTotal: number }[];
+  items: {
+    id: string;
+    title: string;
+    quantity: number;
+    lineTotal: number;
+    priceSnapshot: number;
+    listPrice: number;
+    normalPrice: number;
+    promo: { type: 'percent'; percent: number } | { type: 'fixed'; saving: number } | null;
+  }[];
   subtotal: number;
   itemCount: number;
 };
@@ -385,6 +394,11 @@ export default function CheckoutPage() {
 
   const discount = voucherResult && voucherResult.valid ? voucherResult.discountAmount : 0;
   const subtotal = cart?.subtotal ?? 0;
+  const promoSavings =
+    cart?.items.reduce(
+      (sum, item) => (item.promo ? sum + (item.listPrice - item.normalPrice) * item.quantity : sum),
+      0,
+    ) ?? 0;
   const total = Math.max(0, subtotal + shippingCost - discount);
 
   async function onSubmit(values: CheckoutFormValues) {
@@ -502,7 +516,7 @@ export default function CheckoutPage() {
       <form
         onSubmit={handleSubmit(onSubmit)}
         noValidate
-        className="grid gap-8 lg:grid-cols-[1fr_320px]"
+        className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_440px]"
       >
         <div className="flex flex-col gap-6">
           <div className="rounded-lg border border-neutral-200 bg-white p-5">
@@ -667,16 +681,41 @@ export default function CheckoutPage() {
         <div className="h-fit rounded-lg border border-neutral-200 bg-white p-5">
           <h2 className="mb-4 text-base font-bold text-foreground">Ringkasan Pesanan</h2>
 
-          <div className="mb-4 flex flex-col gap-1 text-sm">
+          <ul className="mb-4 flex flex-col divide-y divide-neutral-100 text-sm">
             {cart.items.map((item) => (
-              <div key={item.id} className="flex justify-between text-neutral-600">
-                <span>
-                  {item.title} x{item.quantity}
-                </span>
-                <span>{formatCurrency(item.lineTotal)}</span>
-              </div>
+              <li key={item.id} className="flex gap-2.5 py-3 first:pt-0 last:pb-0">
+                <span
+                  aria-hidden="true"
+                  className="mt-[7px] h-1.5 w-1.5 shrink-0 rounded-full bg-brand"
+                />
+                <div className="flex min-w-0 flex-1 flex-col gap-1">
+                  <span className="font-medium leading-snug text-foreground">{item.title}</span>
+                  <span className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-neutral-500">
+                    <span>
+                      {item.quantity} x {formatCurrency(item.priceSnapshot)}
+                    </span>
+                    {item.promo ? (
+                      <span className="rounded-sm bg-red px-1.5 py-0.5 text-[10px] font-bold text-white">
+                        {item.promo.type === 'fixed'
+                          ? `Hemat ${formatCurrency(item.promo.saving)}`
+                          : `-${item.promo.percent}%`}
+                      </span>
+                    ) : null}
+                  </span>
+                </div>
+                <div className="flex shrink-0 flex-col items-end">
+                  {item.promo ? (
+                    <span className="text-xs text-neutral-400 line-through">
+                      {formatCurrency(item.listPrice * item.quantity)}
+                    </span>
+                  ) : null}
+                  <span className="font-semibold text-foreground">
+                    {formatCurrency(item.lineTotal)}
+                  </span>
+                </div>
+              </li>
             ))}
-          </div>
+          </ul>
 
           <div className="mb-4 flex flex-col gap-2">
             <label className="text-xs font-medium text-neutral-600">Metode Pengiriman</label>
@@ -872,6 +911,12 @@ export default function CheckoutPage() {
               <span>{shippingLoading ? 'Menghitung...' : formatCurrency(shippingCost)}</span>
             </div>
             {shippingError ? <p className="text-xs text-red">{shippingError}</p> : null}
+            {promoSavings > 0 ? (
+              <div className="flex justify-between text-green">
+                <span>Sudah termasuk hemat promo</span>
+                <span>{formatCurrency(promoSavings)}</span>
+              </div>
+            ) : null}
             {discount > 0 ? (
               <div className="flex justify-between text-green">
                 <span>Diskon Voucher</span>

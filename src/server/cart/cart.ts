@@ -188,6 +188,8 @@ export function serializeCart(cart: CartWithItems) {
       product.wholesalePrice != null &&
       product.wholesaleMinQty != null &&
       item.quantity >= product.wholesaleMinQty;
+    const activeDiscount = product.isPreOrderActive ? null : resolveActiveDiscount(product);
+    const hasDiscount = activeDiscount != null && activeDiscount.discountPercent > 0;
     const flag =
       !product.isActive || product.stock < item.quantity
         ? ('out_of_stock' as const)
@@ -203,6 +205,12 @@ export function serializeCart(cart: CartWithItems) {
       imageUrl: product.images[0]?.url ?? null,
       priceSnapshot: item.priceSnapshot,
       normalPrice: finalPrice,
+      listPrice: product.price,
+      promo: hasDiscount
+        ? product.discountPrice != null
+          ? { type: 'fixed' as const, saving: product.price - finalPrice }
+          : { type: 'percent' as const, percent: activeDiscount.discountPercent }
+        : null,
       isWholesale,
       wholesaleMinQty: product.wholesaleMinQty,
       quantity: item.quantity,
