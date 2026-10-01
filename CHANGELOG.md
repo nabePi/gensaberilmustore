@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.8.0](https://github.com/nabePi/gensaberilmustore/compare/v0.7.0...v0.8.0) (2026-10-01)
+
+
+### Features
+
+* **cart:** tampilkan info diskon produk di keranjang dan checkout ([#91](https://github.com/nabePi/gensaberilmustore/issues/91)) ([f1f539b](https://github.com/nabePi/gensaberilmustore/commit/f1f539b8db17d7bede75077a6c3f0522eb47df69))
+* **section:** dukung potongan harga tetap di section promo ([#85](https://github.com/nabePi/gensaberilmustore/issues/85)) ([c3362eb](https://github.com/nabePi/gensaberilmustore/commit/c3362ebcd1b65c674b182df34d7a086163c3923b))
+
+
+### Bug Fixes
+
+* **products:** tampilkan nominal hemat untuk produk promo harga tetap ([#90](https://github.com/nabePi/gensaberilmustore/issues/90)) ([f090ae6](https://github.com/nabePi/gensaberilmustore/commit/f090ae64c3e9fbfcde053a4b213dd3030fe0af87))
+* **section:** isi potongan harga tetap sebagai nominal rupiah ([#88](https://github.com/nabePi/gensaberilmustore/issues/88)) ([5dd7499](https://github.com/nabePi/gensaberilmustore/commit/5dd7499d9a957c279c3837a648748e7ed0a7f8bd))
+* **section:** perbarui finalPrice saat menyimpan promo section ([#89](https://github.com/nabePi/gensaberilmustore/issues/89)) ([6c56187](https://github.com/nabePi/gensaberilmustore/commit/6c56187da54317da7129f6ab96f2d52e58bf5423))
+
 ## [0.7.0](https://github.com/nabePi/gensaberilmustore/compare/v0.6.0...v0.7.0) (2026-09-30)
 
 
