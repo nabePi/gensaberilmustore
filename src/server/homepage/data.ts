@@ -67,6 +67,7 @@ function toCardData(product: CardRow, soldCount: number): ProductCardData {
     price: product.price,
     finalPrice,
     discountPercent,
+    discountPrice: product.discountPrice,
     isPreOrderActive: product.isPreOrderActive,
     stock: product.stock,
     ribbonType: product.ribbonType as ProductCardData['ribbonType'],

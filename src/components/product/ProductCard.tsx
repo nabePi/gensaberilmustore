@@ -16,6 +16,8 @@ export type ProductCardData = {
   price: number;
   finalPrice: number;
   discountPercent?: number;
+  // Set for a fixed-price promo: the card shows the rupiah saving instead of a percent.
+  discountPrice?: number | null;
   isPreOrderActive?: boolean;
   stock?: number;
   ribbonType?: 'NEW' | 'BEST' | 'DISCOUNT' | null;
@@ -138,7 +140,11 @@ export function ProductCard({ product }: { product: ProductCardData }) {
             ) : product.discountPercent ? (
               <span className="text-[11px] text-neutral-400">
                 {formatCurrency(product.price)}
-                <span className="ml-1 font-semibold text-red">-{product.discountPercent}%</span>
+                <span className="ml-1 font-semibold text-red">
+                  {product.discountPrice != null
+                    ? `Hemat ${formatCurrency(product.price - product.finalPrice)}`
+                    : `-${product.discountPercent}%`}
+                </span>
               </span>
             ) : null}
             <span className="text-sm font-bold text-foreground">

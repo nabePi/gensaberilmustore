@@ -187,7 +187,9 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                   {formatCurrency(product.price)}
                 </span>
                 <span className={`${badgeBase} bg-red text-white`}>
-                  -{product.discountPercent}%
+                  {product.discountPrice != null
+                    ? `Hemat ${formatCurrency(product.price - product.finalPrice)}`
+                    : `-${product.discountPercent}%`}
                 </span>
               </>
             ) : null}
