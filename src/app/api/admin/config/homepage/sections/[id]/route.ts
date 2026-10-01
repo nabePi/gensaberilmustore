@@ -3,7 +3,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { withAuth } from '@/server/auth';
 import { homepageSectionDetailUpdateSchema } from '@/server/config/schema';
-import { minFixedPrice, percentFromFixedPrice } from '@/server/products/pricing';
+import {
+  computeEffectivePrice,
+  minFixedPrice,
+  percentFromFixedPrice,
+} from '@/server/products/pricing';
 
 type RouteContext = { params: Promise<{ id: string }> };
 
@@ -94,10 +98,11 @@ export const PUT = withAuth<RouteContext>(
     const { products, ...sectionData } = parsed.data;
 
     const productPrices = new Map<string, number>();
+    const productPreOrders = new Map<string, { isActive: boolean; price: number | null }>();
     if (products.length > 0) {
       const found = await prisma.product.findMany({
         where: { id: { in: products.map((p) => p.productId) } },
-        select: { id: true, price: true },
+        select: { id: true, price: true, isPreOrderActive: true, preOrderPrice: true },
       });
       if (found.length !== products.length) {
         return NextResponse.json(
@@ -105,7 +110,10 @@ export const PUT = withAuth<RouteContext>(
           { status: 400 },
         );
       }
-      for (const row of found) productPrices.set(row.id, row.price);
+      for (const row of found) {
+        productPrices.set(row.id, row.price);
+        productPreOrders.set(row.id, { isActive: row.isPreOrderActive, price: row.preOrderPrice });
+      }
     }
 
     if (sectionData.type === 'PROMO') {
@@ -177,16 +185,25 @@ export const PUT = withAuth<RouteContext>(
           // A fixed price is stored as-is; discountPercent keeps the derived percent so
           // badges and order snapshots stay meaningful.
           const isFixed = product.discountType === 'FIXED';
+          const price = productPrices.get(product.productId)!;
+          const preOrder = productPreOrders.get(product.productId)!;
+          const discountPercent = isFixed
+            ? percentFromFixedPrice(price, product.discountPrice!)
+            : product.discountPercent!;
+          const discountPrice = isFixed ? product.discountPrice! : null;
           await tx.product.update({
             where: { id: product.productId },
             data: {
-              discountPercent: isFixed
-                ? percentFromFixedPrice(
-                    productPrices.get(product.productId)!,
-                    product.discountPrice!,
-                  )
-                : product.discountPercent,
-              discountPrice: isFixed ? product.discountPrice : null,
+              discountPercent,
+              discountPrice,
+              // finalPrice is the stored column behind price filters and sorting.
+              finalPrice: computeEffectivePrice(
+                price,
+                discountPercent,
+                preOrder.isActive,
+                preOrder.price,
+                discountPrice,
+              ),
               discountEndDate: new Date(`${product.discountEndDate}T23:59:59.999`),
             },
           });
