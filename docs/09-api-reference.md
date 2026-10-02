@@ -1411,6 +1411,11 @@ Kegagalan pencatatan klik **tidak pernah** menghalangi redirect.
 | `GET`    | `/api/admin/reports/payment-methods`        | Admin   |
 | `GET`    | `/api/admin/reports/pos-vs-online`          | Admin   |
 | `GET`    | `/api/admin/reports/export.csv`             | Admin   |
+| `GET`    | `/api/admin/landing`                        | Admin   |
+| `PUT`    | `/api/admin/landing/draft`                  | Admin   |
+| `DELETE` | `/api/admin/landing/draft`                  | Admin   |
+| `POST`   | `/api/admin/landing/publish`                | Admin   |
+| `GET`    | `/api/admin/landing/history`                | Admin   |
 | `GET`    | `/r/[code]`                                 | Publik  |
 
 **Member+** = butuh sesi member **dan** `AffiliateProfile` (jika tidak → `404`).
