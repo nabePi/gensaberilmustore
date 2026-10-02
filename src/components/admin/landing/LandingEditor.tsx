@@ -325,7 +325,7 @@ export function LandingEditor() {
         </div>
       ) : null}
 
-      <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-6 lg:grid-cols-[minmax(0,1fr)_440px]">
+      <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-6 lg:grid-cols-[minmax(0,1fr)_520px]">
         <Card padded={false}>
           <div
             role="tablist"
