@@ -1047,6 +1047,28 @@ Bila `canResetOrders` dari server `false` (yakni di production), UI tidak menamp
 
 ---
 
+## 17b. Landing Page — `/admin/landing-page`
+
+Editor tanpa kode untuk halaman statis gensaberilmu.com (repo `genstorelanding`). Konten disimpan
+di `src/content.json` pada repo itu; admin membaca dan menulisnya lewat GitHub API.
+
+- **Tab Tautan / Header & Teks / Sosial & Marketplace**: ubah teks, link, ikon, tampil/sembunyi,
+  tambah/hapus item, dan urutkan dengan drag (atau keyboard: fokus ke handle, Spasi, panah, Spasi).
+- **Preview**: iframe ke landing page (`?preview=1`) yang menerima draft lewat `postMessage`, jadi
+  tampilannya identik dengan situs asli. Toggle Mobile/Desktop.
+- **Simpan Draft**: simpan di database (`LandingDraft`), belum ke GitHub.
+- **Commit & Push**: dialog ringkasan perubahan lalu commit ke repo landing. Deploy berjalan otomatis
+  dari repo, admin berhenti di commit. Jika file di GitHub sudah berubah sejak editor dibuka, commit
+  ditolak (409) agar edit manual tidak tertimpa.
+- **Riwayat**: 20 commit terakhir yang menyentuh `content.json`.
+
+Env: `GITHUB_LANDING_TOKEN` (fine-grained PAT, `Contents: Read and write` hanya untuk repo landing),
+`GITHUB_LANDING_REPO`, `GITHUB_LANDING_BRANCH`, dan opsional `NEXT_PUBLIC_LANDING_URL` untuk preview.
+
+Belum ada: unggah gambar/logo/poster/video baru (hanya aset yang sudah ada di repo landing).
+
+---
+
 ## 18. Ringkasan: Endpoint Admin yang Belum Punya UI
 
 Bagian ini berguna untuk perencanaan pengembangan lanjutan. Semua endpoint di bawah sudah berfungsi dan teruji, tetapi belum ada halaman yang memanggilnya.
