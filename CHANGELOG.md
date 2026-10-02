@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.9.0](https://github.com/nabePi/gensaberilmustore/compare/v0.8.0...v0.9.0) (2026-10-02)
+
+
+### Features
+
+* **landing:** tambah api baca, draft, dan commit konten landing page ke github ([#92](https://github.com/nabePi/gensaberilmustore/issues/92)) ([ce48359](https://github.com/nabePi/gensaberilmustore/commit/ce483599564dd72d6eab8976a9b797c9c29dcf13))
+* **landing:** tambah menu landing page di admin dengan editor dan preview ([#94](https://github.com/nabePi/gensaberilmustore/issues/94)) ([1b79e2b](https://github.com/nabePi/gensaberilmustore/commit/1b79e2bd8b8198de7f96525d6a78a325c70b0d6f))
+
+
+### Bug Fixes
+
+* **deploy:** teruskan env github landing ke container app ([#95](https://github.com/nabePi/gensaberilmustore/issues/95)) ([61b626f](https://github.com/nabePi/gensaberilmustore/commit/61b626fffae0233811960aee84e39a464986886a))
+* **landing:** lebarkan panel preview dan kecilkan panel editor ([#96](https://github.com/nabePi/gensaberilmustore/issues/96)) ([303aaa8](https://github.com/nabePi/gensaberilmustore/commit/303aaa841fd189cb2a1a70c908dc732a9ce98fe6))
+
 ## [0.8.0](https://github.com/nabePi/gensaberilmustore/compare/v0.7.0...v0.8.0) (2026-10-01)
 
 
