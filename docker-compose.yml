@@ -60,6 +60,11 @@ services:
       R2_SECRET_ACCESS_KEY: ${R2_SECRET_ACCESS_KEY}
       R2_BUCKET: ${R2_BUCKET}
       R2_PUBLIC_URL: ${R2_PUBLIC_URL}
+      # Landing page editor (commits src/content.json to the landing repo).
+      # Empty values fall back to the defaults in src/env.ts.
+      GITHUB_LANDING_TOKEN: ${GITHUB_LANDING_TOKEN}
+      GITHUB_LANDING_REPO: ${GITHUB_LANDING_REPO}
+      GITHUB_LANDING_BRANCH: ${GITHUB_LANDING_BRANCH}
       # Monitoring
       SENTRY_DSN: ${SENTRY_DSN}
       # JNE tariff (shipping cost) API
