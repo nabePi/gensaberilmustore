@@ -1,0 +1,141 @@
+{
+  "hero": {
+    "logo": "/logo-gensa.png",
+    "logoAlt": "Logo Gensa Berilmu",
+    "eyebrow": "Official Website Penerbit",
+    "title": "Gensa Berilmu",
+    "tagline": "Learn History, Repeat Victory!"
+  },
+  "background": {
+    "poster": "/al-aqsa-poster-v2.jpg",
+    "videoDesktop": "/al-aqsa-motion-desktop-v2.mp4",
+    "videoMobile": "/al-aqsa-motion-v2.mp4"
+  },
+  "quickActions": {
+    "saveContact": {
+      "label": "Simpan Kontak",
+      "toast": "Kontak Gensa Berilmu tersimpan",
+      "vcard": {
+        "name": "Gensa Berilmu",
+        "org": "Penerbit Gensa Berilmu",
+        "phone": "+6281384804494",
+        "url": "https://gensaberilmu.com",
+        "instagram": "https://instagram.com/gensa.berilmu"
+      }
+    },
+    "share": {
+      "label": "Bagikan",
+      "title": "Gensa Berilmu",
+      "text": "Temukan kanal resmi dan koleksi buku Gensa Berilmu.",
+      "toastShared": "Tautan siap dibagikan",
+      "toastCopied": "Tautan berhasil disalin",
+      "toastFallback": "Bagikan tautan dari menu browser Anda"
+    }
+  },
+  "links": [
+    {
+      "id": "belanja-web",
+      "label": "Belanja Buku di Website",
+      "description": "Katalog lengkap dan proses pesanan cepat",
+      "href": "https://store.gensaberilmu.com/",
+      "icon": "ShoppingCart",
+      "featured": true,
+      "visible": true
+    },
+    {
+      "id": "belanja-kids",
+      "label": "Belanja di Gensa Kids",
+      "description": "Koleksi buku anak Gensa Berilmu",
+      "href": "https://store.gensaberilmu.com/kids",
+      "icon": "Baby",
+      "visible": true
+    },
+    {
+      "id": "channel-wa",
+      "label": "Gabung Channel WhatsApp",
+      "description": "Info buku baru, kajian, dan program terbaru",
+      "href": "https://whatsapp.com/channel/0029VaSJ3ki7z4kYgFRzuT2N",
+      "iconSrc": "/whatsapp-logo.png",
+      "visible": true
+    },
+    {
+      "id": "reseller",
+      "label": "Daftar Reseller dan Dropship",
+      "description": "Mulai bertumbuh bersama Gensa Berilmu",
+      "href": "https://desty.page/gensa.berilmu",
+      "iconSrc": "/reseller-icon.png",
+      "visible": true
+    },
+    {
+      "id": "undang-ustadz",
+      "label": "Undang Ustadz Edgar Hamas",
+      "description": "Informasi agenda dan undangan kajian",
+      "href": "https://wa.me/6282258532347",
+      "iconSrc": "/google-calendar-icon.png",
+      "visible": true
+    },
+    {
+      "id": "affiliate",
+      "label": "Program Marketing Affiliate",
+      "description": "Bagikan manfaat, dapatkan penghasilan",
+      "href": "https://bit.ly/ikutmasarinprodukgensadong",
+      "iconSrc": "/affiliate-icon.png",
+      "visible": true
+    },
+    {
+      "id": "chat-admin",
+      "label": "Chat Admin Gensa Berilmu",
+      "description": "Tanya produk dan bantuan pemesanan",
+      "href": "https://wa.me/6281384804494",
+      "iconSrc": "/whatsapp-logo.png",
+      "visible": true
+    }
+  ],
+  "social": [
+    {
+      "id": "instagram",
+      "label": "Instagram",
+      "href": "https://instagram.com/gensa.berilmu",
+      "iconSrc": "/instagram-logo.png",
+      "visible": true
+    },
+    {
+      "id": "youtube",
+      "label": "YouTube",
+      "href": "https://youtube.com/channel/UC8tIGvFz0zClZ588XeJtVGg",
+      "iconSrc": "/youtube-logo.png",
+      "visible": true
+    }
+  ],
+  "marketplace": {
+    "heading": "Temukan kami di marketplace",
+    "items": [
+      {
+        "id": "tokopedia",
+        "label": "Tokopedia",
+        "href": "https://bit.ly/m/TokopediaSeller",
+        "iconSrc": "/tokopedia-mascot.png",
+        "visible": true
+      },
+      {
+        "id": "tiktok",
+        "label": "TikTok",
+        "href": "https://www.tiktok.com/@gensa.berilmu?_t=8YopMrRuSHZ&_r=1",
+        "iconSrc": "/tiktok-logo.png",
+        "visible": true
+      },
+      {
+        "id": "shopee",
+        "label": "Shopee",
+        "href": "https://linktr.ee/gensaberilmu",
+        "iconSrc": "/shopee-logo.png",
+        "visible": true
+      }
+    ]
+  },
+  "footer": {
+    "text": "© 2026 Gensa Berilmu. Semua hak dilindungi.",
+    "siteUrl": "https://gensaberilmu.com",
+    "icon": "/icon.png"
+  }
+}

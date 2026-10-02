@@ -609,6 +609,31 @@ model StoreSetting {
   updatedAt                DateTime @updatedAt
 }
 
+/// Draft tunggal untuk editor Landing Page admin (id selalu 1).
+/// `baseSha` = SHA blob src/content.json di GitHub saat draft diambil, dipakai
+/// untuk mendeteksi bentrok sebelum commit.
+model LandingDraft {
+  id          Int      @id @default(1)
+  content     Json
+  baseSha     String
+  updatedById String?
+  updatedAt   DateTime @updatedAt
+}
+
+model LandingPublishLog {
+  id        String   @id @default(uuid())
+  userId    String
+  userName  String
+  message   String
+  commitSha String?
+  commitUrl String?
+  status    String
+  error     String?
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+}
+
 enum HomepageBannerSlot {
   HERO_MAIN
   HERO_SIDE_1

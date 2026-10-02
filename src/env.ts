@@ -45,6 +45,14 @@ const envSchema = z.object({
   R2_BUCKET: z.string().optional(),
   R2_PUBLIC_URL: z.string().optional(),
 
+  // Landing page editor: commits src/content.json to the static landing repo
+  GITHUB_LANDING_TOKEN: z.string().optional(),
+  GITHUB_LANDING_REPO: z
+    .string()
+    .regex(/^[\w.-]+\/[\w.-]+$/, 'GITHUB_LANDING_REPO must look like owner/repo')
+    .default('nabePi/genstorelanding'),
+  GITHUB_LANDING_BRANCH: z.string().default('main'),
+
   // Monitoring placeholders
   SENTRY_DSN: z.string().optional(),
 
@@ -171,6 +179,10 @@ export const env = {
   r2SecretAccessKey: rawEnv.R2_SECRET_ACCESS_KEY,
   r2Bucket: rawEnv.R2_BUCKET,
   r2PublicUrl: rawEnv.R2_PUBLIC_URL,
+
+  githubLandingToken: rawEnv.GITHUB_LANDING_TOKEN,
+  githubLandingRepo: rawEnv.GITHUB_LANDING_REPO,
+  githubLandingBranch: rawEnv.GITHUB_LANDING_BRANCH,
 
   sentryDsn: rawEnv.SENTRY_DSN,
 
