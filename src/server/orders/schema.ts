@@ -64,6 +64,7 @@ export const listMemberOrdersQuerySchema = z.object({
 export const orderStatusUpdateSchema = z.object({
   toStatus: z.enum(ORDER_STATUSES, { required_error: 'Status tujuan wajib diisi' }),
   note: z.string().trim().max(500).optional(),
+  generateAirwaybill: z.boolean().optional(),
 });
 
 export const bulkOrderStatusUpdateSchema = z.object({
