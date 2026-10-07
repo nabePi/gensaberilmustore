@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.10.0](https://github.com/nabePi/gensaberilmustore/compare/v0.9.0...v0.10.0) (2026-10-07)
+
+
+### Features
+
+* **admin:** tambah checkbox buat resi saat tandai lunas ([#98](https://github.com/nabePi/gensaberilmustore/issues/98)) ([c5787d1](https://github.com/nabePi/gensaberilmustore/commit/c5787d1df863330d1e0cd8c19a5c0784409660e0))
+
 ## [0.9.0](https://github.com/nabePi/gensaberilmustore/compare/v0.8.0...v0.9.0) (2026-10-07)
 
 
