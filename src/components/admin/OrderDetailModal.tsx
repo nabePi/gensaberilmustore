@@ -111,6 +111,7 @@ export function OrderDetailModal({
   const [error, setError] = useState<string | null>(null);
   const [generatingAirwaybill, setGeneratingAirwaybill] = useState(false);
   const [airwaybillError, setAirwaybillError] = useState<string | null>(null);
+  const [createAirwaybill, setCreateAirwaybill] = useState(true);
 
   useEffect(() => {
     async function loadOrder() {
@@ -131,7 +132,9 @@ export function OrderDetailModal({
     const response = await fetch(`/api/admin/orders/${orderId}/status`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ toStatus }),
+      body: JSON.stringify(
+        toStatus === 'PAID' ? { toStatus, generateAirwaybill: createAirwaybill } : { toStatus },
+      ),
     });
     const data = await response.json();
     if (!response.ok) {
@@ -399,6 +402,17 @@ export function OrderDetailModal({
             <div className="border-t border-neutral-200 pt-3">
               <h3 className="mb-2 text-sm font-semibold text-foreground">Ubah Status</h3>
               {error ? <p className="mb-2 text-sm text-red">{error}</p> : null}
+              {NEXT_STATUS_OPTIONS[order.status].includes('PAID') ? (
+                <label className="mb-2 flex items-center gap-2 text-sm text-neutral-700">
+                  <input
+                    type="checkbox"
+                    checked={createAirwaybill}
+                    onChange={(event) => setCreateAirwaybill(event.target.checked)}
+                    disabled={updating}
+                  />
+                  Buat resi
+                </label>
+              ) : null}
               <div className="flex flex-wrap gap-2">
                 {NEXT_STATUS_OPTIONS[order.status].map((next) => (
                   <button

@@ -46,7 +46,7 @@ export const PATCH = withAuth<RouteContext>(
 
     await dispatchPendingNotificationsForOrder(order.id);
 
-    if (parsed.data.toStatus === 'PAID') {
+    if (parsed.data.toStatus === 'PAID' && parsed.data.generateAirwaybill !== false) {
       await generateAirwaybillForOrder(order.id);
     }
 
