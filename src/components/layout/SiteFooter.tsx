@@ -117,8 +117,8 @@ export function SiteFooter() {
                   <polyline points="22,6 12,13 2,6" />
                 </svg>
               </span>
-              <a href="mailto:info@gensaberilmu.com" className="hover:text-brand">
-                info@gensaberilmu.com
+              <a href="mailto:info.penerbitalaqsha@gmail.com" className="hover:text-brand">
+                info.penerbitalaqsha@gmail.com
               </a>
             </li>
             <li className="flex items-start gap-2.5">
