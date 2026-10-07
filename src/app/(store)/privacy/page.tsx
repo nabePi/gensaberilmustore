@@ -167,8 +167,11 @@ export default function PrivacyPage() {
               Jika Anda memiliki pertanyaan mengenai kebijakan privasi ini atau ingin menggunakan
               hak Anda atas data pribadi, silakan hubungi kami melalui WhatsApp 0813-8480-4494 atau
               email{' '}
-              <a href="mailto:info@gensaberilmu.com" className="text-brand hover:underline">
-                info@gensaberilmu.com
+              <a
+                href="mailto:info.penerbitalaqsha@gmail.com"
+                className="text-brand hover:underline"
+              >
+                info.penerbitalaqsha@gmail.com
               </a>
               .
             </p>

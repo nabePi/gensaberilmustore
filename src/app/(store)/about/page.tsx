@@ -127,8 +127,8 @@ export default function AboutPage() {
           <a href="https://wa.me/6281384804494" className="hover:text-brand">
             WhatsApp: 0813-8480-4494
           </a>
-          <a href="mailto:info@gensaberilmu.com" className="hover:text-brand">
-            Email: info@gensaberilmu.com
+          <a href="mailto:info.penerbitalaqsha@gmail.com" className="hover:text-brand">
+            Email: info.penerbitalaqsha@gmail.com
           </a>
           <span>
             Jalan Margonda Raya Gang H. Fatimah Bawah Rt 02/014 No. 8, Kemiri Muka, Beji, Kota

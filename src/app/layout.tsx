@@ -73,7 +73,7 @@ const organizationJsonLd = {
   contactPoint: {
     '@type': 'ContactPoint',
     contactType: 'customer support',
-    email: 'info@gensaberilmu.com',
+    email: 'info.penerbitalaqsha@gmail.com',
     availableLanguage: ['Indonesian'],
   },
 };
