@@ -154,9 +154,78 @@ describe('GET /api/affiliate/stats', () => {
     expect(json.profile.code).toBe(profile.code);
     expect(json.totalClicks).toBeGreaterThanOrEqual(1);
     expect(json.totalConversions).toBeGreaterThanOrEqual(1);
-    expect(json.commissionPending).toBeGreaterThanOrEqual(10000);
+    expect(json.commissionEarned).toBe(0);
+    expect(json.completedOrders).toBe(0);
     expect(
       json.productPerformance.some((p: { productId: string }) => p.productId === product.id),
     ).toBe(true);
+  });
+
+  it('only counts commission as earned once the order is completed', async () => {
+    const user = await createTestUser();
+    const cookie = await createSessionCookie(user.id);
+    const profile = await createAffiliateProfile(user.id);
+
+    const specs = [
+      ['PENDING', 1000],
+      ['APPROVED', 2000],
+      ['PAID', 4000],
+      ['REJECTED', 8000],
+    ] as const;
+    for (const [status, commissionAmount] of specs) {
+      const order = await createOrder();
+      await prisma.affiliateConversion.create({
+        data: { affiliateProfileId: profile.id, orderId: order.id, commissionAmount, status },
+      });
+    }
+
+    const json = await (await GET(buildRequest(cookie))).json();
+
+    expect(json.totalConversions).toBe(4);
+    expect(json.completedOrders).toBe(2);
+    expect(json.commissionEarned).toBe(2000);
+    expect(json.commissionPaid).toBe(4000);
+    expect(json.commissionPending).toBeUndefined();
+  });
+
+  it('reports all-time revenue per product from completed orders only', async () => {
+    const user = await createTestUser();
+    const cookie = await createSessionCookie(user.id);
+    const profile = await createAffiliateProfile(user.id);
+    const product = await createProduct();
+    await prisma.affiliateProductSelection.create({
+      data: { affiliateProfileId: profile.id, productId: product.id },
+    });
+
+    const specs = [
+      ['APPROVED', 50000],
+      ['PAID', 30000],
+      ['PENDING', 20000],
+      ['REJECTED', 10000],
+    ] as const;
+    for (const [status, lineTotal] of specs) {
+      const order = await createOrder();
+      await prisma.order.update({ where: { id: order.id }, data: { affiliateUserId: user.id } });
+      await prisma.orderItem.create({
+        data: {
+          orderId: order.id,
+          productId: product.id,
+          titleSnapshot: 'Item',
+          priceSnapshot: lineTotal,
+          discountPercentSnapshot: 0,
+          quantity: 1,
+          lineTotal,
+        },
+      });
+      await prisma.affiliateConversion.create({
+        data: { affiliateProfileId: profile.id, orderId: order.id, commissionAmount: 1, status },
+      });
+    }
+
+    const json = await (await GET(buildRequest(cookie))).json();
+    const row = json.productPerformance.find(
+      (p: { productId: string }) => p.productId === product.id,
+    );
+    expect(row.totalRevenue).toBe(80000);
   });
 });

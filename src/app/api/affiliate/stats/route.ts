@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 
 import { prisma } from '@/lib/db';
+import { summarizeConversions } from '@/server/affiliate/stats';
 import { withAuth } from '@/server/auth';
 
 export const GET = withAuth(async (_request, { user }) => {
@@ -9,10 +10,6 @@ export const GET = withAuth(async (_request, { user }) => {
   if (!profile) {
     return NextResponse.json({ error: 'Anda belum menjadi afiliasi' }, { status: 404 });
   }
-
-  const monthStart = new Date();
-  monthStart.setDate(1);
-  monthStart.setHours(0, 0, 0, 0);
 
   const [totalClicks, conversions, selections] = await Promise.all([
     prisma.affiliateClick.count({ where: { affiliateProfileId: profile.id } }),
@@ -33,12 +30,7 @@ export const GET = withAuth(async (_request, { user }) => {
     }),
   ]);
 
-  const commissionPending = conversions
-    .filter((conversion) => conversion.status === 'PENDING' || conversion.status === 'APPROVED')
-    .reduce((sum, conversion) => sum + conversion.commissionAmount, 0);
-  const commissionPaid = conversions
-    .filter((conversion) => conversion.status === 'PAID')
-    .reduce((sum, conversion) => sum + conversion.commissionAmount, 0);
+  const summary = summarizeConversions(conversions);
 
   const productPerformance = await Promise.all(
     selections.map(async (selection) => {
@@ -46,7 +38,11 @@ export const GET = withAuth(async (_request, { user }) => {
         _sum: { lineTotal: true },
         where: {
           productId: selection.productId,
-          order: { affiliateUserId: user.id, createdAt: { gte: monthStart } },
+          order: {
+            affiliateUserId: user.id,
+            // Same rule as "Order Selesai": only completed orders count, never cancelled ones.
+            affiliateConversion: { is: { status: { in: ['APPROVED', 'PAID'] } } },
+          },
         },
       });
 
@@ -61,7 +57,7 @@ export const GET = withAuth(async (_request, { user }) => {
               isActive: selection.product.commissionRate.isActive,
             }
           : null,
-        revenueThisMonth: revenue._sum.lineTotal ?? 0,
+        totalRevenue: revenue._sum.lineTotal ?? 0,
       };
     }),
   );
@@ -69,9 +65,7 @@ export const GET = withAuth(async (_request, { user }) => {
   return NextResponse.json({
     profile: { code: profile.code, isActive: profile.isActive, status: profile.status },
     totalClicks,
-    totalConversions: conversions.length,
-    commissionPending,
-    commissionPaid,
+    ...summary,
     productPerformance,
   });
 });

@@ -3,7 +3,7 @@ import { randomUUID } from 'node:crypto';
 import { NextRequest } from 'next/server';
 import { afterAll, describe, expect, it } from 'vitest';
 
-import { GET } from '@/app/api/admin/commission-rates/route';
+import { DELETE, GET } from '@/app/api/admin/commission-rates/route';
 import { prisma } from '@/lib/db';
 import { hashPassword } from '@/server/auth/password';
 import { ADMIN_SESSION_COOKIE_NAME, createSession } from '@/server/auth/session';
@@ -79,6 +79,65 @@ describe('GET /api/admin/commission-rates', () => {
     expect(response.status).toBe(200);
     const found = json.items.find((item: { productId: string }) => item.productId === product.id);
     expect(found).toBeTruthy();
-    expect(found.percent).toBe(15);
+    expect(found.commissionType).toBe('PERCENT');
+    expect(found.commissionValue).toBe(15);
+    expect(found.status).toBe('ACTIVE');
+  });
+
+  it('paginates and rejects unsupported page sizes', async () => {
+    const { cookie } = await createAdminCookie();
+    const ok = await GET(
+      new NextRequest('http://localhost/api/admin/commission-rates?limit=10&page=1', {
+        headers: { cookie },
+      }),
+    );
+    const json = await ok.json();
+    expect(ok.status).toBe(200);
+    expect(json).toMatchObject({ page: 1, limit: 10 });
+    expect(json.items.length).toBeLessThanOrEqual(10);
+
+    const bad = await GET(
+      new NextRequest('http://localhost/api/admin/commission-rates?limit=7', {
+        headers: { cookie },
+      }),
+    );
+    expect(bad.status).toBe(400);
+  });
+});
+
+describe('DELETE /api/admin/commission-rates (bulk)', () => {
+  it('deletes only the selected rates', async () => {
+    const { cookie } = await createAdminCookie();
+    const [a, b, c] = [await createProduct(), await createProduct(), await createProduct()];
+    for (const product of [a, b, c]) {
+      await prisma.affiliateCommissionRate.create({ data: { productId: product.id, percent: 5 } });
+    }
+
+    const response = await DELETE(
+      new NextRequest('http://localhost/api/admin/commission-rates', {
+        method: 'DELETE',
+        headers: { cookie, 'content-type': 'application/json' },
+        body: JSON.stringify({ productIds: [a.id, b.id] }),
+      }),
+    );
+    expect(response.status).toBe(200);
+    expect((await response.json()).deleted).toBe(2);
+
+    const remaining = await prisma.affiliateCommissionRate.findMany({
+      where: { productId: { in: [a.id, b.id, c.id] } },
+    });
+    expect(remaining.map((r) => r.productId)).toEqual([c.id]);
+  });
+
+  it('rejects an empty selection', async () => {
+    const { cookie } = await createAdminCookie();
+    const response = await DELETE(
+      new NextRequest('http://localhost/api/admin/commission-rates', {
+        method: 'DELETE',
+        headers: { cookie, 'content-type': 'application/json' },
+        body: JSON.stringify({ productIds: [] }),
+      }),
+    );
+    expect(response.status).toBe(400);
   });
 });

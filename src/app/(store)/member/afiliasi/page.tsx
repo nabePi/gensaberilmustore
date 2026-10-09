@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
+import { AFFILIATE_STAT_HINTS } from '@/lib/affiliate-stat-hints';
 import { INDONESIAN_BANKS } from '@/lib/banks';
 import { formatCurrency } from '@/lib/format';
 import { badgeBase, btnOutline, btnSolid, cardBase, inputBase } from '@/lib/styles';
@@ -15,14 +16,15 @@ type ProductPerformance = {
   title: string;
   slug: string;
   commissionRate: { percent: number; fixedAmount: number | null; isActive: boolean } | null;
-  revenueThisMonth: number;
+  totalRevenue: number;
 };
 
 type AffiliateStats = {
   profile: { code: string; isActive: boolean; status: 'PENDING' | 'APPROVED' };
   totalClicks: number;
   totalConversions: number;
-  commissionPending: number;
+  completedOrders: number;
+  commissionEarned: number;
   commissionPaid: number;
   productPerformance: ProductPerformance[];
 };
@@ -246,31 +248,48 @@ export default function MemberAfiliasiPage() {
         </Link>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <div className={`p-4 ${cardBase}`}>
-          <p className="text-xs text-neutral-500">Total Klik</p>
-          <p className="mt-1 text-xl font-bold text-foreground">{stats.totalClicks}</p>
-        </div>
-        <div className={`p-4 ${cardBase}`}>
-          <p className="text-xs text-neutral-500">Total Konversi</p>
-          <p className="mt-1 text-xl font-bold text-foreground">{stats.totalConversions}</p>
-        </div>
-        <div className={`p-4 ${cardBase}`}>
-          <p className="text-xs text-neutral-500">Komisi Pending</p>
-          <p className="mt-1 text-xl font-bold text-foreground">
-            {formatCurrency(stats.commissionPending)}
-          </p>
-        </div>
-        <div className={`p-4 ${cardBase}`}>
-          <p className="text-xs text-neutral-500">Komisi Dibayar</p>
-          <p className="mt-1 text-xl font-bold text-foreground">
-            {formatCurrency(stats.commissionPaid)}
-          </p>
-        </div>
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+        {[
+          {
+            label: 'Total Klik',
+            value: stats.totalClicks.toString(),
+            hint: AFFILIATE_STAT_HINTS.clicks,
+          },
+          {
+            label: 'Total Konversi',
+            value: stats.totalConversions.toString(),
+            hint: AFFILIATE_STAT_HINTS.conversions,
+          },
+          {
+            label: 'Order Selesai',
+            value: stats.completedOrders.toString(),
+            hint: AFFILIATE_STAT_HINTS.completedOrders,
+          },
+          {
+            label: 'Komisi Masuk',
+            value: formatCurrency(stats.commissionEarned),
+            hint: AFFILIATE_STAT_HINTS.commissionEarned,
+          },
+          {
+            label: 'Komisi Dibayar',
+            value: formatCurrency(stats.commissionPaid),
+            hint: AFFILIATE_STAT_HINTS.commissionPaid,
+          },
+        ].map((stat) => (
+          <div key={stat.label} className={`p-4 ${cardBase}`}>
+            <p className="text-xs text-neutral-500">{stat.label}</p>
+            <p className="mt-1 text-xl font-bold text-foreground">{stat.value}</p>
+            <p className="mt-1.5 text-xs leading-snug text-neutral-400">{stat.hint}</p>
+          </div>
+        ))}
       </div>
 
       <div className={`p-4 ${cardBase}`}>
-        <h2 className="mb-3 text-sm font-semibold text-foreground">Komisi per Produk</h2>
+        <h2 className="text-sm font-semibold text-foreground">Komisi per Produk</h2>
+        <p className="mb-3 mt-1 text-xs text-neutral-500">
+          Rincian per produk yang Anda pilih. Angka pada kotak di atas adalah total dari semua
+          produk.
+        </p>
         {stats.productPerformance.length === 0 ? (
           <p className="text-sm text-neutral-500">
             Belum ada produk dipilih. Klik &quot;Pilih Produk&quot; untuk memulai.
@@ -281,8 +300,20 @@ export default function MemberAfiliasiPage() {
               <thead>
                 <tr className="border-b border-neutral-200 text-neutral-500">
                   <th className="py-2 pr-4">Produk</th>
-                  <th className="py-2 pr-4">Tarif Komisi</th>
-                  <th className="py-2">Pendapatan Bulan Ini</th>
+                  <th className="py-2 pr-4">
+                    Tarif Komisi
+                    <span className="block text-xs font-normal text-neutral-400">
+                      Komisi Anda tiap produk ini terjual
+                    </span>
+                  </th>
+                  <th className="py-2">
+                    Total Pendapatan
+                    <span className="block text-xs font-normal text-neutral-400">
+                      Nilai penjualan produk ini lewat link Anda, dari order yang sudah selesai
+                      (sejak awal)
+                    </span>
+                  </th>
+                  <th className="py-2 pl-4" />
                 </tr>
               </thead>
               <tbody>
@@ -293,7 +324,15 @@ export default function MemberAfiliasiPage() {
                       {formatCommissionRate(product.commissionRate)}
                     </td>
                     <td className="py-2 font-semibold text-foreground">
-                      {formatCurrency(product.revenueThisMonth)}
+                      {formatCurrency(product.totalRevenue)}
+                    </td>
+                    <td className="py-2 pl-4 text-right">
+                      <Link
+                        href={`/member/afiliasi/analisis/${product.productId}`}
+                        className="whitespace-nowrap text-sm font-medium text-brand hover:underline"
+                      >
+                        Lihat Detail
+                      </Link>
                     </td>
                   </tr>
                 ))}

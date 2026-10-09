@@ -67,20 +67,29 @@ afterAll(async () => {
 
 describe('PUT /api/admin/commission-rates/[productId]', () => {
   it('rejects unauthenticated requests', async () => {
-    const response = await PUT(buildRequest({ percent: 10 }, ''), context(randomUUID()));
+    const response = await PUT(
+      buildRequest({ commissionType: 'PERCENT', commissionValue: 10 }, ''),
+      context(randomUUID()),
+    );
     expect(response.status).toBe(401);
   });
 
   it('returns 404 for a non-existent product', async () => {
     const cookie = await createAdminCookie();
-    const response = await PUT(buildRequest({ percent: 10 }, cookie), context(randomUUID()));
+    const response = await PUT(
+      buildRequest({ commissionType: 'PERCENT', commissionValue: 10 }, cookie),
+      context(randomUUID()),
+    );
     expect(response.status).toBe(404);
   });
 
   it('rejects percent outside 0-100', async () => {
     const cookie = await createAdminCookie();
     const product = await createProduct();
-    const response = await PUT(buildRequest({ percent: 150 }, cookie), context(product.id));
+    const response = await PUT(
+      buildRequest({ commissionType: 'PERCENT', commissionValue: 150 }, cookie),
+      context(product.id),
+    );
     expect(response.status).toBe(400);
   });
 
@@ -89,13 +98,13 @@ describe('PUT /api/admin/commission-rates/[productId]', () => {
     const product = await createProduct();
 
     const response = await PUT(
-      buildRequest({ percent: 12.5, isActive: true }, cookie),
+      buildRequest({ commissionType: 'PERCENT', commissionValue: 12.5, isActive: true }, cookie),
       context(product.id),
     );
     const json = await response.json();
 
     expect(response.status).toBe(200);
-    expect(json.percent).toBe(12.5);
+    expect(json.commissionValue).toBe(12.5);
     expect(json.isActive).toBe(true);
   });
 
@@ -107,13 +116,76 @@ describe('PUT /api/admin/commission-rates/[productId]', () => {
     });
 
     const response = await PUT(
-      buildRequest({ percent: 20, isActive: false }, cookie),
+      buildRequest({ commissionType: 'PERCENT', commissionValue: 20, isActive: false }, cookie),
       context(product.id),
     );
     const json = await response.json();
 
     expect(response.status).toBe(200);
-    expect(json.percent).toBe(20);
+    expect(json.commissionValue).toBe(20);
     expect(json.isActive).toBe(false);
+  });
+
+  it('stores fixed commission, discount and a period', async () => {
+    const cookie = await createAdminCookie();
+    const product = await createProduct();
+
+    const response = await PUT(
+      buildRequest(
+        {
+          commissionType: 'FIXED',
+          commissionValue: 5000,
+          discountType: 'PERCENT',
+          discountValue: 10,
+          startsAt: '2030-01-01T00:00:00.000Z',
+          endsAt: '2030-02-01T00:00:00.000Z',
+        },
+        cookie,
+      ),
+      context(product.id),
+    );
+    const json = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(json).toMatchObject({
+      commissionType: 'FIXED',
+      commissionValue: 5000,
+      discountType: 'PERCENT',
+      discountValue: 10,
+      status: 'SCHEDULED',
+    });
+  });
+
+  it('rejects an end date before the start date and a missing discount value', async () => {
+    const cookie = await createAdminCookie();
+    const product = await createProduct();
+
+    const badPeriod = await PUT(
+      buildRequest(
+        {
+          commissionValue: 5,
+          startsAt: '2030-02-01T00:00:00.000Z',
+          endsAt: '2030-01-01T00:00:00.000Z',
+        },
+        cookie,
+      ),
+      context(product.id),
+    );
+    expect(badPeriod.status).toBe(400);
+
+    const badDiscount = await PUT(
+      buildRequest({ commissionValue: 5, discountType: 'FIXED' }, cookie),
+      context(product.id),
+    );
+    expect(badDiscount.status).toBe(400);
+  });
+
+  it('rejects POS-only products', async () => {
+    const cookie = await createAdminCookie();
+    const product = await createProduct();
+    await prisma.product.update({ where: { id: product.id }, data: { channel: 'POS' } });
+
+    const response = await PUT(buildRequest({ commissionValue: 5 }, cookie), context(product.id));
+    expect(response.status).toBe(400);
   });
 });

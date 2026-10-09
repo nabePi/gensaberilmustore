@@ -74,6 +74,11 @@ enum AffiliateApprovalStatus {
   APPROVED
 }
 
+enum AffiliateDiscountType {
+  PERCENT
+  FIXED
+}
+
 enum AffiliatePayoutStatus {
   PENDING
   PAID
@@ -443,6 +448,7 @@ model Order {
   voucherId              String?
   voucherCode            String?
   voucherDiscount        Int            @default(0)
+  affiliateDiscount      Int            @default(0)
   manualDiscount         Int            @default(0)
   manualDiscountReason   String?
   createdAt              DateTime       @default(now())
@@ -536,13 +542,18 @@ model AffiliateProductSelection {
 }
 
 model AffiliateCommissionRate {
-  id              String   @id @default(uuid())
-  productId       String   @unique
-  percent         Decimal  @db.Decimal(5, 2)
+  id              String                 @id @default(uuid())
+  productId       String                 @unique
+  percent         Decimal                @db.Decimal(5, 2)
   fixedAmount     Int?
-  isActive        Boolean  @default(true)
+  discountType    AffiliateDiscountType?
+  discountPercent Decimal?               @db.Decimal(5, 2)
+  discountAmount  Int?
+  startsAt        DateTime?
+  endsAt          DateTime?
+  isActive        Boolean                @default(true)
   updatedByUserId String?
-  updatedAt       DateTime @updatedAt
+  updatedAt       DateTime               @updatedAt
 
   product       Product @relation(fields: [productId], references: [id], onDelete: Cascade)
   updatedByUser User?   @relation(fields: [updatedByUserId], references: [id], onDelete: SetNull)

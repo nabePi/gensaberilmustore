@@ -2,7 +2,9 @@ import type { Prisma } from '@prisma/client';
 import { NextRequest, NextResponse } from 'next/server';
 
 import { prisma } from '@/lib/db';
+import { promotableProductWhere } from '@/server/affiliate/rate';
 import { affiliateProductSelectionSchema } from '@/server/affiliate/schema';
+import { serializeCommissionRate } from '@/server/affiliate/serialize-rate';
 import { withAuth } from '@/server/auth';
 
 const thumbnailImageInclude = {
@@ -32,7 +34,7 @@ export const GET = withAuth(async (request: NextRequest, { user }) => {
   const [products, selections] = await Promise.all([
     prisma.product.findMany({
       where: {
-        isActive: true,
+        ...promotableProductWhere(),
         ...(q ? { title: { contains: q, mode: 'insensitive' } } : {}),
       },
       select: {
@@ -41,7 +43,7 @@ export const GET = withAuth(async (request: NextRequest, { user }) => {
         slug: true,
         finalPrice: true,
         images: thumbnailImageInclude,
-        commissionRate: { select: { percent: true, fixedAmount: true, isActive: true } },
+        commissionRate: true,
       },
       orderBy: { title: 'asc' },
     }),
@@ -61,11 +63,13 @@ export const GET = withAuth(async (request: NextRequest, { user }) => {
       finalPrice: product.finalPrice,
       imageUrl: product.images[0]?.url ?? null,
       commissionRate: product.commissionRate
-        ? {
-            percent: Number(product.commissionRate.percent),
-            fixedAmount: product.commissionRate.fixedAmount,
-            isActive: product.commissionRate.isActive,
-          }
+        ? (({ commissionType, commissionValue, discountType, discountValue, endsAt }) => ({
+            commissionType,
+            commissionValue,
+            discountType,
+            discountValue,
+            endsAt,
+          }))(serializeCommissionRate(product.commissionRate))
         : null,
       isSelected: selectedIds.has(product.id),
     })),
@@ -94,12 +98,23 @@ export const PUT = withAuth(async (request: NextRequest, { user }) => {
     );
   }
 
-  await prisma.$transaction(async (tx) => {
-    await tx.affiliateProductSelection.deleteMany({ where: { affiliateProfileId: profile.id } });
+  // Only products the admin currently offers can be picked. Selections of products that are
+  // temporarily outside the program (paused or scheduled) are left untouched.
+  const promotable = await prisma.product.findMany({
+    where: promotableProductWhere(),
+    select: { id: true },
+  });
+  const promotableIds = new Set(promotable.map((product) => product.id));
+  const productIds = parsed.data.productIds.filter((productId) => promotableIds.has(productId));
 
-    if (parsed.data.productIds.length > 0) {
+  await prisma.$transaction(async (tx) => {
+    await tx.affiliateProductSelection.deleteMany({
+      where: { affiliateProfileId: profile.id, productId: { in: [...promotableIds] } },
+    });
+
+    if (productIds.length > 0) {
       await tx.affiliateProductSelection.createMany({
-        data: parsed.data.productIds.map((productId) => ({
+        data: productIds.map((productId) => ({
           affiliateProfileId: profile.id,
           productId,
         })),
