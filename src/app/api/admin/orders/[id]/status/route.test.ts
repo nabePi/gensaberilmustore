@@ -122,6 +122,9 @@ describe('PATCH /api/admin/orders/[id]/status', () => {
     await prisma.affiliateConversion.deleteMany({
       where: { orderId: { in: createdOrderIds } },
     });
+    await prisma.affiliateMemberRate.deleteMany({
+      where: { affiliateProfileId: { in: createdAffiliateProfileIds } },
+    });
     await prisma.affiliateProfile.deleteMany({
       where: { id: { in: createdAffiliateProfileIds } },
     });
@@ -233,6 +236,41 @@ describe('PATCH /api/admin/orders/[id]/status', () => {
     });
     expect(conversion?.status).toBe('PENDING');
     expect(conversion?.commissionAmount).toBeGreaterThanOrEqual(0);
+  });
+
+  it('uses the member-specific commission when one is set for the product', async () => {
+    const cookie = await createAdminCookie();
+    const affiliateUser = await createTestUser('AFFILIATE');
+    const affiliateProfile = await prisma.affiliateProfile.create({
+      data: {
+        userId: affiliateUser.id,
+        code: `AFF-${randomUUID()}`,
+        payoutBankName: 'Bank',
+        payoutBankAccount: '123',
+        payoutBankHolder: 'Holder',
+      },
+    });
+    createdAffiliateProfileIds.push(affiliateProfile.id);
+
+    const { order, product } = await createOrder({
+      affiliateUserId: affiliateUser.id,
+      affiliateCode: affiliateProfile.code,
+    });
+    await prisma.affiliateProductSelection.create({
+      data: { affiliateProfileId: affiliateProfile.id, productId: product.id },
+    });
+    await prisma.affiliateMemberRate.create({
+      data: { affiliateProfileId: affiliateProfile.id, productId: product.id, fixedAmount: 7000 },
+    });
+
+    const response = await PATCH(buildRequest({ toStatus: 'PAID' }, cookie), context(order.id));
+    expect(response.status).toBe(200);
+
+    const conversion = await prisma.affiliateConversion.findUnique({
+      where: { orderId: order.id },
+    });
+    // The test order has 2 units, so 2 × Rp7.000.
+    expect(conversion?.commissionAmount).toBe(14000);
   });
 
   it('does not create a conversion when the order has no affiliate-selected product', async () => {

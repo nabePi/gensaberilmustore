@@ -85,6 +85,12 @@ enum AffiliatePayoutStatus {
   CANCELLED
 }
 
+enum AffiliateWithdrawalStatus {
+  REQUESTED
+  IN_PROGRESS
+  COMPLETED
+}
+
 enum KidsSectionTheme {
   CREAM
   MINT
@@ -271,6 +277,7 @@ model Product {
   affiliateSelections     AffiliateProductSelection[]
   commissionRate          AffiliateCommissionRate?
   affiliateClicks         AffiliateClick[]
+  affiliateMemberRates    AffiliateMemberRate[]
   homepageSectionProducts HomepageSectionProduct[]
   kidsSectionItems        KidsSectionItem[]
   wishlistItems           WishlistItem[]
@@ -523,6 +530,8 @@ model AffiliateProfile {
   clicks            AffiliateClick[]
   conversions       AffiliateConversion[]
   payouts           AffiliatePayout[]
+  withdrawals       AffiliateWithdrawal[]
+  memberRates       AffiliateMemberRate[]
 
   @@index([code])
 }
@@ -558,6 +567,25 @@ model AffiliateCommissionRate {
   product       Product @relation(fields: [productId], references: [id], onDelete: Cascade)
   updatedByUser User?   @relation(fields: [updatedByUserId], references: [id], onDelete: SetNull)
 
+  @@index([productId])
+}
+
+/// Komisi khusus untuk satu member pada satu produk. Menimpa tarif komisi produk (percent atau
+/// fixedAmount, salah satu terisi); periode dan diskon pembeli tetap mengikuti tarif produk.
+/// Hanya berlaku untuk order baru, konversi yang sudah tercatat tidak berubah.
+model AffiliateMemberRate {
+  id                 String   @id @default(uuid())
+  affiliateProfileId String
+  productId          String
+  percent            Decimal? @db.Decimal(5, 2)
+  fixedAmount        Int?
+  updatedByUserId    String?
+  updatedAt          DateTime @updatedAt
+
+  affiliateProfile AffiliateProfile @relation(fields: [affiliateProfileId], references: [id], onDelete: Cascade)
+  product          Product          @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([affiliateProfileId, productId])
   @@index([productId])
 }
 
@@ -610,6 +638,25 @@ model AffiliatePayout {
   affiliateProfile AffiliateProfile @relation(fields: [affiliateProfileId], references: [id], onDelete: Cascade)
 
   @@index([affiliateProfileId, createdAt])
+  @@index([status])
+}
+
+/// Pencairan komisi yang diajukan afiliasi sendiri (jumlah bebas, min Rp50.000).
+/// Rekening tujuan di-snapshot saat pengajuan supaya perubahan profil tidak menggeser tujuan transfer.
+model AffiliateWithdrawal {
+  id                 String                    @id @default(uuid())
+  affiliateProfileId String
+  amount             Int
+  status             AffiliateWithdrawalStatus @default(REQUESTED)
+  bankName           String
+  bankAccount        String
+  bankHolder         String
+  requestedAt        DateTime                  @default(now())
+  completedAt        DateTime?
+
+  affiliateProfile AffiliateProfile @relation(fields: [affiliateProfileId], references: [id], onDelete: Cascade)
+
+  @@index([affiliateProfileId, requestedAt])
   @@index([status])
 }
 

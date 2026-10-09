@@ -133,3 +133,27 @@ export function computeItemCommission(
   }
   return defaultPercent > 0 ? Math.floor((line.lineTotal * defaultPercent) / 100) : 0;
 }
+
+export type MemberRateOverride = {
+  percent: Prisma.Decimal | number | null;
+  fixedAmount: number | null;
+};
+
+/**
+ * A member-specific commission replaces only the commission value of the product rate. The
+ * period and on/off switch still come from the product rate, so pausing a product pauses
+ * everyone. Without a product rate the override applies as an always-on rate.
+ */
+export function applyMemberRateOverride<R extends CommissionRateLike>(
+  rate: R | null,
+  override: MemberRateOverride | null | undefined,
+): CommissionRateLike | R | null {
+  if (!override) return rate;
+  return {
+    isActive: rate?.isActive ?? true,
+    startsAt: rate?.startsAt ?? null,
+    endsAt: rate?.endsAt ?? null,
+    percent: override.percent ?? 0,
+    fixedAmount: override.fixedAmount,
+  };
+}

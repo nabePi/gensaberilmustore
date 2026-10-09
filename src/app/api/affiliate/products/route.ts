@@ -13,6 +13,13 @@ const thumbnailImageInclude = {
   select: { url: true },
 } satisfies Prisma.ProductImageFindManyArgs;
 
+function memberCommission(override: { percent: unknown; fixedAmount: number | null } | undefined) {
+  if (!override) return {};
+  return override.fixedAmount !== null
+    ? { commissionType: 'FIXED' as const, commissionValue: override.fixedAmount }
+    : { commissionType: 'PERCENT' as const, commissionValue: Number(override.percent) };
+}
+
 async function requireAffiliateProfile(userId: string) {
   return prisma.affiliateProfile.findUnique({ where: { userId } });
 }
@@ -31,7 +38,7 @@ export const GET = withAuth(async (request: NextRequest, { user }) => {
 
   const q = request.nextUrl.searchParams.get('q')?.trim();
 
-  const [products, selections] = await Promise.all([
+  const [products, selections, memberRates] = await Promise.all([
     prisma.product.findMany({
       where: {
         ...promotableProductWhere(),
@@ -51,7 +58,9 @@ export const GET = withAuth(async (request: NextRequest, { user }) => {
       where: { affiliateProfileId: profile.id },
       select: { productId: true },
     }),
+    prisma.affiliateMemberRate.findMany({ where: { affiliateProfileId: profile.id } }),
   ]);
+  const overrideByProduct = new Map(memberRates.map((override) => [override.productId, override]));
 
   const selectedIds = new Set(selections.map((selection) => selection.productId));
 
@@ -69,7 +78,10 @@ export const GET = withAuth(async (request: NextRequest, { user }) => {
             discountType,
             discountValue,
             endsAt,
-          }))(serializeCommissionRate(product.commissionRate))
+          }))({
+            ...serializeCommissionRate(product.commissionRate),
+            ...memberCommission(overrideByProduct.get(product.id)),
+          })
         : null,
       isSelected: selectedIds.has(product.id),
     })),

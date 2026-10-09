@@ -60,6 +60,7 @@ const NAV_GROUPS: NavGroup[] = [
           { href: '/admin/afiliasi', label: 'Performa & Komisi' },
           { href: '/admin/afiliasi/member', label: 'Member' },
           { href: '/admin/afiliasi/produk', label: 'Produk Afiliasi' },
+          { href: '/admin/afiliasi/pencairan', label: 'Pencairan' },
         ],
       },
       { href: '/admin/laporan', label: 'Laporan', icon: BarChartIcon },
