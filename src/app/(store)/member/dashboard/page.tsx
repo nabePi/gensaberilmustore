@@ -21,12 +21,16 @@ async function getAffiliateStats(userId: string): Promise<AffiliateStats | null>
   const profile = await prisma.affiliateProfile.findUnique({ where: { userId } });
   if (!profile) return null;
 
-  const [totalClicks, conversions] = await Promise.all([
+  const [totalClicks, conversions, withdrawals] = await Promise.all([
     prisma.affiliateClick.count({ where: { affiliateProfileId: profile.id } }),
     prisma.affiliateConversion.findMany({ where: { affiliateProfileId: profile.id } }),
+    prisma.affiliateWithdrawal.findMany({
+      where: { affiliateProfileId: profile.id },
+      select: { status: true, amount: true },
+    }),
   ]);
 
-  return { totalClicks, ...summarizeConversions(conversions) };
+  return { totalClicks, ...summarizeConversions(conversions, withdrawals) };
 }
 
 function StatCard({ label, value, hint }: { label: string; value: string; hint?: string }) {

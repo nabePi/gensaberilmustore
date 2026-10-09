@@ -131,3 +131,21 @@ export const createPayoutBatchSchema = z
     message: 'periodStart harus sebelum atau sama dengan periodEnd',
     path: ['periodStart'],
   });
+
+export const memberCommissionSchema = z
+  .object({
+    commissionType: z.enum(['PERCENT', 'FIXED']),
+    commissionValue: z.number().min(0, 'Komisi minimal 0'),
+  })
+  .superRefine((value, ctx) => {
+    if (value.commissionType === 'PERCENT' && value.commissionValue > 100) {
+      ctx.addIssue({ code: 'custom', path: ['commissionValue'], message: 'Komisi maksimal 100%' });
+    }
+    if (value.commissionType === 'FIXED' && !Number.isInteger(value.commissionValue)) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['commissionValue'],
+        message: 'Komisi nominal harus bilangan bulat',
+      });
+    }
+  });

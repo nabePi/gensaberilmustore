@@ -17,6 +17,7 @@ type ProductPerformance = {
   slug: string;
   commissionRate: { percent: number; fixedAmount: number | null; isActive: boolean } | null;
   totalRevenue: number;
+  totalCommission: number;
 };
 
 type AffiliateStats = {
@@ -243,9 +244,14 @@ export default function MemberAfiliasiPage() {
             Bagikan link afiliasi. Setiap pembelian melalui link Anda memberi komisi.
           </p>
         </div>
-        <Link href="/member/afiliasi/produk" className={btnSolid}>
-          Pilih Produk
-        </Link>
+        <div className="flex flex-wrap gap-2">
+          <Link href="/member/afiliasi/pencairan" className={btnOutline}>
+            Pencairan
+          </Link>
+          <Link href="/member/afiliasi/produk" className={btnSolid}>
+            Pilih Produk
+          </Link>
+        </div>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
@@ -306,11 +312,16 @@ export default function MemberAfiliasiPage() {
                       Komisi Anda tiap produk ini terjual
                     </span>
                   </th>
-                  <th className="py-2">
-                    Total Pendapatan
+                  <th className="py-2 pr-4">
+                    Total Komisi
                     <span className="block text-xs font-normal text-neutral-400">
-                      Nilai penjualan produk ini lewat link Anda, dari order yang sudah selesai
-                      (sejak awal)
+                      Komisi Anda dari order selesai (sejak awal)
+                    </span>
+                  </th>
+                  <th className="py-2">
+                    Harga Produk Terjual
+                    <span className="block text-xs font-normal text-neutral-400">
+                      Total harga produk ini yang terjual lewat link Anda, dari order selesai
                     </span>
                   </th>
                   <th className="py-2 pl-4" />
@@ -323,7 +334,10 @@ export default function MemberAfiliasiPage() {
                     <td className="py-2 pr-4 text-neutral-600">
                       {formatCommissionRate(product.commissionRate)}
                     </td>
-                    <td className="py-2 font-semibold text-foreground">
+                    <td className="py-2 pr-4 font-semibold text-foreground">
+                      {formatCurrency(product.totalCommission)}
+                    </td>
+                    <td className="py-2 text-neutral-600">
                       {formatCurrency(product.totalRevenue)}
                     </td>
                     <td className="py-2 pl-4 text-right">

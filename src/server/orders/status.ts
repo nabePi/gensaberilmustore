@@ -7,7 +7,7 @@ import type {
   PrismaClient,
 } from '@prisma/client';
 
-import { computeItemCommission } from '@/server/affiliate/rate';
+import { applyMemberRateOverride, computeItemCommission } from '@/server/affiliate/rate';
 import { totalWithManualPaymentCode } from '@/server/payment/manual-qris';
 
 export class OrderStatusTransitionError extends Error {}
@@ -156,11 +156,18 @@ async function isOrderEligibleForCommission(
 
 async function computeCommissionAmount(
   tx: Db,
+  affiliateProfileId: string,
   items: OrderItem[],
   orderedAt: Date,
 ): Promise<number> {
   const storeSetting = await tx.storeSetting.findUnique({ where: { id: 1 } });
   const defaultPercent = storeSetting ? Number(storeSetting.defaultCommissionPercent) : 0;
+
+  const overrides = await tx.affiliateMemberRate.findMany({
+    where: { affiliateProfileId },
+    select: { productId: true, percent: true, fixedAmount: true },
+  });
+  const overrideByProduct = new Map(overrides.map((override) => [override.productId, override]));
 
   let total = 0;
 
@@ -171,7 +178,12 @@ async function computeCommissionAmount(
       where: { productId: item.productId },
     });
 
-    total += computeItemCommission(rate, defaultPercent, item, orderedAt);
+    total += computeItemCommission(
+      applyMemberRateOverride(rate, overrideByProduct.get(item.productId)),
+      defaultPercent,
+      item,
+      orderedAt,
+    );
   }
 
   return total;
@@ -191,7 +203,12 @@ async function createPendingAffiliateConversion(
   const eligible = await isOrderEligibleForCommission(tx, affiliateProfile.id, order.items);
   if (!eligible) return;
 
-  const commissionAmount = await computeCommissionAmount(tx, order.items, order.createdAt);
+  const commissionAmount = await computeCommissionAmount(
+    tx,
+    affiliateProfile.id,
+    order.items,
+    order.createdAt,
+  );
 
   await tx.affiliateConversion.create({
     data: {

@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 
 import { prisma } from '@/lib/db';
-import { computeItemCommission } from '@/server/affiliate/rate';
+import { loadItemCommissions } from '@/server/affiliate/item-commission';
 import { serializeCommissionRate } from '@/server/affiliate/serialize-rate';
 import { withAuth } from '@/server/auth';
 
@@ -51,33 +51,19 @@ export const GET = withAuth<RouteContext>(async (_request, { params, user }) => 
   const since = new Date(Date.now() - (DAYS - 1) * 24 * 60 * 60 * 1000);
   since.setHours(0, 0, 0, 0);
 
-  const [totalClicks, recentClicks, storeSetting, items] = await Promise.all([
+  const [totalClicks, recentClicks, items, memberRate] = await Promise.all([
     prisma.affiliateClick.count({ where: { affiliateProfileId: profile.id, productId } }),
     prisma.affiliateClick.findMany({
       where: { affiliateProfileId: profile.id, productId, createdAt: { gte: since } },
       select: { createdAt: true },
     }),
-    prisma.storeSetting.findUnique({ where: { id: 1 } }),
-    prisma.orderItem.findMany({
-      where: { productId, order: { affiliateUserId: user.id } },
-      orderBy: { order: { createdAt: 'desc' } },
-      select: {
-        quantity: true,
-        lineTotal: true,
-        order: {
-          select: {
-            orderNumber: true,
-            createdAt: true,
-            status: true,
-            affiliateConversion: { select: { status: true } },
-          },
-        },
-      },
+    loadItemCommissions(prisma, { id: profile.id, userId: user.id }, { productId }),
+    prisma.affiliateMemberRate.findUnique({
+      where: { affiliateProfileId_productId: { affiliateProfileId: profile.id, productId } },
     }),
   ]);
 
-  const rate = selection.product.commissionRate;
-  const defaultPercent = storeSetting ? Number(storeSetting.defaultCommissionPercent) : 0;
+  const productRate = selection.product.commissionRate;
 
   const orders = {
     total: items.length,
@@ -93,16 +79,12 @@ export const GET = withAuth<RouteContext>(async (_request, { params, user }) => 
   let commissionPaid = 0;
 
   const recentOrders = items.map((item) => {
-    const { order } = item;
-    const conversionStatus = order.affiliateConversion?.status ?? null;
-    const commission =
-      conversionStatus && conversionStatus !== 'REJECTED'
-        ? computeItemCommission(rate, defaultPercent, item, order.createdAt)
-        : 0;
+    // Recorded commission of the order, so later rate changes do not rewrite past orders.
+    const { conversionStatus, commission } = item;
 
-    if (order.status === 'AWAITING_PAYMENT') orders.awaitingPayment += 1;
-    else if (order.status === 'CANCELLED') orders.cancelled += 1;
-    else if (order.status === 'COMPLETED') orders.completed += 1;
+    if (item.orderStatus === 'AWAITING_PAYMENT') orders.awaitingPayment += 1;
+    else if (item.orderStatus === 'CANCELLED') orders.cancelled += 1;
+    else if (item.orderStatus === 'COMPLETED') orders.completed += 1;
     else orders.processing += 1;
 
     if (conversionStatus === 'APPROVED' || conversionStatus === 'PAID') {
@@ -114,9 +96,9 @@ export const GET = withAuth<RouteContext>(async (_request, { params, user }) => 
     if (conversionStatus === 'PAID') commissionPaid += commission;
 
     return {
-      orderNumber: order.orderNumber,
-      createdAt: order.createdAt,
-      orderStatus: order.status,
+      orderNumber: item.orderNumber,
+      createdAt: item.createdAt,
+      orderStatus: item.orderStatus,
       quantity: item.quantity,
       lineTotal: item.lineTotal,
       commission,
@@ -135,12 +117,20 @@ export const GET = withAuth<RouteContext>(async (_request, { params, user }) => 
     if (bucket) bucket.clicks += 1;
   }
   for (const item of items) {
-    const bucket = daily.get(dayKey(item.order.createdAt));
+    const bucket = daily.get(dayKey(item.createdAt));
     if (bucket) bucket.orders += 1;
   }
 
   const { product } = selection;
-  const serializedRate = rate ? serializeCommissionRate(rate) : null;
+  const serializedRate = productRate ? serializeCommissionRate(productRate) : null;
+  const commissionView = memberRate
+    ? memberRate.fixedAmount !== null
+      ? { type: 'FIXED', value: memberRate.fixedAmount }
+      : { type: 'PERCENT', value: Number(memberRate.percent) }
+    : serializedRate && {
+        type: serializedRate.commissionType,
+        value: serializedRate.commissionValue,
+      };
 
   return NextResponse.json({
     product: {
@@ -149,10 +139,7 @@ export const GET = withAuth<RouteContext>(async (_request, { params, user }) => 
       slug: product.slug,
       finalPrice: product.finalPrice,
       imageUrl: product.images[0]?.url ?? null,
-      commission: serializedRate && {
-        type: serializedRate.commissionType,
-        value: serializedRate.commissionValue,
-      },
+      commission: commissionView,
       buyerDiscount:
         serializedRate?.discountType && serializedRate.discountValue !== null
           ? { type: serializedRate.discountType, value: serializedRate.discountValue }

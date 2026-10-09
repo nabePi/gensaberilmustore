@@ -4,6 +4,8 @@ export const AFFILIATE_STAT_HINTS = {
     'Pesanan lewat link Anda yang sudah dibayar. Pesanan yang kemudian dibatalkan tetap terhitung di sini.',
   completedOrders:
     'Pesanan lewat link Anda yang sudah selesai. Hanya ini yang menghasilkan komisi.',
-  commissionEarned: 'Komisi dari order yang sudah selesai, menunggu dibayarkan admin.',
-  commissionPaid: 'Komisi yang sudah ditransfer admin ke rekening Anda.',
+  commissionEarned:
+    'Komisi dari order selesai yang belum diajukan pencairan. Inilah saldo yang bisa Anda cairkan.',
+  commissionPaid:
+    'Komisi yang sudah ditransfer admin ke rekening Anda (pencairan berstatus Selesai).',
 } as const;

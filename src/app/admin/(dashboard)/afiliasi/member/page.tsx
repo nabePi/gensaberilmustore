@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useEffect, useState } from 'react';
 
 import { Badge } from '@/components/admin/ui/Badge';
@@ -256,6 +257,12 @@ export default function AdminAfiliasiMemberPage() {
                   </Td>
                   <Td>
                     <div className="flex justify-end gap-2">
+                      <Link
+                        href={`/admin/afiliasi/member/${member.id}`}
+                        className={adminBtnOutlineSm}
+                      >
+                        Detail
+                      </Link>
                       {member.status === 'PENDING' ? (
                         <button
                           type="button"

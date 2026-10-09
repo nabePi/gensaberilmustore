@@ -205,7 +205,7 @@ export default function MemberAfiliasiAnalisisPage() {
           hint="Jumlah eksemplar dari order yang sudah selesai."
         />
         <Stat
-          label="Total Pendapatan"
+          label="Harga Produk Terjual"
           value={formatCurrency(totals.salesValue)}
           hint="Nilai penjualan produk ini dari order yang sudah selesai."
         />
