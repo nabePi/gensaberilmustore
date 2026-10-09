@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 
 import { prisma } from '@/lib/db';
+import { updateAffiliateMemberSchema } from '@/server/affiliate/schema';
 import { withAuth } from '@/server/auth';
 
 type RouteContext = { params: Promise<{ id: string }> };
@@ -63,6 +64,35 @@ export const GET = withAuth<RouteContext>(
       })),
       commissionByStatus,
     });
+  },
+  { role: 'ADMIN' },
+);
+
+export const PATCH = withAuth<RouteContext>(
+  async (request, { params }) => {
+    const { id } = await params;
+
+    const body = await request.json().catch(() => null);
+    const parsed = updateAffiliateMemberSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Validasi gagal', issues: parsed.error.flatten() },
+        { status: 400 },
+      );
+    }
+
+    const existing = await prisma.affiliateProfile.findUnique({ where: { id } });
+    if (!existing) {
+      return NextResponse.json({ error: 'Afiliasi tidak ditemukan' }, { status: 404 });
+    }
+
+    const updated = await prisma.affiliateProfile.update({
+      where: { id },
+      data: parsed.data,
+      select: { id: true, status: true, isActive: true },
+    });
+
+    return NextResponse.json(updated);
   },
   { role: 'ADMIN' },
 );

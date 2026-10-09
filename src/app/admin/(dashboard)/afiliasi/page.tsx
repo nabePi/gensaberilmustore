@@ -7,12 +7,6 @@ import { Badge } from '@/components/admin/ui/Badge';
 import { PageHeader } from '@/components/admin/ui/PageHeader';
 import { StatCard } from '@/components/admin/ui/StatCard';
 import { Table, Tbody, Td, Th, Thead, Tr } from '@/components/admin/ui/Table';
-import {
-  adminBtnOutline,
-  adminBtnPrimary,
-  adminBtnPrimarySm,
-  adminInputBase,
-} from '@/lib/admin/styles';
 import { formatCurrency } from '@/lib/format';
 
 type AffiliateListItem = {
@@ -46,43 +40,10 @@ type AffiliateDetail = {
   commissionByStatus: Record<string, number>;
 };
 
-type CommissionRate = {
-  productId: string;
-  title: string;
-  sku: string;
-  finalPrice: number;
-  percent: number;
-  fixedAmount: number | null;
-  isActive: boolean;
-};
-
-type ProductOption = { id: string; title: string; sku: string };
-
 export default function AdminAfiliasiPage() {
   const [affiliates, setAffiliates] = useState<AffiliateListItem[]>([]);
   const [loadingAffiliates, setLoadingAffiliates] = useState(true);
   const [detail, setDetail] = useState<AffiliateDetail | null>(null);
-
-  const [rates, setRates] = useState<CommissionRate[]>([]);
-  const [loadingRates, setLoadingRates] = useState(true);
-  const [products, setProducts] = useState<ProductOption[]>([]);
-
-  const [modalTarget, setModalTarget] = useState<CommissionRate | 'new' | null>(null);
-  const [formProductId, setFormProductId] = useState('');
-  const [formPercent, setFormPercent] = useState('10');
-  const [formEnabled, setFormEnabled] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [formError, setFormError] = useState<string | null>(null);
-
-  async function loadRates() {
-    setLoadingRates(true);
-    const response = await fetch('/api/admin/commission-rates');
-    if (response.ok) {
-      const data: { items: CommissionRate[] } = await response.json();
-      setRates(data.items);
-    }
-    setLoadingRates(false);
-  }
 
   useEffect(() => {
     async function load() {
@@ -97,86 +58,12 @@ export default function AdminAfiliasiPage() {
     load();
   }, []);
 
-  useEffect(() => {
-    async function load() {
-      setLoadingRates(true);
-      const response = await fetch('/api/admin/commission-rates');
-      if (response.ok) {
-        const data: { items: CommissionRate[] } = await response.json();
-        setRates(data.items);
-      }
-      setLoadingRates(false);
-    }
-    load();
-  }, []);
-
-  useEffect(() => {
-    fetch('/api/admin/products?limit=60')
-      .then((res) => res.json())
-      .then((data: { items: ProductOption[] }) => setProducts(data.items));
-  }, []);
-
   async function openDetail(affiliateId: string) {
     const response = await fetch(`/api/admin/affiliates/${affiliateId}`);
     if (response.ok) {
       setDetail(await response.json());
     }
   }
-
-  function openAddRate() {
-    setModalTarget('new');
-    setFormProductId('');
-    setFormPercent('10');
-    setFormEnabled(true);
-    setFormError(null);
-  }
-
-  function openEditRate(rate: CommissionRate) {
-    setModalTarget(rate);
-    setFormProductId(rate.productId);
-    setFormPercent(String(rate.percent));
-    setFormEnabled(rate.isActive);
-    setFormError(null);
-  }
-
-  async function handleSaveRate() {
-    if (!formProductId) {
-      setFormError('Pilih produk terlebih dahulu');
-      return;
-    }
-    const percent = Number(formPercent);
-    if (Number.isNaN(percent) || percent < 0 || percent > 100) {
-      setFormError('Persentase harus antara 0-100');
-      return;
-    }
-
-    setSaving(true);
-    setFormError(null);
-
-    const response = await fetch(`/api/admin/commission-rates/${formProductId}`, {
-      method: 'PUT',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ percent, isActive: formEnabled }),
-    });
-
-    setSaving(false);
-
-    if (!response.ok) {
-      const data = await response.json().catch(() => null);
-      setFormError(data?.error ?? 'Gagal menyimpan tingkat komisi');
-      return;
-    }
-
-    setModalTarget(null);
-    loadRates();
-  }
-
-  const availableProducts = products.filter(
-    (product) => modalTarget === 'new' || product.id === formProductId,
-  );
-  const unratedProducts = products.filter(
-    (product) => !rates.some((rate) => rate.productId === product.id),
-  );
 
   return (
     <div className="flex flex-col gap-6">
@@ -262,135 +149,6 @@ export default function AdminAfiliasiPage() {
           </Table>
         )}
       </div>
-
-      <div className="flex flex-col gap-3">
-        <h2 className="text-lg font-semibold text-foreground">Tingkat Komisi per Produk</h2>
-        <p className="text-sm text-neutral-500">
-          Atur produk mana saja yang tersedia untuk program afiliasi beserta tingkat komisinya.
-        </p>
-        <div className="flex items-center justify-between">
-          <span />
-          <button type="button" onClick={openAddRate} className={adminBtnPrimarySm}>
-            + Tambah Produk
-          </button>
-        </div>
-
-        {loadingRates ? (
-          <p className="text-sm text-neutral-500">Memuat data...</p>
-        ) : rates.length === 0 ? (
-          <div className="flex flex-col items-center gap-2 rounded-lg border border-neutral-200 bg-white py-10 text-center">
-            <p className="text-sm text-neutral-500">
-              Belum ada produk afiliasi. Klik &quot;Tambah Produk&quot; untuk menambahkan.
-            </p>
-          </div>
-        ) : (
-          <Table>
-            <Thead>
-              <Th>Produk</Th>
-              <Th className="text-right">Komisi</Th>
-              <Th>Status</Th>
-              <Th />
-            </Thead>
-            <Tbody>
-              {rates.map((rate) => (
-                <Tr key={rate.productId}>
-                  <Td>
-                    <p className="font-medium text-foreground">{rate.title}</p>
-                    <p className="text-xs text-neutral-500">{rate.sku}</p>
-                  </Td>
-                  <Td className="text-right text-neutral-600">{rate.percent}%</Td>
-                  <Td>
-                    <Badge tone={rate.isActive ? 'success' : 'neutral'}>
-                      {rate.isActive ? 'Aktif' : 'Nonaktif'}
-                    </Badge>
-                  </Td>
-                  <Td className="text-right">
-                    <button
-                      type="button"
-                      onClick={() => openEditRate(rate)}
-                      className="text-sm font-medium text-brand hover:underline"
-                    >
-                      Edit
-                    </button>
-                  </Td>
-                </Tr>
-              ))}
-            </Tbody>
-          </Table>
-        )}
-      </div>
-
-      {modalTarget ? (
-        <AdminModal
-          title={modalTarget === 'new' ? 'Tambah Produk Afiliasi' : 'Edit Produk Afiliasi'}
-          onClose={() => setModalTarget(null)}
-        >
-          <div className="flex flex-col gap-4">
-            <div className="flex flex-col gap-1">
-              <label htmlFor="affProductSelect" className="text-xs font-medium text-neutral-600">
-                Pilih Produk
-              </label>
-              <select
-                id="affProductSelect"
-                value={formProductId}
-                onChange={(e) => setFormProductId(e.target.value)}
-                disabled={modalTarget !== 'new'}
-                className={adminInputBase}
-              >
-                <option value="">Pilih produk</option>
-                {(modalTarget === 'new' ? unratedProducts : availableProducts).map((product) => (
-                  <option key={product.id} value={product.id}>
-                    {product.title} ({product.sku})
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="flex flex-col gap-1">
-              <label htmlFor="affProductRate" className="text-xs font-medium text-neutral-600">
-                Tingkat Komisi (%)
-              </label>
-              <input
-                id="affProductRate"
-                type="number"
-                min={0}
-                max={100}
-                value={formPercent}
-                onChange={(e) => setFormPercent(e.target.value)}
-                className={adminInputBase}
-              />
-              <p className="text-xs text-neutral-500">
-                Persentase komisi yang diterima affiliate per penjualan (0-100%)
-              </p>
-            </div>
-
-            <label className="flex items-center gap-2 text-sm text-neutral-700">
-              <input
-                type="checkbox"
-                checked={formEnabled}
-                onChange={(e) => setFormEnabled(e.target.checked)}
-              />
-              Aktifkan untuk afiliasi
-            </label>
-
-            {formError ? <p className="text-sm text-red">{formError}</p> : null}
-          </div>
-
-          <div className="mt-4 flex justify-end gap-2">
-            <button type="button" onClick={() => setModalTarget(null)} className={adminBtnOutline}>
-              Batal
-            </button>
-            <button
-              type="button"
-              disabled={saving}
-              onClick={handleSaveRate}
-              className={adminBtnPrimary}
-            >
-              {saving ? 'Menyimpan...' : 'Simpan'}
-            </button>
-          </div>
-        </AdminModal>
-      ) : null}
 
       {detail ? (
         <AdminModal

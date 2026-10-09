@@ -1,16 +1,19 @@
 import Link from 'next/link';
 
+import { AFFILIATE_STAT_HINTS } from '@/lib/affiliate-stat-hints';
 import { prisma } from '@/lib/db';
 import { formatCurrency } from '@/lib/format';
 import { getOrderStatusBadgeClass, getOrderStatusLabel } from '@/lib/order-status';
 import { badgeBase, btnSolid, cardBase } from '@/lib/styles';
+import { summarizeConversions } from '@/server/affiliate/stats';
 import { getSessionUser } from '@/server/auth';
 import { orderListInclude, serializeOrderListItem } from '@/server/orders/serialize';
 
 type AffiliateStats = {
   totalClicks: number;
   totalConversions: number;
-  commissionPending: number;
+  completedOrders: number;
+  commissionEarned: number;
   commissionPaid: number;
 };
 
@@ -23,23 +26,15 @@ async function getAffiliateStats(userId: string): Promise<AffiliateStats | null>
     prisma.affiliateConversion.findMany({ where: { affiliateProfileId: profile.id } }),
   ]);
 
-  return {
-    totalClicks,
-    totalConversions: conversions.length,
-    commissionPending: conversions
-      .filter((c) => c.status === 'PENDING' || c.status === 'APPROVED')
-      .reduce((sum, c) => sum + c.commissionAmount, 0),
-    commissionPaid: conversions
-      .filter((c) => c.status === 'PAID')
-      .reduce((sum, c) => sum + c.commissionAmount, 0),
-  };
+  return { totalClicks, ...summarizeConversions(conversions) };
 }
 
-function StatCard({ label, value }: { label: string; value: string }) {
+function StatCard({ label, value, hint }: { label: string; value: string; hint?: string }) {
   return (
     <div className={`p-4 ${cardBase}`}>
       <p className="text-xs text-neutral-500">{label}</p>
       <p className="mt-1 text-xl font-bold text-foreground">{value}</p>
+      {hint ? <p className="mt-1.5 text-xs leading-snug text-neutral-400">{hint}</p> : null}
     </div>
   );
 }
@@ -77,14 +72,32 @@ export default async function MemberDashboardPage() {
       </div>
 
       {affiliateStats ? (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <StatCard label="Total Klik" value={affiliateStats.totalClicks.toString()} />
-          <StatCard label="Total Konversi" value={affiliateStats.totalConversions.toString()} />
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
           <StatCard
-            label="Komisi Pending"
-            value={formatCurrency(affiliateStats.commissionPending)}
+            label="Total Klik"
+            value={affiliateStats.totalClicks.toString()}
+            hint={AFFILIATE_STAT_HINTS.clicks}
           />
-          <StatCard label="Komisi Dibayar" value={formatCurrency(affiliateStats.commissionPaid)} />
+          <StatCard
+            label="Total Konversi"
+            value={affiliateStats.totalConversions.toString()}
+            hint={AFFILIATE_STAT_HINTS.conversions}
+          />
+          <StatCard
+            label="Order Selesai"
+            value={affiliateStats.completedOrders.toString()}
+            hint={AFFILIATE_STAT_HINTS.completedOrders}
+          />
+          <StatCard
+            label="Komisi Masuk"
+            value={formatCurrency(affiliateStats.commissionEarned)}
+            hint={AFFILIATE_STAT_HINTS.commissionEarned}
+          />
+          <StatCard
+            label="Komisi Dibayar"
+            value={formatCurrency(affiliateStats.commissionPaid)}
+            hint={AFFILIATE_STAT_HINTS.commissionPaid}
+          />
         </div>
       ) : null}
 

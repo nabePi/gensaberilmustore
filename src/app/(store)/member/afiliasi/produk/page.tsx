@@ -6,7 +6,13 @@ import { useEffect, useState } from 'react';
 import { formatCurrency } from '@/lib/format';
 import { btnOutline, btnSolid, cardBase, inputBase } from '@/lib/styles';
 
-type CommissionRate = { percent: number; fixedAmount: number | null; isActive: boolean };
+type CommissionRate = {
+  commissionType: 'PERCENT' | 'FIXED';
+  commissionValue: number;
+  discountType: 'PERCENT' | 'FIXED' | null;
+  discountValue: number | null;
+  endsAt: string | null;
+};
 
 type AffiliateProduct = {
   id: string;
@@ -18,10 +24,18 @@ type AffiliateProduct = {
   isSelected: boolean;
 };
 
+function formatAmount(type: 'PERCENT' | 'FIXED', value: number): string {
+  return type === 'PERCENT' ? `${value}%` : `${formatCurrency(value)}/item`;
+}
+
 function formatCommissionRate(rate: CommissionRate | null): string {
-  if (!rate || !rate.isActive) return '-';
-  if (rate.fixedAmount !== null) return `${formatCurrency(rate.fixedAmount)}/item`;
-  return `${rate.percent}%`;
+  if (!rate) return '-';
+  return formatAmount(rate.commissionType, rate.commissionValue);
+}
+
+function formatBuyerDiscount(rate: CommissionRate | null): string | null {
+  if (!rate || !rate.discountType || rate.discountValue === null) return null;
+  return formatAmount(rate.discountType, rate.discountValue);
 }
 
 export default function MemberAfiliasiProdukPage() {
@@ -110,7 +124,7 @@ export default function MemberAfiliasiProdukPage() {
         <div>
           <h1 className="text-2xl font-bold text-foreground">Pilih Produk Afiliasi</h1>
           <p className="mt-1 text-sm text-neutral-500">
-            Pilih produk yang ingin Anda promosikan sebagai afiliasi.
+            Pilih dari produk yang dibuka admin untuk program afiliasi.
           </p>
         </div>
         <Link href="/member/afiliasi" className={btnOutline}>
@@ -131,7 +145,7 @@ export default function MemberAfiliasiProdukPage() {
       {loading ? (
         <p className="text-sm text-neutral-500">Memuat produk...</p>
       ) : products.length === 0 ? (
-        <p className="text-sm text-neutral-500">Tidak ada produk ditemukan.</p>
+        <p className="text-sm text-neutral-500">Belum ada produk afiliasi yang tersedia.</p>
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {products.map((product) => {
@@ -165,6 +179,21 @@ export default function MemberAfiliasiProdukPage() {
                   <p className="text-xs text-brand">
                     Komisi: {formatCommissionRate(product.commissionRate)}
                   </p>
+                  {formatBuyerDiscount(product.commissionRate) ? (
+                    <p className="text-xs text-green">
+                      Diskon pembeli: {formatBuyerDiscount(product.commissionRate)}
+                    </p>
+                  ) : null}
+                  {product.commissionRate?.endsAt ? (
+                    <p className="text-2xs text-neutral-400">
+                      Sampai{' '}
+                      {new Date(product.commissionRate.endsAt).toLocaleDateString('id-ID', {
+                        day: 'numeric',
+                        month: 'short',
+                        year: 'numeric',
+                      })}
+                    </p>
+                  ) : null}
                 </div>
               </label>
             );

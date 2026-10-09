@@ -52,7 +52,16 @@ const NAV_GROUPS: NavGroup[] = [
     label: 'Lainnya',
     items: [
       { href: '/admin/member', label: 'Member', icon: UsersIcon },
-      { href: '/admin/afiliasi', label: 'Afiliasi', icon: ShareIcon },
+      {
+        href: '/admin/afiliasi',
+        label: 'Afiliasi',
+        icon: ShareIcon,
+        children: [
+          { href: '/admin/afiliasi', label: 'Performa & Komisi' },
+          { href: '/admin/afiliasi/member', label: 'Member' },
+          { href: '/admin/afiliasi/produk', label: 'Produk Afiliasi' },
+        ],
+      },
       { href: '/admin/laporan', label: 'Laporan', icon: BarChartIcon },
       { href: '/admin/laporan-lengkap', label: 'Laporan Lengkap', icon: BarChartIcon },
     ],
@@ -77,7 +86,10 @@ const NAV_GROUPS: NavGroup[] = [
 
 export function AdminSidebar({ collapsed = false }: { collapsed?: boolean }) {
   const pathname = usePathname();
-  const [expanded, setExpanded] = useState<Record<string, boolean>>({ Konfigurasi: true });
+  const [expanded, setExpanded] = useState<Record<string, boolean>>({
+    Konfigurasi: true,
+    Afiliasi: true,
+  });
 
   return (
     <nav className="flex flex-col gap-6">

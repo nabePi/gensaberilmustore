@@ -210,6 +210,7 @@ type CheckoutFormValues = z.infer<typeof checkoutSchema>;
 export default function CheckoutPage() {
   const router = useRouter();
   const [cart, setCart] = useState<Cart | null>(null);
+  const [affiliateDiscount, setAffiliateDiscount] = useState(0);
   const [receivers, setReceivers] = useState<Receiver[]>([]);
   const [user, setUser] = useState<SessionUser | null>(null);
   const [ready, setReady] = useState(false);
@@ -249,9 +250,10 @@ export default function CheckoutPage() {
 
   useEffect(() => {
     async function bootstrap() {
-      const [cartResponse, sessionResponse] = await Promise.all([
+      const [cartResponse, sessionResponse, affiliateDiscountResponse] = await Promise.all([
         fetch('/api/cart'),
         fetch('/api/auth/session'),
+        fetch('/api/affiliate/discount').catch(() => null),
       ]);
 
       const cartData: Cart = await cartResponse.json();
@@ -260,6 +262,11 @@ export default function CheckoutPage() {
         return;
       }
       setCart(cartData);
+
+      if (affiliateDiscountResponse?.ok) {
+        const affiliateData: { discountAmount: number } = await affiliateDiscountResponse.json();
+        setAffiliateDiscount(affiliateData.discountAmount);
+      }
 
       const sessionData: { user: SessionUser | null } = await sessionResponse.json();
       setUser(sessionData.user);
@@ -399,7 +406,7 @@ export default function CheckoutPage() {
       (sum, item) => (item.promo ? sum + (item.listPrice - item.normalPrice) * item.quantity : sum),
       0,
     ) ?? 0;
-  const total = Math.max(0, subtotal + shippingCost - discount);
+  const total = Math.max(0, subtotal + shippingCost - discount - affiliateDiscount);
 
   async function onSubmit(values: CheckoutFormValues) {
     setSubmitError(null);
@@ -921,6 +928,12 @@ export default function CheckoutPage() {
               <div className="flex justify-between text-green">
                 <span>Diskon Voucher</span>
                 <span>-{formatCurrency(discount)}</span>
+              </div>
+            ) : null}
+            {affiliateDiscount > 0 ? (
+              <div className="flex justify-between text-green">
+                <span>Diskon Link Afiliasi</span>
+                <span>-{formatCurrency(affiliateDiscount)}</span>
               </div>
             ) : null}
             <div className="flex justify-between text-base font-bold text-foreground">

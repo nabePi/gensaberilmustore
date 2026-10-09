@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import { env } from '@/env';
 import { prisma } from '@/lib/db';
+import { computeAffiliateDiscount } from '@/server/affiliate/rate';
 import { getSession, withAuth } from '@/server/auth';
 import {
   computeCartWeightKg,
@@ -154,6 +155,16 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    const affiliateDiscount = await computeAffiliateDiscount(
+      prisma,
+      affiliateCode,
+      cart.items.map((item) => ({
+        productId: item.productId,
+        quantity: item.quantity,
+        lineTotal: unitPriceByItemId.get(item.id)! * item.quantity,
+      })),
+    );
+
     const order = await prisma.$transaction(async (tx) => {
       for (const item of cart.items) {
         const result = await tx.product.updateMany({
@@ -190,7 +201,7 @@ export async function POST(request: NextRequest) {
         lockedVoucher = revalidated.voucher;
       }
 
-      const discount = voucherDiscount;
+      const discount = voucherDiscount + affiliateDiscount;
       const total = Math.max(0, subtotal + shippingCost - discount);
 
       const orderNumber = await generateUniqueOrderNumber(async (candidate) =>
@@ -228,6 +239,7 @@ export async function POST(request: NextRequest) {
           voucherId: lockedVoucher?.id ?? null,
           voucherCode: lockedVoucher?.code ?? null,
           voucherDiscount,
+          affiliateDiscount,
           manualDiscount: 0,
           items: {
             create: cart.items.map((item) => {

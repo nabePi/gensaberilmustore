@@ -39,7 +39,10 @@ async function createAffiliateProfile(userId: string, status: 'PENDING' | 'APPRO
   return profile;
 }
 
-async function createProduct() {
+async function createProduct(
+  options: { withRate?: boolean; channel?: 'WEB' | 'POS' | 'BOTH' } = {},
+) {
+  const { withRate = true, channel = 'BOTH' } = options;
   const product = await prisma.product.create({
     data: {
       sku: `SKU-${randomUUID()}`,
@@ -56,6 +59,8 @@ async function createProduct() {
       coverType: 'SOFTCOVER',
       publishYear: 2024,
       isActive: true,
+      channel,
+      ...(withRate ? { commissionRate: { create: { percent: 10 } } } : {}),
     },
   });
   createdProductIds.push(product.id);
@@ -124,6 +129,52 @@ describe('GET /api/affiliate/products', () => {
     expect(response.status).toBe(200);
     const item = json.items.find((entry: { id: string }) => entry.id === product.id);
     expect(item?.isSelected).toBe(true);
+  });
+});
+
+describe('GET /api/affiliate/products visibility', () => {
+  it('only lists products the admin put into the affiliate program', async () => {
+    const user = await createTestUser();
+    const cookie = await createSessionCookie(user.id);
+    await createAffiliateProfile(user.id);
+
+    const listed = await createProduct();
+    const noRate = await createProduct({ withRate: false });
+    const posOnly = await createProduct({ channel: 'POS' });
+    const paused = await createProduct();
+    await prisma.affiliateCommissionRate.update({
+      where: { productId: paused.id },
+      data: { isActive: false },
+    });
+    const expired = await createProduct();
+    await prisma.affiliateCommissionRate.update({
+      where: { productId: expired.id },
+      data: { endsAt: new Date('2020-01-01T00:00:00Z') },
+    });
+
+    const response = await GET(buildGetRequest(cookie));
+    const ids = (await response.json()).items.map((entry: { id: string }) => entry.id);
+
+    expect(ids).toContain(listed.id);
+    for (const hidden of [noRate, posOnly, paused, expired]) {
+      expect(ids).not.toContain(hidden.id);
+    }
+  });
+
+  it('ignores products outside the program when saving a selection', async () => {
+    const user = await createTestUser();
+    const cookie = await createSessionCookie(user.id);
+    const profile = await createAffiliateProfile(user.id);
+    const listed = await createProduct();
+    const noRate = await createProduct({ withRate: false });
+
+    const response = await PUT(buildWriteRequest({ productIds: [listed.id, noRate.id] }, cookie));
+    expect(response.status).toBe(200);
+
+    const selections = await prisma.affiliateProductSelection.findMany({
+      where: { affiliateProfileId: profile.id },
+    });
+    expect(selections.map((s) => s.productId)).toEqual([listed.id]);
   });
 });
 
