@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.11.0](https://github.com/nabePi/gensaberilmustore/compare/v0.10.0...v0.11.0) (2026-10-09)
+
+
+### Features
+
+* **afiliasi:** menu member dan produk afiliasi di admin, analisis produk di member ([#100](https://github.com/nabePi/gensaberilmustore/issues/100)) ([b1124ce](https://github.com/nabePi/gensaberilmustore/commit/b1124ce2ea8901c8f0a16a00f22ed650e5612819))
+* **afiliasi:** pencairan komisi, detail member admin, komisi khusus, top 10 ([#102](https://github.com/nabePi/gensaberilmustore/issues/102)) ([e5eeaa1](https://github.com/nabePi/gensaberilmustore/commit/e5eeaa1e0356b71cd1203c8c3b00c48b97e0993a))
+
 ## [0.10.0](https://github.com/nabePi/gensaberilmustore/compare/v0.9.0...v0.10.0) (2026-10-07)
 
 
