@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.11.1](https://github.com/nabePi/gensaberilmustore/compare/v0.11.0...v0.11.1) (2026-10-12)
+
+
+### Bug Fixes
+
+* **afiliasi:** redirect pakai host publik, bukan alamat internal 0.0.0.0 ([#103](https://github.com/nabePi/gensaberilmustore/issues/103)) ([33a7bc6](https://github.com/nabePi/gensaberilmustore/commit/33a7bc6b381676ddea4242e2df4e4d6424e4fc94))
+
 ## [0.11.0](https://github.com/nabePi/gensaberilmustore/compare/v0.10.0...v0.11.0) (2026-10-09)
 
 
