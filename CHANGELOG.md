@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.11.2](https://github.com/nabePi/gensaberilmustore/compare/v0.11.1...v0.11.2) (2026-10-12)
+
+
+### Bug Fixes
+
+* **admin:** checkbox buat resi hanya untuk order JNE ([#105](https://github.com/nabePi/gensaberilmustore/issues/105)) ([c301b40](https://github.com/nabePi/gensaberilmustore/commit/c301b401ac3fc9f86773a54881c6afb4e4e51803))
+
 ## [0.11.1](https://github.com/nabePi/gensaberilmustore/compare/v0.11.0...v0.11.1) (2026-10-12)
 
 
