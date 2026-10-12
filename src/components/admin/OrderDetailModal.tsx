@@ -133,7 +133,9 @@ export function OrderDetailModal({
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(
-        toStatus === 'PAID' ? { toStatus, generateAirwaybill: createAirwaybill } : { toStatus },
+        toStatus === 'PAID' && order?.shippingMethod === 'JNE'
+          ? { toStatus, generateAirwaybill: createAirwaybill }
+          : { toStatus },
       ),
     });
     const data = await response.json();
@@ -402,7 +404,8 @@ export function OrderDetailModal({
             <div className="border-t border-neutral-200 pt-3">
               <h3 className="mb-2 text-sm font-semibold text-foreground">Ubah Status</h3>
               {error ? <p className="mb-2 text-sm text-red">{error}</p> : null}
-              {NEXT_STATUS_OPTIONS[order.status].includes('PAID') ? (
+              {NEXT_STATUS_OPTIONS[order.status].includes('PAID') &&
+              order.shippingMethod === 'JNE' ? (
                 <label className="mb-2 flex items-center gap-2 text-sm text-neutral-700">
                   <input
                     type="checkbox"
