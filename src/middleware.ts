@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 import { getAdminSession, getSession } from '@/server/auth';
+import { publicUrl } from '@/server/http/public-url';
 
 export const config = {
   runtime: 'nodejs',
@@ -16,7 +17,7 @@ function unauthorized(request: NextRequest, loginPath: string): NextResponse {
   if (request.nextUrl.pathname.startsWith('/api/')) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
-  return NextResponse.redirect(new URL(loginPath, request.url));
+  return NextResponse.redirect(publicUrl(loginPath, request));
 }
 
 export async function middleware(request: NextRequest): Promise<NextResponse> {

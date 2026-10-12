@@ -10,13 +10,14 @@ import {
   affiliateCookieOptions,
 } from '@/server/affiliate/cookie';
 import { getClientIp } from '@/server/http/client-ip';
+import { publicUrl } from '@/server/http/public-url';
 
 type RouteContext = { params: Promise<{ code: string }> };
 
 export async function GET(request: NextRequest, { params }: RouteContext) {
   const { code } = await params;
   const productSlug = request.nextUrl.searchParams.get('p');
-  const redirectUrl = new URL(productSlug ? `/products/${productSlug}` : '/', request.url);
+  const redirectUrl = publicUrl(productSlug ? `/products/${productSlug}` : '/', request);
 
   const profile = await prisma.affiliateProfile.findUnique({ where: { code } });
 
