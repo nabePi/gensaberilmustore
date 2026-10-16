@@ -64,6 +64,7 @@ const envSchema = z.object({
 
   // JNE tracking (list/v1/cnote) API
   JNE_TRACKING_API_URL: z.string().optional(),
+  JNE_WEBHOOK_SECRET: z.string().min(MIN_SECRET_LENGTH).optional(),
 
   // JNE generate airwaybill (generatecnote) API
   JNE_GENERATE_CNOTE_API_URL: z.string().optional(),
@@ -192,6 +193,7 @@ export const env = {
   jneSenderOrigin: rawEnv.JNE_SENDER_ORIGIN,
 
   jneTrackingApiUrl: rawEnv.JNE_TRACKING_API_URL,
+  jneWebhookSecret: rawEnv.JNE_WEBHOOK_SECRET,
 
   jneGenerateCnoteApiUrl: rawEnv.JNE_GENERATE_CNOTE_API_URL,
   jneOlshopBranch: rawEnv.JNE_OLSHOP_BRANCH,

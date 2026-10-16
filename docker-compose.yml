@@ -74,6 +74,7 @@ services:
       JNE_SENDER_ORIGIN: ${JNE_SENDER_ORIGIN}
       # JNE tracking (list/v1/cnote) API
       JNE_TRACKING_API_URL: ${JNE_TRACKING_API_URL}
+      JNE_WEBHOOK_SECRET: ${JNE_WEBHOOK_SECRET}
       # JNE generate airwaybill (generatecnote) API
       JNE_GENERATE_CNOTE_API_URL: ${JNE_GENERATE_CNOTE_API_URL}
       JNE_OLSHOP_BRANCH: ${JNE_OLSHOP_BRANCH}
