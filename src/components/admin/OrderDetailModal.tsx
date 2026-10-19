@@ -112,6 +112,7 @@ export function OrderDetailModal({
   const [generatingAirwaybill, setGeneratingAirwaybill] = useState(false);
   const [airwaybillError, setAirwaybillError] = useState<string | null>(null);
   const [createAirwaybill, setCreateAirwaybill] = useState(true);
+  const hasCustomerNote = Boolean(order?.receiver.note?.trim());
 
   useEffect(() => {
     async function loadOrder() {
@@ -226,6 +227,21 @@ export function OrderDetailModal({
             </div>
           </div>
           {airwaybillError ? <p className="text-sm text-red">{airwaybillError}</p> : null}
+
+          {hasCustomerNote ? (
+            <section
+              aria-label="Catatan dari pembeli"
+              className="rounded-lg border border-amber-200 border-l-4 border-l-amber-500 bg-amber-50 p-4"
+            >
+              <h3 className="text-sm font-semibold text-amber-950">Catatan dari pembeli</h3>
+              <p className="mt-1 text-xs text-amber-800">
+                Perhatikan catatan ini saat menyiapkan pesanan.
+              </p>
+              <p className="mt-3 text-sm leading-relaxed whitespace-pre-wrap wrap-anywhere text-amber-950">
+                {order.receiver.note}
+              </p>
+            </section>
+          ) : null}
 
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
@@ -403,6 +419,12 @@ export function OrderDetailModal({
           {NEXT_STATUS_OPTIONS[order.status].length > 0 ? (
             <div className="border-t border-neutral-200 pt-3">
               <h3 className="mb-2 text-sm font-semibold text-foreground">Ubah Status</h3>
+              {hasCustomerNote ? (
+                <p className="mb-3 text-sm font-medium text-amber-800">
+                  Pesanan ini memiliki catatan pembeli. Pastikan catatan sudah dibaca sebelum
+                  mengubah status.
+                </p>
+              ) : null}
               {error ? <p className="mb-2 text-sm text-red">{error}</p> : null}
               {NEXT_STATUS_OPTIONS[order.status].includes('PAID') &&
               order.shippingMethod === 'JNE' ? (
