@@ -190,6 +190,16 @@ export default async function FulfillmentPrintPage({
                 ) : null}
               </div>
 
+              {order.receiver.note?.trim() ? (
+                <section
+                  aria-label="Catatan dari pembeli"
+                  className="mb-[2mm] break-inside-avoid border-2 border-neutral-900 p-[1.5mm] text-[9px] leading-snug"
+                >
+                  <h2 className="mb-[1mm] font-bold">Catatan dari pembeli</h2>
+                  <p className="whitespace-pre-wrap wrap-anywhere">{order.receiver.note}</p>
+                </section>
+              ) : null}
+
               <div className="mb-[2mm] border border-neutral-400 p-[1.5mm] text-[8px]">
                 <div className="flex flex-col items-center">
                   <p className="mb-[1mm] font-semibold">Nomor Pesanan</p>
