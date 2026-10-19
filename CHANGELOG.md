@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.13.0](https://github.com/nabePi/gensaberilmustore/compare/v0.12.0...v0.13.0) (2026-10-19)
+
+
+### Features
+
+* **admin:** search orders by displayed payment total ([#114](https://github.com/nabePi/gensaberilmustore/issues/114)) ([d8bdc4c](https://github.com/nabePi/gensaberilmustore/commit/d8bdc4c72f8b9b9c52b35fa42303bc42f83df447))
+
+
+### Bug Fixes
+
+* **admin:** print customer notes on shipping labels ([#116](https://github.com/nabePi/gensaberilmustore/issues/116)) ([463fc05](https://github.com/nabePi/gensaberilmustore/commit/463fc05b24e2ef68a0496699e663bcb5836eff42))
+
 ## [0.12.0](https://github.com/nabePi/gensaberilmustore/compare/v0.11.2...v0.12.0) (2026-10-19)
 
 
