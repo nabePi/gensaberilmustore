@@ -148,6 +148,63 @@ describe('GET /api/admin/orders', () => {
     ).toBe(true);
   });
 
+  it('matches the exact payable amount across pages, including unique payment codes', async () => {
+    const cookie = await createAdminCookie();
+    const marker = randomUUID();
+    const plain = await createOrder({
+      receiverName: marker,
+      affiliateCode: marker,
+      total: 150123,
+      createdAt: new Date('2026-01-01T00:00:00Z'),
+    });
+    const coded = await createOrder({
+      receiverName: marker,
+      affiliateCode: marker,
+      total: 150000,
+      manualPaymentCode: 123,
+      createdAt: new Date('2026-01-02T00:00:00Z'),
+    });
+    await createOrder({ affiliateCode: marker, total: 150123, manualPaymentCode: 1 });
+    await createOrder({ affiliateCode: marker, total: 150123, status: 'CANCELLED' });
+    await createOrder({ affiliateCode: marker, total: 150123, source: 'POS' });
+
+    const query = `?q=Rp150.123%2C00&affiliateCode=${marker}&status=AWAITING_PAYMENT&source=ONLINE&limit=1`;
+    const first = await GET(buildRequest(cookie, `${query}&page=1`));
+    const second = await GET(buildRequest(cookie, `${query}&page=2`));
+    const a = await first.json();
+    const b = await second.json();
+
+    expect(first.status).toBe(200);
+    expect(second.status).toBe(200);
+    expect(a.total).toBe(2);
+    expect(b.total).toBe(2);
+    expect(a.aggregates).toEqual({ totalRevenue: 300123, totalOrders: 2 });
+    expect([...a.items, ...b.items].map((item: { id: string }) => item.id).sort()).toEqual(
+      [plain.id, coded.id].sort(),
+    );
+  });
+
+  it('returns no orders when no payable amount matches', async () => {
+    const cookie = await createAdminCookie();
+    const marker = randomUUID();
+    await createOrder({ affiliateCode: marker, total: 150000, manualPaymentCode: 123 });
+    const response = await GET(buildRequest(cookie, `?q=150000&affiliateCode=${marker}`));
+    const json = await response.json();
+    expect(response.status).toBe(200);
+    expect(json.items).toEqual([]);
+    expect(json.total).toBe(0);
+  });
+
+  it('still searches numeric phone values when no amount matches', async () => {
+    const cookie = await createAdminCookie();
+    const marker = randomUUID();
+    const matching = await createOrder({ affiliateCode: marker, receiverPhone: '081299988877' });
+    const response = await GET(buildRequest(cookie, `?q=081299988877&affiliateCode=${marker}`));
+    const json = await response.json();
+    expect(response.status).toBe(200);
+    expect(json.items.map((item: { id: string }) => item.id)).toEqual([matching.id]);
+  });
+
   it('rejects an invalid status value', async () => {
     const cookie = await createAdminCookie();
     const response = await GET(buildRequest(cookie, '?status=NOT_A_STATUS'));

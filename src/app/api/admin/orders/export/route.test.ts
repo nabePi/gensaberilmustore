@@ -48,7 +48,14 @@ async function createProduct() {
   return product;
 }
 
-async function createOrder(overrides: { receiverName?: string } = {}) {
+async function createOrder(
+  overrides: {
+    receiverName?: string;
+    total?: number;
+    manualPaymentCode?: number;
+    affiliateCode?: string;
+  } = {},
+) {
   const product = await createProduct();
   const order = await prisma.order.create({
     data: {
@@ -60,7 +67,9 @@ async function createOrder(overrides: { receiverName?: string } = {}) {
       subtotal: 10000,
       shippingCost: 5000,
       discount: 0,
-      total: 15000,
+      total: overrides.total ?? 15000,
+      manualPaymentCode: overrides.manualPaymentCode,
+      affiliateCode: overrides.affiliateCode,
       paymentMethod: 'BANK_TRANSFER',
       source: 'ONLINE',
       status: 'AWAITING_PAYMENT',
@@ -122,5 +131,24 @@ describe('GET /api/admin/orders/export', () => {
     const cookie = await createAdminCookie();
     const response = await GET(buildRequest(cookie, '?status=NOT_A_STATUS'));
     expect(response.status).toBe(400);
+  });
+
+  it('exports only orders matching the amount including their unique code', async () => {
+    const cookie = await createAdminCookie();
+    const marker = randomUUID();
+    const { order: matching } = await createOrder({
+      receiverName: marker,
+      affiliateCode: marker,
+      total: 150000,
+      manualPaymentCode: 123,
+    });
+    const { order: excluded } = await createOrder({ affiliateCode: marker, total: 150000 });
+
+    const response = await GET(buildRequest(cookie, `?q=150123&affiliateCode=${marker}`));
+    const csv = await response.text();
+
+    expect(response.status).toBe(200);
+    expect(csv).toContain(matching.orderNumber);
+    expect(csv).not.toContain(excluded.orderNumber);
   });
 });
