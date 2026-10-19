@@ -48,9 +48,9 @@ async function createSection(
 
 // Other test files (e.g. sections/[id]/route.test.ts) create HomepageSection rows in this
 // same shared table. The PUT route deletes any section not present in the incoming list, so
-// tests must echo back every currently-existing section they don't intend to delete, instead
-// of wiping/replacing the whole table - otherwise concurrently-running test files race and
-// their rows get collaterally deleted.
+// tests echo back every currently-existing section they don't intend to delete. Vitest's
+// serial homepage project also prevents another file creating a section between this
+// snapshot and the PUT, which would otherwise delete that newly-created row.
 async function listAllSectionsAsPayload(excludeId?: string) {
   const sections = await prisma.homepageSection.findMany({
     where: excludeId ? { id: { not: excludeId } } : undefined,

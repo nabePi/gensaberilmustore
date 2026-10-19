@@ -138,7 +138,8 @@ export default function AdminPesananPage() {
       <div className="grid gap-3 sm:grid-cols-3">
         <input
           type="search"
-          placeholder="Cari no. pesanan / penerima / telepon"
+          aria-label="Cari nomor pesanan, penerima, telepon, atau total"
+          placeholder="Cari pesanan / penerima / telepon / total"
           value={q}
           onChange={(e) => {
             setQ(e.target.value);

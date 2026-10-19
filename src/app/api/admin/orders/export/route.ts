@@ -3,7 +3,9 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 import { prisma } from '@/lib/db';
+import { parseRupiahAmount } from '@/lib/rupiah-amount';
 import { withAuth } from '@/server/auth';
+import { orderAmountFilter } from '@/server/orders/amount-filter';
 import { ORDER_STATUSES, listAdminOrdersQuerySchema } from '@/server/orders/schema';
 
 const MAX_EXPORT_ROWS = 10000;
@@ -83,10 +85,12 @@ export const GET = withAuth(
       };
     }
     if (q) {
+      const amount = parseRupiahAmount(q);
       where.OR = [
         { orderNumber: { contains: q, mode: 'insensitive' } },
         { receiverName: { contains: q, mode: 'insensitive' } },
         { receiverPhone: { contains: q, mode: 'insensitive' } },
+        ...(amount !== null ? [await orderAmountFilter(amount)] : []),
       ];
     }
 

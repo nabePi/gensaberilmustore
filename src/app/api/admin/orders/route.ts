@@ -2,7 +2,9 @@ import type { Prisma } from '@prisma/client';
 import { NextRequest, NextResponse } from 'next/server';
 
 import { prisma } from '@/lib/db';
+import { parseRupiahAmount } from '@/lib/rupiah-amount';
 import { withAuth } from '@/server/auth';
+import { orderAmountFilter } from '@/server/orders/amount-filter';
 import { ORDER_STATUSES, listAdminOrdersQuerySchema } from '@/server/orders/schema';
 import { orderListInclude, serializeAdminOrderListItem } from '@/server/orders/serialize';
 
@@ -58,10 +60,12 @@ export const GET = withAuth(
     }
 
     if (q) {
+      const amount = parseRupiahAmount(q);
       where.OR = [
         { orderNumber: { contains: q, mode: 'insensitive' } },
         { receiverName: { contains: q, mode: 'insensitive' } },
         { receiverPhone: { contains: q, mode: 'insensitive' } },
+        ...(amount !== null ? [await orderAmountFilter(amount)] : []),
       ];
     }
 
