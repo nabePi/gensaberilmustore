@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.12.0](https://github.com/nabePi/gensaberilmustore/compare/v0.11.2...v0.12.0) (2026-10-19)
+
+
+### Features
+
+* **webhooks:** add IP-restricted Moota BCA endpoint ([#108](https://github.com/nabePi/gensaberilmustore/issues/108)) ([5638db9](https://github.com/nabePi/gensaberilmustore/commit/5638db9dbef6042bc9963a6337646bbb708c4c5e))
+* **webhooks:** add Moota Interactive QRIS endpoint ([#111](https://github.com/nabePi/gensaberilmustore/issues/111)) ([b523db0](https://github.com/nabePi/gensaberilmustore/commit/b523db06f48e87d4fec80865e0a64173d455c5df))
+* **webhooks:** complete orders on JNE delivery callbacks ([#112](https://github.com/nabePi/gensaberilmustore/issues/112)) ([b224fa5](https://github.com/nabePi/gensaberilmustore/commit/b224fa50671a2be4b7757be98c15bc521bb9e32e))
+
+
+### Bug Fixes
+
+* **admin:** highlight customer notes in order details ([#113](https://github.com/nabePi/gensaberilmustore/issues/113)) ([0d61313](https://github.com/nabePi/gensaberilmustore/commit/0d6131368196f19e9046e7181634d90e6fe7615c))
+* **webhooks:** temporarily remove Moota BCA IP restriction ([#110](https://github.com/nabePi/gensaberilmustore/issues/110)) ([0d0f44c](https://github.com/nabePi/gensaberilmustore/commit/0d0f44ce0fb46f4428c475f0a14152ecbd3db076))
+
 ## [0.11.2](https://github.com/nabePi/gensaberilmustore/compare/v0.11.1...v0.11.2) (2026-10-12)
 
 
