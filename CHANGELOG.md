@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.15.0](https://github.com/nabePi/gensaberilmustore/compare/v0.14.0...v0.15.0) (2026-10-22)
+
+
+### Features
+
+* **admin:** show order payment methods in table ([#123](https://github.com/nabePi/gensaberilmustore/issues/123)) ([b78184f](https://github.com/nabePi/gensaberilmustore/commit/b78184f42d4310a430d6116ba92bb5ff2c68a574))
+
 ## [0.14.0](https://github.com/nabePi/gensaberilmustore/compare/v0.13.0...v0.14.0) (2026-10-22)
 
 
