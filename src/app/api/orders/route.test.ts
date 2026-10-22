@@ -193,6 +193,28 @@ describe('POST /api/orders', () => {
     expect(notification?.recipient).toBe('budi@example.com');
   });
 
+  it('preserves the PO flag on order items after the product settings change', async () => {
+    const product = await createProduct({
+      isPreOrderActive: true,
+      preOrderPrice: 90000,
+      finalPrice: 90000,
+    });
+    const guestToken = await createGuestCartWithItem(product.id);
+    const { response, json } = await post(
+      {
+        receiverName: 'Buyer',
+        receiverPhone: '0812',
+        shippingMethod: 'SELF_PICKUP',
+        paymentMethod: 'BANK_TRANSFER',
+      },
+      `${GUEST_CART_COOKIE_NAME}=${guestToken}`,
+    );
+    expect(response.status).toBe(201);
+    await prisma.product.update({ where: { id: product.id }, data: { isPreOrderActive: false } });
+    const item = await prisma.orderItem.findFirstOrThrow({ where: { orderId: json.orderId } });
+    expect(item.isPreOrderSnapshot).toBe(true);
+  });
+
   it('rejects when stock is insufficient', async () => {
     const destination = await createDestination();
     const product = await createProduct({ stock: 1 });

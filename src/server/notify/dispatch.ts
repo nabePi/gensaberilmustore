@@ -1,4 +1,4 @@
-import type { NotificationTemplate, Prisma } from '@prisma/client';
+import type { NotificationTemplate, Prisma, PrismaClient } from '@prisma/client';
 
 import { prisma } from '@/lib/db';
 import {
@@ -75,21 +75,27 @@ export async function retryFailedNotifications(): Promise<number> {
   return due.length;
 }
 
-export async function dispatchPendingNotificationsForOrder(orderId: string): Promise<void> {
-  const pending = await prisma.notification.findMany({
+export async function dispatchPendingNotificationsForOrder(
+  orderId: string,
+  db: PrismaClient | Prisma.TransactionClient = prisma,
+): Promise<void> {
+  const pending = await db.notification.findMany({
     where: { relatedOrderId: orderId, status: 'PENDING' },
     select: { id: true },
   });
 
-  await Promise.all(pending.map((notification) => dispatchNotification(notification.id)));
+  await Promise.all(pending.map((notification) => dispatchNotification(notification.id, db)));
 }
 
-export async function dispatchNotification(notificationId: string): Promise<void> {
-  const notification = await prisma.notification.findUnique({ where: { id: notificationId } });
+export async function dispatchNotification(
+  notificationId: string,
+  db: PrismaClient | Prisma.TransactionClient = prisma,
+): Promise<void> {
+  const notification = await db.notification.findUnique({ where: { id: notificationId } });
   if (!notification || notification.status === 'SENT') return;
 
   if (notification.channel !== 'EMAIL') {
-    await prisma.notification.update({
+    await db.notification.update({
       where: { id: notification.id },
       data: { status: 'FAILED', error: 'Channel WhatsApp belum diintegrasikan', nextRetryAt: null },
     });
@@ -98,7 +104,7 @@ export async function dispatchNotification(notificationId: string): Promise<void
 
   const rendered = renderEmail(notification.template, notification.payloadJson);
   if (!rendered) {
-    await prisma.notification.update({
+    await db.notification.update({
       where: { id: notification.id },
       data: { status: 'FAILED', error: `Template ${notification.template} tidak dikenal` },
     });
@@ -109,7 +115,7 @@ export async function dispatchNotification(notificationId: string): Promise<void
   const attempts = notification.attempts + 1;
 
   if (result.success) {
-    await prisma.notification.update({
+    await db.notification.update({
       where: { id: notification.id },
       data: {
         status: 'SENT',
@@ -123,7 +129,7 @@ export async function dispatchNotification(notificationId: string): Promise<void
     return;
   }
 
-  await prisma.notification.update({
+  await db.notification.update({
     where: { id: notification.id },
     data: {
       status: 'FAILED',

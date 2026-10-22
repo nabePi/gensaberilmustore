@@ -247,6 +247,7 @@ export async function POST(request: NextRequest) {
               return {
                 productId: item.productId,
                 titleSnapshot: item.product.title,
+                isPreOrderSnapshot: item.product.isPreOrderActive,
                 priceSnapshot: unitPrice,
                 discountPercentSnapshot: effectiveDiscountByItemId.get(item.id)!.discountPercent,
                 quantity: item.quantity,

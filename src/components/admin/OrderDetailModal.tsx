@@ -55,6 +55,7 @@ export type OrderDetail = {
     imageUrl: string | null;
     priceSnapshot: number;
     discountPercentSnapshot: number;
+    isPreOrder?: boolean;
     quantity: number;
     lineTotal: number;
   }[];
@@ -113,6 +114,7 @@ export function OrderDetailModal({
   const [airwaybillError, setAirwaybillError] = useState<string | null>(null);
   const [createAirwaybill, setCreateAirwaybill] = useState(true);
   const hasCustomerNote = Boolean(order?.receiver.note?.trim());
+  const hasPreOrder = Boolean(order?.items.some((item) => item.isPreOrder));
 
   useEffect(() => {
     async function loadOrder() {
@@ -351,7 +353,14 @@ export function OrderDetailModal({
                       <div className="h-10 w-8 bg-neutral-100" />
                     )}
                     <div>
-                      <p className="font-medium text-foreground">{item.title}</p>
+                      <p className="font-medium text-foreground">
+                        {item.title}
+                        {item.isPreOrder ? (
+                          <span className="ml-2 text-xs font-semibold text-amber-800">
+                            Pre-order (PO)
+                          </span>
+                        ) : null}
+                      </p>
                       <p className="text-xs text-neutral-500">
                         {item.quantity} x {formatCurrency(item.priceSnapshot)}
                       </p>
@@ -419,6 +428,12 @@ export function OrderDetailModal({
           {NEXT_STATUS_OPTIONS[order.status].length > 0 ? (
             <div className="border-t border-neutral-200 pt-3">
               <h3 className="mb-2 text-sm font-semibold text-foreground">Ubah Status</h3>
+              {hasPreOrder ? (
+                <p className="mb-3 text-sm font-medium text-amber-800">
+                  Pesanan berisi barang PO. Resi tidak dibuat otomatis saat lunas; buat resi melalui
+                  Generate Resi setelah barang siap dikirim.
+                </p>
+              ) : null}
               {hasCustomerNote ? (
                 <p className="mb-3 text-sm font-medium text-amber-800">
                   Pesanan ini memiliki catatan pembeli. Pastikan catatan sudah dibaca sebelum
@@ -427,7 +442,8 @@ export function OrderDetailModal({
               ) : null}
               {error ? <p className="mb-2 text-sm text-red">{error}</p> : null}
               {NEXT_STATUS_OPTIONS[order.status].includes('PAID') &&
-              order.shippingMethod === 'JNE' ? (
+              order.shippingMethod === 'JNE' &&
+              !hasPreOrder ? (
                 <label className="mb-2 flex items-center gap-2 text-sm text-neutral-700">
                   <input
                     type="checkbox"

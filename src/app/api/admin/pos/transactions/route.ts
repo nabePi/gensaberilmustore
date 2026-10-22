@@ -181,6 +181,7 @@ export const POST = withAuth(
                 return {
                   productId: product.id,
                   titleSnapshot: product.title,
+                  isPreOrderSnapshot: product.isPreOrderActive,
                   priceSnapshot: unitPrice,
                   discountPercentSnapshot: effectiveDiscount.discountPercent,
                   quantity: item.quantity,

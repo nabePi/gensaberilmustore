@@ -536,6 +536,11 @@ export function ProductForm({
             Tampilkan Harga PO ke pembeli (menggantikan harga normal selama pre order aktif)
           </label>
 
+          <p className="text-xs text-neutral-500">
+            Produk dengan pre-order aktif menahan pembuatan resi otomatis. Pesanan tetap dapat
+            dilunasi; admin membuat resi setelah barang siap dikirim.
+          </p>
+
           <label className="flex items-center gap-2 text-sm">
             <input type="checkbox" {...register('isActive')} className="h-4 w-4" />
             Aktif (ditampilkan di toko)

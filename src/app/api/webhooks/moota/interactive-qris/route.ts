@@ -1,7 +1,5 @@
-export async function POST(request: Request) {
-  const body = await request.text();
-  // eslint-disable-next-line no-console -- This endpoint only logs the webhook body.
-  console.log(body);
+import { handleMootaWebhook } from '@/server/payment/moota';
 
-  return new Response(null, { status: 200 });
+export async function POST(request: Request) {
+  return handleMootaWebhook(request, 'interactive-qris');
 }

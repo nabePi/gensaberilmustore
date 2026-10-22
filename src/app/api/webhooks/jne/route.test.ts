@@ -70,7 +70,7 @@ describe('POST /api/webhooks/jne', () => {
       include: { items: true },
     });
     expect(tx.order.update).toHaveBeenCalledWith({
-      where: { id: order.id },
+      where: { id: order.id, status: 'SHIPPED' },
       data: { status: 'COMPLETED' },
     });
     expect(tx.orderStatusHistory.create).toHaveBeenCalledWith({

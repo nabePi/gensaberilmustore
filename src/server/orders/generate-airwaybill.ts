@@ -1,7 +1,10 @@
+import type { Prisma, PrismaClient } from '@prisma/client';
+
 import { prisma } from '@/lib/db';
 import { generateJneAirwaybill } from '@/server/shipping/jne-airwaybill';
 
-export type GenerateAirwaybillResult = { ok: true } | { ok: false; error: string };
+export type GenerateAirwaybillResult =
+  { ok: true; skipped?: 'pre_order' } | { ok: false; error: string };
 
 /**
  * Best-effort side effect run after an order is marked PAID: generates a JNE
@@ -14,15 +17,34 @@ export type GenerateAirwaybillResult = { ok: true } | { ok: false; error: string
  */
 export async function generateAirwaybillForOrder(
   orderId: string,
+  db: PrismaClient | Prisma.TransactionClient = prisma,
+  { allowPreOrder = false }: { allowPreOrder?: boolean } = {},
 ): Promise<GenerateAirwaybillResult> {
   try {
-    const order = await prisma.order.findUnique({
+    const order = await db.order.findUnique({
       where: { id: orderId },
-      include: { items: true, destination: true },
+      include: {
+        items: { include: { product: { select: { isPreOrderActive: true } } } },
+        destination: true,
+      },
     });
 
-    if (!order || !order.destination || order.airwaybillNumber || order.shippingMethod !== 'JNE') {
+    if (
+      !order ||
+      !order.destination ||
+      order.airwaybillNumber ||
+      order.shippingMethod !== 'JNE' ||
+      order.status === 'AWAITING_PAYMENT' ||
+      order.status === 'CANCELLED'
+    ) {
       return { ok: true };
+    }
+
+    if (
+      !allowPreOrder &&
+      order.items.some((item) => item.isPreOrderSnapshot || item.product?.isPreOrderActive)
+    ) {
+      return { ok: true, skipped: 'pre_order' };
     }
 
     const quantity = order.items.reduce((sum, item) => sum + item.quantity, 0);
@@ -43,7 +65,7 @@ export async function generateAirwaybillForOrder(
       goodsDesc: `Pesanan ${order.orderNumber}`,
     });
 
-    await prisma.order.update({
+    await db.order.update({
       where: { id: order.id },
       data: { airwaybillNumber: cnoteNo },
     });
