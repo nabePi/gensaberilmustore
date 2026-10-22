@@ -1,4 +1,4 @@
-import { createHmac, randomInt, randomUUID } from 'node:crypto';
+import { createHash, createHmac, randomInt, randomUUID } from 'node:crypto';
 
 import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -87,6 +87,122 @@ afterAll(async () => {
 });
 
 describe('Moota payment pairing (PostgreSQL)', () => {
+  function dateOnlyPayment(amount: number) {
+    return mutation(amount, {
+      date: '2026-10-22 00:00:00',
+      created_at: '2026-10-22 12:19:21',
+      bank: { bank_type: 'interactiveQris' },
+    });
+  }
+  async function oldNoMatch(payment: ReturnType<typeof mutation>, receivedAt: Date) {
+    const stored: typeof payment & { created_at?: string } = { ...payment };
+    delete stored.created_at;
+    const providerEventId = `moota:${createHash('sha256')
+      .update(JSON.stringify([payment.bank_id, payment.mutation_id]))
+      .digest('hex')}`;
+    return prisma.webhookLog.create({
+      data: {
+        provider: 'moota',
+        providerEventId,
+        payload: { channel: 'interactive-qris', mutation: stored, result: { outcome: 'no_match' } },
+        createdAt: receivedAt,
+        processedAt: receivedAt,
+      },
+    });
+  }
+  it('matches a daytime QRIS order when the bank date has no time', async () => {
+    const amount = 10445;
+    const created = await order(amount, {
+      paymentMethod: 'QRIS',
+      createdAt: new Date('2026-10-22T04:30:00Z'),
+    });
+    const payment = dateOnlyPayment(amount);
+    const result = await send([payment], 'qris');
+    expect(result.results[0]).toMatchObject({ outcome: 'matched', orderId: created.id });
+    expect(sendEmail).toHaveBeenCalledTimes(1);
+    await send([payment], 'qris');
+    expect(sendEmail).toHaveBeenCalledTimes(1);
+  });
+  it('does not match an order created after QRIS was discovered', async () => {
+    const amount = randomInt(200000, 200000000);
+    await order(amount, { paymentMethod: 'QRIS', createdAt: new Date('2026-10-22T05:19:22Z') });
+    expect((await send([dateOnlyPayment(amount)], 'qris')).results[0].outcome).toBe('no_match');
+    expect(sendEmail).not.toHaveBeenCalled();
+  });
+  it.each(['bca', 'qris'] as const)(
+    'accepts a delayed %s webhook without requiring checkout near delivery time',
+    async (channel) => {
+      const amount = randomInt(200000, 200000000);
+      const created = await order(amount, {
+        paymentMethod: channel === 'bca' ? 'BANK_TRANSFER' : 'QRIS',
+        createdAt: new Date('2026-10-22T04:55:00Z'),
+      });
+      const payment = mutation(amount, {
+        date: '2026-10-22 12:00:00',
+        created_at: '2026-10-22 12:19:21',
+      });
+      expect((await send([payment], channel)).results[0]).toMatchObject({
+        outcome: 'matched',
+        orderId: created.id,
+      });
+      expect(sendEmail).toHaveBeenCalledTimes(1);
+    },
+  );
+  it('does not use a previous bank day to pay a next-day order', async () => {
+    const amount = randomInt(200000, 200000000);
+    await order(amount, { paymentMethod: 'QRIS', createdAt: new Date('2026-10-22T00:00:00Z') });
+    const payment = { ...dateOnlyPayment(amount), date: '2026-10-21 00:00:00' };
+    expect((await send([payment], 'qris')).results[0].outcome).toBe('no_match');
+  });
+  it('repairs an old cached date-only no_match once without duplicating email', async () => {
+    const amount = randomInt(200000, 200000000);
+    const created = await order(amount, {
+      paymentMethod: 'QRIS',
+      createdAt: new Date('2026-10-22T04:30:00Z'),
+    });
+    const payment = dateOnlyPayment(amount);
+    const log = await oldNoMatch(payment, new Date('2026-10-22T05:20:00Z'));
+    expect((await send([payment], 'qris')).results[0]).toMatchObject({
+      outcome: 'matched',
+      orderId: created.id,
+      duplicate: false,
+    });
+    expect((await send([payment], 'qris')).results[0]).toMatchObject({
+      outcome: 'matched',
+      duplicate: true,
+    });
+    expect(await prisma.webhookLog.count({ where: { providerEventId: log.providerEventId } })).toBe(
+      1,
+    );
+    expect(sendEmail).toHaveBeenCalledTimes(1);
+  });
+  it('keeps the original receipt cutoff on retry and seals the repaired no_match', async () => {
+    const amount = randomInt(200000, 200000000);
+    const payment = dateOnlyPayment(amount);
+    await oldNoMatch(payment, new Date('2026-10-22T04:00:00Z'));
+    await order(amount, { paymentMethod: 'QRIS', createdAt: new Date('2026-10-22T04:01:00Z') });
+    expect((await send([payment], 'qris')).results[0]).toMatchObject({
+      outcome: 'no_match',
+      duplicate: false,
+    });
+    await order(amount, { paymentMethod: 'QRIS', createdAt: new Date('2026-10-22T03:00:00Z') });
+    expect((await send([payment], 'qris')).results[0]).toMatchObject({
+      outcome: 'no_match',
+      duplicate: true,
+    });
+    expect(sendEmail).not.toHaveBeenCalled();
+  });
+  it('does not let a retry change the stored amount to pay another order', async () => {
+    const amount = randomInt(200000, 200000000);
+    const payment = dateOnlyPayment(amount);
+    await oldNoMatch(payment, new Date('2026-10-22T05:20:00Z'));
+    await order(amount + 1000, { paymentMethod: 'QRIS' });
+    expect((await send([{ ...payment, amount: amount + 1000 }], 'qris')).results[0]).toMatchObject({
+      outcome: 'no_match',
+      duplicate: true,
+    });
+    expect(sendEmail).not.toHaveBeenCalled();
+  });
   it('rejects a stale parallel admin transition before creating another payment notification', async () => {
     const amount = randomInt(200000, 200000000);
     const staleOrder = await order(amount);

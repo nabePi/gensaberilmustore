@@ -9,7 +9,8 @@ import { dispatchPendingNotificationsForOrder } from '@/server/notify/dispatch';
 import { generateAirwaybillForOrder } from '@/server/orders/generate-airwaybill';
 import { applyOrderStatusTransition } from '@/server/orders/status';
 import {
-  mootaMutationDate,
+  mootaMutationSchema,
+  mootaOrderCutoff,
   mootaPayloadSchema,
   verifyMootaSignature,
   type MootaChannel,
@@ -35,27 +36,51 @@ async function pairMutation(channel: MootaChannel, mutation: MootaMutation) {
     // Serialize Moota matching across processes before checking duplicates/candidates.
     await tx.$executeRaw`SELECT pg_advisory_xact_lock(6422026)`;
     const existing = await tx.webhookLog.findUnique({ where: { providerEventId } });
+    let pairingMutation = mutation;
     if (existing) {
-      return {
-        ...resultSchema.parse((existing.payload as Prisma.JsonObject).result),
-        duplicate: true,
+      const payload = existing.payload as Prisma.JsonObject;
+      const previous = resultSchema.parse(payload.result);
+      const stored = mootaMutationSchema.safeParse(payload.mutation);
+      // Retry the old midnight bug once, using the original event's identity,
+      // amount and receipt time. Never reconsider a payment already matched.
+      const retryDateOnly =
+        channel === 'interactive-qris' &&
+        previous.outcome === 'no_match' &&
+        payload.matchingVersion === undefined &&
+        payload.channel === channel &&
+        stored.success &&
+        stored.data.date.endsWith(' 00:00:00') &&
+        stored.data.date === mutation.date &&
+        stored.data.amount === mutation.amount &&
+        stored.data.type === mutation.type;
+      if (!retryDateOnly || !stored.success) return { ...previous, duplicate: true };
+      pairingMutation = {
+        ...stored.data,
+        // Older schema stripped created_at. The first receipt still caps it.
+        created_at: stored.data.created_at ?? mutation.created_at,
       };
     }
 
     let match: MatchResult;
     if (
-      mutation.type !== 'CR' ||
-      (channel === 'bca' && mutation.bank && mutation.bank.bank_type.toLowerCase() !== 'bca')
+      pairingMutation.type !== 'CR' ||
+      (channel === 'bca' &&
+        pairingMutation.bank &&
+        pairingMutation.bank.bank_type.toLowerCase() !== 'bca')
     ) {
       match = { outcome: 'ignored' };
     } else {
       const method = channel === 'bca' ? 'BANK_TRANSFER' : 'QRIS';
-      const latestCreatedAt = new Date(mootaMutationDate(mutation.date)!.getTime() + 999);
+      const latestCreatedAt = mootaOrderCutoff(
+        pairingMutation,
+        existing?.createdAt ?? new Date(),
+        channel,
+      );
       const candidates = await tx.$queryRaw<{ id: string }[]>`
         SELECT o.id FROM "Order" o
         WHERE o.status = 'AWAITING_PAYMENT' AND o.source = 'ONLINE'
           AND o."paymentMethod"::text = ${method}
-          AND o.total::bigint + COALESCE(o."manualPaymentCode", 0) = ${mutation.amount}::bigint
+          AND o.total::bigint + COALESCE(o."manualPaymentCode", 0) = ${pairingMutation.amount}::bigint
           AND o."createdAt" <= ${latestCreatedAt}
           AND NOT EXISTS (SELECT 1 FROM "PaymentSession" p WHERE p."orderId" = o.id)
         ORDER BY o."createdAt", o.id
@@ -77,16 +102,17 @@ async function pairMutation(channel: MootaChannel, mutation: MootaMutation) {
       }
     }
 
-    await tx.webhookLog.create({
-      data: {
-        provider: 'moota',
-        providerEventId,
-        payload: JSON.parse(
-          JSON.stringify({ channel, mutation, result: match }),
-        ) as Prisma.InputJsonValue,
-        processedAt: match.outcome === 'matched' ? null : new Date(),
-      },
-    });
+    const logData = {
+      payload: JSON.parse(
+        JSON.stringify({ channel, mutation: pairingMutation, result: match, matchingVersion: 2 }),
+      ) as Prisma.InputJsonValue,
+      processedAt: match.outcome === 'matched' ? null : new Date(),
+    };
+    if (existing) {
+      await tx.webhookLog.update({ where: { providerEventId }, data: logData });
+    } else {
+      await tx.webhookLog.create({ data: { provider: 'moota', providerEventId, ...logData } });
+    }
     return { ...match, duplicate: false };
   });
 
