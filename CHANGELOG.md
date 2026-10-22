@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.14.0](https://github.com/nabePi/gensaberilmustore/compare/v0.13.0...v0.14.0) (2026-10-22)
+
+
+### Features
+
+* **checkout:** separate pre-order and ready-stock purchases ([#119](https://github.com/nabePi/gensaberilmustore/issues/119)) ([fa28c3d](https://github.com/nabePi/gensaberilmustore/commit/fa28c3dd2c3016baffa97f0c55d8510cf306996a))
+* **payments:** pair Moota mutations and confirm manual orders ([#117](https://github.com/nabePi/gensaberilmustore/issues/117)) ([d768bf3](https://github.com/nabePi/gensaberilmustore/commit/d768bf322189248429b1310d4d193fb7db05dff5))
+
+
+### Bug Fixes
+
+* **admin:** display order times in WIB ([#122](https://github.com/nabePi/gensaberilmustore/issues/122)) ([1c35083](https://github.com/nabePi/gensaberilmustore/commit/1c35083b5734cfaaa99252a701998b81505fd2aa))
+* **payments:** pair date-only Moota QRIS mutations ([#120](https://github.com/nabePi/gensaberilmustore/issues/120)) ([5608769](https://github.com/nabePi/gensaberilmustore/commit/560876926fac78b731bf6c8e37266ec4c7a0cb71))
+* **payments:** support Moota BCA Bisnis mutations ([#121](https://github.com/nabePi/gensaberilmustore/issues/121)) ([b033a92](https://github.com/nabePi/gensaberilmustore/commit/b033a92c142fb41e640603a7f8b615b443342798))
+
 ## [0.13.0](https://github.com/nabePi/gensaberilmustore/compare/v0.12.0...v0.13.0) (2026-10-19)
 
 
