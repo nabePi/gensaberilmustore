@@ -177,7 +177,8 @@ export function OrderDetailModal({
             <div>
               <p className="text-base font-bold text-foreground">{order.orderNumber}</p>
               <p className="text-xs text-neutral-500">
-                {formatOrderDate(order.createdAt)} · {order.source === 'ONLINE' ? 'Online' : 'POS'}
+                {formatOrderDateTime(order.createdAt)} ·{' '}
+                {order.source === 'ONLINE' ? 'Online' : 'POS'}
               </p>
             </div>
             <div className="flex items-center gap-2">
@@ -308,7 +309,7 @@ export function OrderDetailModal({
               {order.status === 'AWAITING_PAYMENT' && order.payment.paymentClaimedAt ? (
                 <p className="text-sm font-medium text-amber-600">
                   Pembeli mengklaim sudah transfer pada{' '}
-                  {formatOrderDate(order.payment.paymentClaimedAt)}
+                  {formatOrderDateTime(order.payment.paymentClaimedAt)}
                 </p>
               ) : null}
               {order.payment.proofUrl ? (

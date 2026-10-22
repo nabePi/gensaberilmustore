@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 
 import {
   OrderDetailModal,
-  formatOrderDate,
+  formatOrderDateTime,
   type OrderStatusValue,
 } from '@/components/admin/OrderDetailModal';
 import { PageHeader } from '@/components/admin/ui/PageHeader';
@@ -176,7 +176,7 @@ export default function AdminPesananPage() {
           <Thead>
             <Th>No. Pesanan</Th>
             <Th>Penerima</Th>
-            <Th>Tanggal</Th>
+            <Th>Tanggal & jam</Th>
             <Th>Sumber</Th>
             <Th>Status</Th>
             <Th className="text-right">Total</Th>
@@ -190,7 +190,7 @@ export default function AdminPesananPage() {
                   <br />
                   <span className="text-xs text-neutral-400">{order.receiverPhone}</span>
                 </Td>
-                <Td className="text-neutral-600">{formatOrderDate(order.createdAt)}</Td>
+                <Td className="text-neutral-600">{formatOrderDateTime(order.createdAt)}</Td>
                 <Td className="text-neutral-600">{order.source === 'ONLINE' ? 'Online' : 'POS'}</Td>
                 <Td>
                   <span className={`${adminBadgeBase} ${ORDER_STATUS_BADGE_CLASSES[order.status]}`}>
