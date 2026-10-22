@@ -1,5 +1,6 @@
 'use client';
 
+import type { PaymentMethod } from '@prisma/client';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
@@ -36,7 +37,18 @@ type AdminOrderListItem = {
   receiverName: string;
   receiverPhone: string;
   source: 'ONLINE' | 'POS';
+  paymentMethod: PaymentMethod;
   affiliateCode: string | null;
+};
+
+const PAYMENT_METHOD_LABELS: Record<PaymentMethod, string> = {
+  BANK_TRANSFER: 'Transfer BCA',
+  QRIS: 'QRIS',
+  EWALLET: 'E-wallet',
+  POS_CASH: 'Tunai (POS)',
+  POS_TRANSFER: 'Transfer (POS)',
+  POS_QRIS: 'QRIS (POS)',
+  POS_GATEWAY: 'Payment Gateway (POS)',
 };
 
 export default function AdminPesananPage() {
@@ -179,6 +191,7 @@ export default function AdminPesananPage() {
             <Th>Tanggal & jam</Th>
             <Th>Sumber</Th>
             <Th>Status</Th>
+            <Th>Metode pembayaran</Th>
             <Th className="text-right">Total</Th>
           </Thead>
           <Tbody>
@@ -201,6 +214,9 @@ export default function AdminPesananPage() {
                       Diklaim dibayar
                     </span>
                   ) : null}
+                </Td>
+                <Td className="whitespace-nowrap text-neutral-600">
+                  {PAYMENT_METHOD_LABELS[order.paymentMethod] ?? '—'}
                 </Td>
                 <Td className="text-right font-medium text-foreground">
                   {formatCurrency(
