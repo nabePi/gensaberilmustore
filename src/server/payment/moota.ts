@@ -9,6 +9,7 @@ import { dispatchPendingNotificationsForOrder } from '@/server/notify/dispatch';
 import { generateAirwaybillForOrder } from '@/server/orders/generate-airwaybill';
 import { applyOrderStatusTransition } from '@/server/orders/status';
 import {
+  isMootaBcaBankType,
   mootaMutationSchema,
   mootaOrderCutoff,
   mootaPayloadSchema,
@@ -41,19 +42,29 @@ async function pairMutation(channel: MootaChannel, mutation: MootaMutation) {
       const payload = existing.payload as Prisma.JsonObject;
       const previous = resultSchema.parse(payload.result);
       const stored = mootaMutationSchema.safeParse(payload.mutation);
-      // Retry the old midnight bug once, using the original event's identity,
+      // Retry old bank-type/date bugs once, using the original event's identity,
       // amount and receipt time. Never reconsider a payment already matched.
-      const retryDateOnly =
-        channel === 'interactive-qris' &&
-        previous.outcome === 'no_match' &&
-        payload.matchingVersion === undefined &&
+      const legacyVersion = payload.matchingVersion === undefined || payload.matchingVersion === 2;
+      const retryBug =
+        stored.success &&
+        ((channel === 'interactive-qris' &&
+          payload.matchingVersion === undefined &&
+          previous.outcome === 'no_match' &&
+          stored.data.date.endsWith(' 00:00:00')) ||
+          (channel === 'bca' &&
+            legacyVersion &&
+            stored.data.type === 'CR' &&
+            ((previous.outcome === 'ignored' &&
+              stored.data.bank?.bank_type.toLowerCase() === 'bcagirov2') ||
+              (previous.outcome === 'no_match' && stored.data.date.endsWith(' 00:00:00')))));
+      const retryLegacy =
+        retryBug &&
         payload.channel === channel &&
         stored.success &&
-        stored.data.date.endsWith(' 00:00:00') &&
         stored.data.date === mutation.date &&
         stored.data.amount === mutation.amount &&
         stored.data.type === mutation.type;
-      if (!retryDateOnly || !stored.success) return { ...previous, duplicate: true };
+      if (!retryLegacy || !stored.success) return { ...previous, duplicate: true };
       pairingMutation = {
         ...stored.data,
         // Older schema stripped created_at. The first receipt still caps it.
@@ -66,16 +77,12 @@ async function pairMutation(channel: MootaChannel, mutation: MootaMutation) {
       pairingMutation.type !== 'CR' ||
       (channel === 'bca' &&
         pairingMutation.bank &&
-        pairingMutation.bank.bank_type.toLowerCase() !== 'bca')
+        !isMootaBcaBankType(pairingMutation.bank.bank_type))
     ) {
       match = { outcome: 'ignored' };
     } else {
       const method = channel === 'bca' ? 'BANK_TRANSFER' : 'QRIS';
-      const latestCreatedAt = mootaOrderCutoff(
-        pairingMutation,
-        existing?.createdAt ?? new Date(),
-        channel,
-      );
+      const latestCreatedAt = mootaOrderCutoff(pairingMutation, existing?.createdAt ?? new Date());
       const candidates = await tx.$queryRaw<{ id: string }[]>`
         SELECT o.id FROM "Order" o
         WHERE o.status = 'AWAITING_PAYMENT' AND o.source = 'ONLINE'
@@ -104,7 +111,7 @@ async function pairMutation(channel: MootaChannel, mutation: MootaMutation) {
 
     const logData = {
       payload: JSON.parse(
-        JSON.stringify({ channel, mutation: pairingMutation, result: match, matchingVersion: 2 }),
+        JSON.stringify({ channel, mutation: pairingMutation, result: match, matchingVersion: 3 }),
       ) as Prisma.InputJsonValue,
       processedAt: match.outcome === 'matched' ? null : new Date(),
     };

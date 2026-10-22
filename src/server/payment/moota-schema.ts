@@ -35,15 +35,14 @@ export const mootaPayloadSchema = z.array(mootaMutationSchema).min(1).max(1000);
 export type MootaMutation = z.infer<typeof mootaMutationSchema>;
 export type MootaChannel = 'bca' | 'interactive-qris';
 
-/** Interactive QRIS sends a bank date at midnight without a transaction time. */
-export function mootaOrderCutoff(
-  mutation: MootaMutation,
-  receivedAt: Date,
-  channel: MootaChannel,
-): Date {
+export function isMootaBcaBankType(bankType: string): boolean {
+  return ['bca', 'bcagirov2'].includes(bankType.toLowerCase());
+}
+
+/** QRIS and BCA Bisnis can send a bank date without a transaction time. */
+export function mootaOrderCutoff(mutation: MootaMutation, receivedAt: Date): Date {
   const date = mootaMutationDate(mutation.date)!;
-  if (channel !== 'interactive-qris' || !mutation.date.endsWith(' 00:00:00'))
-    return new Date(date.getTime() + 999);
+  if (!mutation.date.endsWith(' 00:00:00')) return new Date(date.getTime() + 999);
 
   const observedAt = mutation.created_at ? mootaMutationDate(mutation.created_at) : null;
   return new Date(
