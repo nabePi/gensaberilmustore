@@ -87,6 +87,110 @@ afterAll(async () => {
 });
 
 describe('Moota payment pairing (PostgreSQL)', () => {
+  function bcaBisnisPayment(amount: number) {
+    return mutation(amount, {
+      date: '2026-10-18 00:00:00',
+      created_at: '2026-10-19 11:37:37',
+      bank: { bank_type: 'bcaGiroV2' },
+    });
+  }
+  async function legacyBcaLog(
+    payment: ReturnType<typeof mutation>,
+    outcome: 'ignored' | 'no_match',
+    version?: number,
+  ) {
+    const providerEventId = `moota:${createHash('sha256')
+      .update(JSON.stringify([payment.bank_id, payment.mutation_id]))
+      .digest('hex')}`;
+    return prisma.webhookLog.create({
+      data: {
+        provider: 'moota',
+        providerEventId,
+        createdAt: new Date('2026-10-19T04:40:00Z'),
+        processedAt: new Date('2026-10-19T04:40:00Z'),
+        payload: {
+          channel: 'bca',
+          mutation: payment,
+          result: { outcome },
+          ...(version ? { matchingVersion: version } : {}),
+        },
+      },
+    });
+  }
+  it('matches BCA Bisnis amount 194042 including code 42 on the original bank day', async () => {
+    const created = await order(194042, {
+      total: 194000,
+      manualPaymentCode: 42,
+      createdAt: new Date('2026-10-18T03:00:00Z'),
+    });
+    const payment = bcaBisnisPayment(194042);
+    expect((await send([payment])).results[0]).toMatchObject({
+      outcome: 'matched',
+      orderId: created.id,
+    });
+    expect((await send([payment])).results[0]).toMatchObject({
+      outcome: 'matched',
+      duplicate: true,
+    });
+    expect(sendEmail).toHaveBeenCalledTimes(1);
+  });
+  it('does not let a next-day discovery pay a next-day BCA order', async () => {
+    const amount = randomInt(200000, 200000000);
+    await order(amount, { createdAt: new Date('2026-10-19T00:00:00Z') });
+    expect((await send([bcaBisnisPayment(amount)])).results[0].outcome).toBe('no_match');
+    expect(sendEmail).not.toHaveBeenCalled();
+  });
+  it.each([0, 999])('matches BCA with unique code %i', async (code) => {
+    const baseTotal = randomInt(200000, 200000000);
+    const created = await order(baseTotal + code, {
+      total: baseTotal,
+      manualPaymentCode: code,
+      createdAt: new Date('2026-10-18T03:00:00Z'),
+    });
+    expect((await send([bcaBisnisPayment(baseTotal + code)])).results[0]).toMatchObject({
+      outcome: 'matched',
+      orderId: created.id,
+    });
+  });
+  it.each([undefined, 2])('can retry a BCA Bisnis event ignored by version %s', async (version) => {
+    const amount = randomInt(200000, 200000000);
+    const created = await order(amount, { createdAt: new Date('2026-10-18T03:00:00Z') });
+    const payment = bcaBisnisPayment(amount);
+    await legacyBcaLog(payment, 'ignored', version);
+    const results = await Promise.all([send([payment]), send([payment])]);
+    expect(results.every((result) => result.results[0].outcome === 'matched')).toBe(true);
+    expect(results.map((result) => result.results[0].duplicate).sort()).toEqual([false, true]);
+    expect(
+      await prisma.orderStatusHistory.count({ where: { orderId: created.id, toStatus: 'PAID' } }),
+    ).toBe(1);
+    expect(sendEmail).toHaveBeenCalledTimes(1);
+  });
+  it('repairs a cached BCA no_match for midnight while retaining the BCA endpoint', async () => {
+    const amount = randomInt(200000, 200000000);
+    const created = await order(amount, { createdAt: new Date('2026-10-18T03:00:00Z') });
+    const payment = { ...bcaBisnisPayment(amount), bank: { bank_type: 'bca' } };
+    await legacyBcaLog(payment, 'no_match', 2);
+    expect((await send([payment], 'qris')).results[0]).toMatchObject({
+      outcome: 'no_match',
+      duplicate: true,
+    });
+    expect((await send([payment])).results[0]).toMatchObject({
+      outcome: 'matched',
+      orderId: created.id,
+    });
+    expect(sendEmail).toHaveBeenCalledTimes(1);
+  });
+  it('never reprocesses a BCA Bisnis debit as payment', async () => {
+    const amount = randomInt(200000, 200000000);
+    await order(amount, { createdAt: new Date('2026-10-18T03:00:00Z') });
+    const payment = { ...bcaBisnisPayment(amount), type: 'DB' };
+    await legacyBcaLog(payment, 'ignored', 2);
+    expect((await send([payment])).results[0]).toMatchObject({
+      outcome: 'ignored',
+      duplicate: true,
+    });
+    expect(sendEmail).not.toHaveBeenCalled();
+  });
   function dateOnlyPayment(amount: number) {
     return mutation(amount, {
       date: '2026-10-22 00:00:00',
