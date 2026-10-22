@@ -7,6 +7,7 @@ import type {
 } from '@prisma/client';
 import { Prisma } from '@prisma/client';
 
+import { getOrderDeliveryProof } from '@/lib/delivery-proof';
 import { applyMemberRateOverride, computeItemCommission } from '@/server/affiliate/rate';
 import { totalWithManualPaymentCode } from '@/server/payment/manual-qris';
 
@@ -98,7 +99,10 @@ async function runOrderStatusSideEffects(
       });
       break;
     case 'COMPLETED':
-      await queueOrderNotification(tx, order, 'ORDER_COMPLETED');
+      await queueOrderNotification(tx, order, 'ORDER_COMPLETED', {
+        airwaybillNumber: order.airwaybillNumber,
+        deliveryProof: getOrderDeliveryProof(order),
+      });
       await approveAffiliateConversion(tx, order);
       break;
     case 'CANCELLED':

@@ -1,5 +1,6 @@
 import type { Prisma } from '@prisma/client';
 
+import { getOrderDeliveryProof } from '@/lib/delivery-proof';
 const thumbnailImageInclude = {
   orderBy: [{ isPrimary: 'desc' }, { position: 'asc' }],
   take: 1,
@@ -98,6 +99,7 @@ export function serializeOrderDetail(order: OrderDetail) {
     airwaybillNumber: order.airwaybillNumber,
     shippingMethod: order.shippingMethod,
     shippingService: order.shippingService,
+    deliveryProof: getOrderDeliveryProof(order),
     weightKg: order.weightKg,
     receiver: {
       name: order.receiverName,

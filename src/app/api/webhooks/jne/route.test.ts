@@ -7,6 +7,7 @@ const { tx, transaction, dispatch, config } = vi.hoisted(() => {
     orderStatusHistory: { create: vi.fn() },
     notification: { create: vi.fn() },
     affiliateConversion: { findUnique: vi.fn(), update: vi.fn() },
+    webhookLog: { upsert: vi.fn() },
   };
   return {
     tx,
@@ -33,6 +34,10 @@ const order = {
   total: 100000,
   userId: null,
   items: [],
+  deliveryPhotoUrl: null,
+  deliveryReceiverName: null,
+  deliveryReceiverRelation: null,
+  deliveryConfirmedAt: null,
 };
 const payload = { awb: order.airwaybillNumber, order_id: order.orderNumber, status: 'DELIVERED' };
 
@@ -88,16 +93,20 @@ describe('POST /api/webhooks/jne', () => {
       where: { id: 'conversion-id' },
       data: { status: 'APPROVED', approvedAt: expect.any(Date) },
     });
-    expect(dispatch).toHaveBeenCalledWith(order.id);
+    expect(dispatch).toHaveBeenCalledWith(order.id, tx);
   });
 
   it('acknowledges repeated delivery without duplicating completion side effects', async () => {
     await POST(request());
-    tx.order.findUnique.mockResolvedValue({ ...order, status: 'COMPLETED' });
+    tx.order.findUnique.mockResolvedValue({
+      ...order,
+      status: 'COMPLETED',
+      deliveryConfirmedAt: new Date(),
+    });
     const repeated = await POST(request());
 
     expect(await repeated.json()).toEqual({ status: true });
-    expect(tx.order.update).toHaveBeenCalledTimes(1);
+    expect(tx.order.update).toHaveBeenCalledTimes(2);
     expect(tx.orderStatusHistory.create).toHaveBeenCalledTimes(1);
     expect(tx.notification.create).toHaveBeenCalledTimes(1);
     expect(tx.affiliateConversion.update).toHaveBeenCalledTimes(1);
@@ -109,7 +118,8 @@ describe('POST /api/webhooks/jne', () => {
       const response = await POST(request({ ...payload, status }));
       expect(response.status).toBe(200);
       expect(await response.json()).toEqual({ status: true });
-      expect(transaction).not.toHaveBeenCalled();
+      expect(tx.order.findUnique).not.toHaveBeenCalled();
+      expect(tx.webhookLog.upsert).toHaveBeenCalledTimes(1);
     },
   );
 
@@ -187,10 +197,100 @@ describe('POST /api/webhooks/jne', () => {
   it('allows a retry to dispatch pending notifications after completion was committed', async () => {
     dispatch.mockRejectedValueOnce(new Error('Notification unavailable'));
     expect((await POST(request())).status).toBe(500);
-    tx.order.findUnique.mockResolvedValue({ ...order, status: 'COMPLETED' });
+    tx.order.findUnique.mockResolvedValue({
+      ...order,
+      status: 'COMPLETED',
+      deliveryConfirmedAt: new Date(),
+    });
     expect((await POST(request())).status).toBe(200);
-    expect(tx.order.update).toHaveBeenCalledTimes(1);
+    expect(tx.order.update).toHaveBeenCalledTimes(2);
     expect(tx.notification.create).toHaveBeenCalledTimes(1);
     expect(dispatch).toHaveBeenCalledTimes(2);
+  });
+
+  it('stores delivery evidence and includes it in the completion email payload', async () => {
+    const proof = {
+      photo: 'https://example.com/pod.jpg',
+      receiver_name: 'Ibu Siti',
+      receiver_relation: 'Keluarga',
+    };
+    expect((await POST(request({ ...payload, ...proof, extra_jne_field: 'audit' }))).status).toBe(
+      200,
+    );
+    expect(tx.order.update).toHaveBeenCalledWith({
+      where: { id: order.id },
+      data: {
+        deliveryPhotoUrl: proof.photo,
+        deliveryReceiverName: proof.receiver_name,
+        deliveryReceiverRelation: proof.receiver_relation,
+        deliveryConfirmedAt: expect.any(Date),
+      },
+    });
+    expect(tx.notification.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        payloadJson: expect.objectContaining({
+          airwaybillNumber: payload.awb,
+          deliveryProof: {
+            photoUrl: proof.photo,
+            receiverName: proof.receiver_name,
+            receiverRelation: proof.receiver_relation,
+            confirmedAt: expect.any(String),
+          },
+        }),
+      }),
+    });
+    expect(tx.webhookLog.upsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        create: expect.objectContaining({
+          provider: 'jne',
+          payload: { ...payload, ...proof, extra_jne_field: 'audit' },
+        }),
+      }),
+    );
+  });
+
+  it('fills late evidence for a completed order without another completion email', async () => {
+    tx.order.findUnique.mockResolvedValue({
+      ...order,
+      status: 'COMPLETED',
+      deliveryConfirmedAt: new Date(),
+    });
+    expect(
+      (await POST(request({ ...payload, photo: 'https://example.com/late.jpg' }))).status,
+    ).toBe(200);
+    expect(tx.order.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ deliveryPhotoUrl: 'https://example.com/late.jpg' }),
+      }),
+    );
+    expect(tx.notification.create).not.toHaveBeenCalled();
+    expect(tx.orderStatusHistory.create).not.toHaveBeenCalled();
+  });
+
+  it('keeps original proof when a repeated delivery sends empty or different fields', async () => {
+    tx.order.findUnique.mockResolvedValue({
+      ...order,
+      status: 'COMPLETED',
+      deliveryPhotoUrl: 'https://example.com/original.jpg',
+      deliveryReceiverName: 'Original',
+      deliveryReceiverRelation: 'Sendiri',
+      deliveryConfirmedAt: new Date(),
+    });
+    expect(
+      (
+        await POST(
+          request({ ...payload, photo: '', receiver_name: 'Replacement', receiver_relation: null }),
+        )
+      ).status,
+    ).toBe(200);
+    expect(tx.order.update).not.toHaveBeenCalled();
+    expect(tx.notification.create).not.toHaveBeenCalled();
+  });
+
+  it('ignores unsafe photo URLs without preventing completion', async () => {
+    expect((await POST(request({ ...payload, photo: 'javascript:alert(1)' }))).status).toBe(200);
+    expect(tx.order.update).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ deliveryPhotoUrl: null }) }),
+    );
   });
 });

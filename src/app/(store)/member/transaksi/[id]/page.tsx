@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
+import type { DeliveryProof } from '@/lib/delivery-proof';
 import { formatCurrency } from '@/lib/format';
 import {
   getOrderStatusBadgeClass,
@@ -22,6 +23,7 @@ type OrderDetail = {
   airwaybillNumber: string | null;
   shippingMethod: 'JNE' | 'SELF_PICKUP' | 'OTHER';
   shippingService: string;
+  deliveryProof: DeliveryProof | null;
   receiver: {
     name: string;
     phone: string;
@@ -76,6 +78,7 @@ export default function MemberTransaksiDetailPage() {
   const [tracking, setTracking] = useState<JneTracking | null>(null);
   const [trackingLoading, setTrackingLoading] = useState(false);
   const [trackingError, setTrackingError] = useState<string | null>(null);
+  const [failedProofPhotoUrl, setFailedProofPhotoUrl] = useState<string | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -358,6 +361,76 @@ export default function MemberTransaksiDetailPage() {
           </div>
         </div>
       </div>
+
+      {order.deliveryProof ? (
+        <section aria-labelledby="delivery-proof-title" className={`p-4 ${cardBase}`}>
+          <h2 id="delivery-proof-title" className="text-sm font-semibold text-foreground">
+            Bukti Penerimaan JNE
+          </h2>
+          <p className="mt-1 text-sm text-neutral-600">
+            Paket telah diterima sesuai konfirmasi JNE.
+          </p>
+          <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-2">
+            {order.deliveryProof.receiverName ? (
+              <div>
+                <dt className="text-neutral-500">Diterima oleh</dt>
+                <dd className="mt-1 font-medium text-foreground">
+                  {order.deliveryProof.receiverName}
+                </dd>
+              </div>
+            ) : null}
+            {order.deliveryProof.receiverRelation ? (
+              <div>
+                <dt className="text-neutral-500">Hubungan penerima</dt>
+                <dd className="mt-1 text-foreground">{order.deliveryProof.receiverRelation}</dd>
+              </div>
+            ) : null}
+            {order.deliveryProof.confirmedAt ? (
+              <div>
+                <dt className="text-neutral-500">Konfirmasi JNE diterima sistem</dt>
+                <dd className="mt-1 text-foreground">
+                  {new Date(order.deliveryProof.confirmedAt).toLocaleString('id-ID', {
+                    day: 'numeric',
+                    month: 'long',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    timeZone: 'Asia/Jakarta',
+                  })}{' '}
+                  WIB
+                </dd>
+              </div>
+            ) : null}
+          </dl>
+          {order.deliveryProof.photoUrl ? (
+            <div className="mt-4">
+              {failedProofPhotoUrl !== order.deliveryProof.photoUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element -- Proof photos are hosted by JNE on provider URLs.
+                <img
+                  src={order.deliveryProof.photoUrl}
+                  alt="Foto bukti penerimaan paket dari JNE"
+                  loading="lazy"
+                  referrerPolicy="no-referrer"
+                  onError={() => setFailedProofPhotoUrl(order.deliveryProof!.photoUrl)}
+                  className="max-h-80 w-full rounded-md border border-neutral-200 bg-neutral-50 object-contain"
+                />
+              ) : (
+                <p className="text-sm text-neutral-500">
+                  Foto tidak dapat dimuat. Coba buka tautan foto di bawah.
+                </p>
+              )}
+              <a
+                href={order.deliveryProof.photoUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`mt-3 ${btnOutline}`}
+              >
+                Buka foto bukti penerimaan
+              </a>
+            </div>
+          ) : null}
+        </section>
+      ) : null}
 
       {order.airwaybillNumber ? (
         <div className={`p-4 ${cardBase}`}>
