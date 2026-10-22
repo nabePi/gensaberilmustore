@@ -3,6 +3,7 @@ import type { NextRequest } from 'next/server';
 
 import { prisma } from '@/lib/db';
 import { computeCartWeightKg, resolveCart } from '@/server/cart/cart';
+import { CheckoutGroupError, selectCheckoutItems } from '@/server/cart/checkout';
 import {
   fetchJneTariffOptions,
   isAllowedJneService,
@@ -35,9 +36,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Keranjang Anda kosong' }, { status: 400 });
   }
 
-  const weightKg = computeCartWeightKg(cart);
-
   try {
+    const items = selectCheckoutItems(cart.items, parsed.data.checkoutGroup);
+    const weightKg = computeCartWeightKg({ ...cart, items });
     const options = await fetchJneTariffOptions(destination.tariffCode, weightKg);
     return NextResponse.json({
       options: options
@@ -49,6 +50,9 @@ export async function POST(request: NextRequest) {
         })),
     });
   } catch (error) {
+    if (error instanceof CheckoutGroupError) {
+      return NextResponse.json({ error: error.message }, { status: 400 });
+    }
     if (error instanceof JneTariffError) {
       return NextResponse.json({ error: error.message }, { status: 502 });
     }

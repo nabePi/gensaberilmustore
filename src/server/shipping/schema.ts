@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+import { CHECKOUT_GROUPS } from '@/lib/checkout-groups';
+
 const cityFields = {
   name: z.string().trim().min(1, 'Nama kota wajib diisi'),
   province: z.string().trim().min(1, 'Provinsi wajib diisi'),
@@ -37,4 +39,5 @@ export const listDestinationsQuerySchema = z
 
 export const tariffQuerySchema = z.object({
   destinationId: z.string().uuid('Tujuan tidak valid'),
+  checkoutGroup: z.enum(CHECKOUT_GROUPS).optional(),
 });

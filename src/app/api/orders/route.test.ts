@@ -113,6 +113,23 @@ function buildOrderRequest(body: unknown, cookie?: string) {
   });
 }
 
+async function createMixedCart(poStock = 5) {
+  const ready = await createProduct({ stock: 5, weightGram: 500 });
+  const po = await createProduct({
+    stock: poStock,
+    isPreOrderActive: true,
+    preOrderPrice: 90000,
+    finalPrice: 90000,
+    weightGram: 3500,
+  });
+  const guestToken = await createGuestCartWithItem(ready.id, 2);
+  const cart = await prisma.cart.findUniqueOrThrow({ where: { guestToken } });
+  await prisma.cartItem.create({
+    data: { cartId: cart.id, productId: po.id, quantity: 1, priceSnapshot: 90000 },
+  });
+  return { ready, po, guestToken, cart };
+}
+
 function receiverPayload(destinationId: string, overrides: Record<string, unknown> = {}) {
   return {
     receiverName: 'Budi',
@@ -159,6 +176,150 @@ describe('POST /api/orders', () => {
     expect(response.status).toBe(400);
   });
 
+  it('rejects mixed checkout without a group and keeps both items and their stock', async () => {
+    const { ready, po, guestToken, cart } = await createMixedCart();
+    const { response } = await post(
+      { receiverName: 'Buyer', receiverPhone: '0812', shippingMethod: 'SELF_PICKUP' },
+      `${GUEST_CART_COOKIE_NAME}=${guestToken}`,
+    );
+    expect(response.status).toBe(400);
+    expect(await prisma.cartItem.count({ where: { cartId: cart.id } })).toBe(2);
+    expect((await prisma.product.findUniqueOrThrow({ where: { id: ready.id } })).stock).toBe(5);
+    expect((await prisma.product.findUniqueOrThrow({ where: { id: po.id } })).stock).toBe(5);
+  });
+
+  it.each(['READY', 'PRE_ORDER'] as const)(
+    'checks out only %s and keeps the other group accessible to the guest',
+    async (checkoutGroup) => {
+      const { ready, po, guestToken, cart } = await createMixedCart();
+      const destination = await createDestination();
+      const { response, json } = await post(
+        receiverPayload(destination.id, { checkoutGroup }),
+        `${GUEST_CART_COOKIE_NAME}=${guestToken}`,
+      );
+      expect(response.status).toBe(201);
+      const created = await prisma.order.findUniqueOrThrow({
+        where: { id: json.orderId },
+        include: { items: true },
+      });
+      expect(created.items).toHaveLength(1);
+      expect(created.items[0]?.productId).toBe(checkoutGroup === 'READY' ? ready.id : po.id);
+      expect(created.items[0]?.isPreOrderSnapshot).toBe(checkoutGroup === 'PRE_ORDER');
+      expect(created.subtotal).toBe(checkoutGroup === 'READY' ? 200000 : 90000);
+      expect(created.weightKg).toBe(checkoutGroup === 'READY' ? 1 : 4);
+      expect(created.total).toBe(created.subtotal + SHIPPING_COST);
+      const confirmation = await prisma.notification.findFirstOrThrow({
+        where: { relatedOrderId: created.id, template: 'ORDER_CONFIRMED' },
+      });
+      expect(confirmation.payloadJson).toMatchObject({
+        subtotal: created.subtotal,
+        items: [{ title: checkoutGroup === 'READY' ? ready.title : po.title }],
+      });
+      const remaining = await prisma.cartItem.findMany({ where: { cartId: cart.id } });
+      expect(remaining).toHaveLength(1);
+      expect(remaining[0]?.productId).toBe(checkoutGroup === 'READY' ? po.id : ready.id);
+      expect(response.headers.get('set-cookie') ?? '').not.toContain(`${GUEST_CART_COOKIE_NAME}=;`);
+      const otherGroup = checkoutGroup === 'READY' ? 'PRE_ORDER' : 'READY';
+      const second = await post(
+        receiverPayload(destination.id, { checkoutGroup: otherGroup }),
+        `${GUEST_CART_COOKIE_NAME}=${guestToken}`,
+      );
+      expect(second.response.status).toBe(201);
+      expect(await prisma.cartItem.count({ where: { cartId: cart.id } })).toBe(0);
+    },
+  );
+
+  it('does not let an out-of-stock PO item block ready checkout', async () => {
+    const { guestToken } = await createMixedCart(0);
+    const { response } = await post(
+      {
+        receiverName: 'Buyer',
+        receiverPhone: '0812',
+        shippingMethod: 'SELF_PICKUP',
+        checkoutGroup: 'READY',
+      },
+      `${GUEST_CART_COOKIE_NAME}=${guestToken}`,
+    );
+    expect(response.status).toBe(201);
+  });
+
+  it('keeps the other group in the member cart', async () => {
+    const user = await createTestUser();
+    const { token } = await createSession({ userId: user.id });
+    const ready = await createProduct();
+    const po = await createProduct({
+      isPreOrderActive: true,
+      preOrderPrice: 90000,
+      finalPrice: 90000,
+    });
+    await createMemberCartWithItem(user.id, ready.id);
+    const cart = await prisma.cart.findUniqueOrThrow({ where: { userId: user.id } });
+    await prisma.cartItem.create({
+      data: { cartId: cart.id, productId: po.id, quantity: 1, priceSnapshot: 90000 },
+    });
+    const { response, json } = await post(
+      {
+        receiverName: 'Buyer',
+        receiverPhone: '0812',
+        shippingMethod: 'SELF_PICKUP',
+        checkoutGroup: 'READY',
+      },
+      `session=${token}`,
+    );
+    expect(response.status).toBe(201);
+    expect((await prisma.order.findUniqueOrThrow({ where: { id: json.orderId } })).userId).toBe(
+      user.id,
+    );
+    const remaining = await prisma.cartItem.findMany({ where: { cartId: cart.id } });
+    expect(remaining.map((item) => item.productId)).toEqual([po.id]);
+  });
+
+  it('does not order the same selected items twice during simultaneous checkout', async () => {
+    const { ready, guestToken, cart } = await createMixedCart();
+    const body = {
+      receiverName: 'Buyer',
+      receiverPhone: '0812',
+      shippingMethod: 'SELF_PICKUP',
+      checkoutGroup: 'READY',
+    };
+    const cookie = `${GUEST_CART_COOKIE_NAME}=${guestToken}`;
+    const results = await Promise.all([post(body, cookie), post(body, cookie)]);
+    expect(results.map(({ response }) => response.status).sort()).toEqual([201, 400]);
+    expect((await prisma.product.findUniqueOrThrow({ where: { id: ready.id } })).stock).toBe(3);
+    expect(await prisma.cartItem.count({ where: { cartId: cart.id } })).toBe(1);
+  });
+
+  it('prevents a voucher from using the combined subtotal of the two groups', async () => {
+    const { guestToken, cart } = await createMixedCart();
+    const code = `PO-${randomUUID()}`;
+    const admin = await createTestUser('ADMIN');
+    createdVoucherCodes.push(code);
+    await prisma.voucher.create({
+      data: {
+        code,
+        type: 'FIXED',
+        value: 10000,
+        minPurchase: 250000,
+        createdByUserId: admin.id,
+        channel: 'ONLINE',
+        isActive: true,
+      },
+    });
+    const { response } = await post(
+      {
+        receiverName: 'Buyer',
+        receiverPhone: '0812',
+        shippingMethod: 'SELF_PICKUP',
+        checkoutGroup: 'READY',
+        voucherCode: code,
+      },
+      `${GUEST_CART_COOKIE_NAME}=${guestToken}`,
+    );
+    expect(response.status).toBe(400);
+    expect(await prisma.cartItem.count({ where: { cartId: cart.id } })).toBe(2);
+    expect((await prisma.voucher.findUniqueOrThrow({ where: { code } })).usedCount).toBe(0);
+  });
+
   it('creates a guest order, decrements stock, and clears the cart', async () => {
     const destination = await createDestination();
     const product = await createProduct({ stock: 5, discountPercent: 50, finalPrice: 50000 });
@@ -181,11 +342,11 @@ describe('POST /api/orders', () => {
     const updatedProduct = await prisma.product.findUnique({ where: { id: product.id } });
     expect(updatedProduct?.stock).toBe(3);
 
-    const cart = await prisma.cart.findUnique({ where: { guestToken } });
-    expect(cart).toBeNull();
+    const cart = await prisma.cart.findUnique({ where: { guestToken }, include: { items: true } });
+    expect(cart?.items).toEqual([]);
 
     const setCookieHeader = response.headers.get('set-cookie');
-    expect(setCookieHeader).toContain(`${GUEST_CART_COOKIE_NAME}=;`);
+    expect(setCookieHeader ?? '').not.toContain(`${GUEST_CART_COOKIE_NAME}=;`);
 
     const notification = await prisma.notification.findFirst({
       where: { relatedOrderId: json.orderId, template: 'ORDER_CONFIRMED' },

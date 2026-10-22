@@ -1,4 +1,4 @@
-import type { Prisma } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 import { NextRequest, NextResponse } from 'next/server';
 
 import { env } from '@/env';
@@ -11,6 +11,7 @@ import {
   guestCartCookieOptions,
   resolveCart,
 } from '@/server/cart/cart';
+import { CheckoutGroupError, selectCheckoutItems } from '@/server/cart/checkout';
 import { dispatchPendingNotificationsForOrder } from '@/server/notify/dispatch';
 import { generateUniqueOrderNumber } from '@/server/orders/order-number';
 import { createOrderSchema, listMemberOrdersQuerySchema } from '@/server/orders/schema';
@@ -35,7 +36,7 @@ export async function POST(request: NextRequest) {
 
   const data = parsed.data;
   const user = await getSession(request);
-  const { cart, guestTokenToSet } = await resolveCart(request);
+  const { cart: fullCart, guestTokenToSet } = await resolveCart(request);
 
   const withGuestCookie = (response: NextResponse) => {
     if (guestTokenToSet) {
@@ -44,11 +45,12 @@ export async function POST(request: NextRequest) {
     return response;
   };
 
-  if (cart.items.length === 0) {
+  if (fullCart.items.length === 0) {
     return withGuestCookie(NextResponse.json({ error: 'Keranjang Anda kosong' }, { status: 400 }));
   }
 
   try {
+    const cart = { ...fullCart, items: selectCheckoutItems(fullCart.items, data.checkoutGroup) };
     let receiverName: string;
     let receiverPhone: string;
     let receiverEmail: string | null;
@@ -166,13 +168,34 @@ export async function POST(request: NextRequest) {
     );
 
     const order = await prisma.$transaction(async (tx) => {
+      // Lock the selected rows so double checkout cannot consume the same items.
+      const selectedRows = await tx.$queryRaw<{ id: string; quantity: number }[]>`
+        SELECT id, quantity FROM "CartItem"
+        WHERE "cartId" = ${cart.id} AND id IN (${Prisma.join(cart.items.map((item) => item.id))})
+        ORDER BY id FOR UPDATE
+      `;
+      if (
+        selectedRows.length !== cart.items.length ||
+        selectedRows.some(
+          (row) => cart.items.find((item) => item.id === row.id)?.quantity !== row.quantity,
+        )
+      ) {
+        throw new OrderCreationError('Keranjang berubah. Muat ulang checkout sebelum melanjutkan.');
+      }
       for (const item of cart.items) {
         const result = await tx.product.updateMany({
-          where: { id: item.productId, isActive: true, stock: { gte: item.quantity } },
+          where: {
+            id: item.productId,
+            isActive: true,
+            stock: { gte: item.quantity },
+            isPreOrderActive: item.product.isPreOrderActive,
+          },
           data: { stock: { decrement: item.quantity } },
         });
         if (result.count === 0) {
-          throw new OrderCreationError(`Stok produk "${item.product.title}" tidak mencukupi`);
+          throw new OrderCreationError(
+            `Stok atau status PO produk "${item.product.title}" berubah. Periksa kembali keranjang.`,
+          );
         }
       }
 
@@ -276,7 +299,10 @@ export async function POST(request: NextRequest) {
         });
       }
 
-      await tx.cart.delete({ where: { id: cart.id } });
+      // Keep the cart and its cookie: unselected/new items must remain accessible.
+      await tx.cartItem.deleteMany({
+        where: { cartId: cart.id, id: { in: cart.items.map((item) => item.id) } },
+      });
 
       if (createdOrder.receiverEmail) {
         await tx.notification.create({
@@ -319,13 +345,9 @@ export async function POST(request: NextRequest) {
       { status: 201 },
     );
 
-    if (!user) {
-      response.cookies.delete(GUEST_CART_COOKIE_NAME);
-    }
-
-    return response;
+    return withGuestCookie(response);
   } catch (error) {
-    if (error instanceof OrderCreationError) {
+    if (error instanceof OrderCreationError || error instanceof CheckoutGroupError) {
       return withGuestCookie(NextResponse.json({ error: error.message }, { status: 400 }));
     }
     throw error;
