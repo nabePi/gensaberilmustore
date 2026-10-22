@@ -22,6 +22,7 @@ export const mootaMutationSchema = z
     date: z
       .string()
       .refine((value) => mootaMutationDate(value) !== null, 'Tanggal mutasi tidak valid'),
+    created_at: z.string().optional(),
     amount: z
       .union([z.number(), z.string().regex(/^\d+(?:\.0+)?$/)])
       .pipe(z.coerce.number().int().positive().max(Number.MAX_SAFE_INTEGER)),
@@ -33,6 +34,26 @@ export const mootaMutationSchema = z
 export const mootaPayloadSchema = z.array(mootaMutationSchema).min(1).max(1000);
 export type MootaMutation = z.infer<typeof mootaMutationSchema>;
 export type MootaChannel = 'bca' | 'interactive-qris';
+
+/** Interactive QRIS sends a bank date at midnight without a transaction time. */
+export function mootaOrderCutoff(
+  mutation: MootaMutation,
+  receivedAt: Date,
+  channel: MootaChannel,
+): Date {
+  const date = mootaMutationDate(mutation.date)!;
+  if (channel !== 'interactive-qris' || !mutation.date.endsWith(' 00:00:00'))
+    return new Date(date.getTime() + 999);
+
+  const observedAt = mutation.created_at ? mootaMutationDate(mutation.created_at) : null;
+  return new Date(
+    Math.min(
+      date.getTime() + 24 * 60 * 60 * 1000 - 1,
+      observedAt ? observedAt.getTime() + 999 : receivedAt.getTime(),
+      receivedAt.getTime(),
+    ),
+  );
+}
 
 export function verifyMootaSignature(
   body: string,
