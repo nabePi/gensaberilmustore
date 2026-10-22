@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 
 import { dispatchCartUpdated } from '@/lib/cart-events';
+import { CHECKOUT_GROUPS, CHECKOUT_GROUP_LABELS, checkoutGroupFor } from '@/lib/checkout-groups';
 import { formatCurrency } from '@/lib/format';
 import { btnOutline, btnSolid } from '@/lib/styles';
 
@@ -12,6 +13,7 @@ type CartItem = {
   productId: string;
   slug: string;
   title: string;
+  isPreOrder: boolean;
   imageUrl: string | null;
   priceSnapshot: number;
   normalPrice: number;
@@ -98,7 +100,16 @@ export default function CartPage() {
     );
   }
 
-  const hasBlockingIssue = cart.items.some((item) => item.flag === 'out_of_stock');
+  const groups = CHECKOUT_GROUPS.map((group) => {
+    const items = cart.items.filter((item) => checkoutGroupFor(item.isPreOrder) === group);
+    return {
+      group,
+      items,
+      subtotal: items.reduce((sum, item) => sum + item.lineTotal, 0),
+      itemCount: items.reduce((sum, item) => sum + item.quantity, 0),
+      blocked: items.some((item) => item.flag === 'out_of_stock'),
+    };
+  }).filter((group) => group.items.length > 0);
 
   return (
     <div className="container-prototype py-8">
@@ -130,6 +141,11 @@ export default function CartPage() {
                   >
                     {item.title}
                   </Link>
+                  <span
+                    className={`w-fit text-xs font-semibold ${item.isPreOrder ? 'text-amber-800' : 'text-neutral-600'}`}
+                  >
+                    {item.isPreOrder ? 'Pre-order (PO)' : 'Ready'}
+                  </span>
                   <div className="flex flex-col">
                     {item.promo || item.isWholesale ? (
                       <span className="text-xs text-neutral-400 line-through">
@@ -210,19 +226,40 @@ export default function CartPage() {
             <span className="font-semibold text-foreground">{formatCurrency(cart.subtotal)}</span>
           </div>
 
-          {hasBlockingIssue ? (
-            <p className="mt-4 rounded-sm bg-red/5 px-3 py-2 text-xs font-medium text-red">
-              Selesaikan masalah stok pada keranjang Anda sebelum melanjutkan ke pembayaran.
+          {groups.length > 1 ? (
+            <p className="mt-4 text-sm leading-relaxed text-neutral-600">
+              Produk PO dipesan terpisah karena jadwal pengirimannya berbeda. Pilih kelompok yang
+              ingin dibayar; barang lainnya tetap di keranjang.
             </p>
           ) : null}
 
-          <Link
-            href="/checkout"
-            aria-disabled={hasBlockingIssue}
-            className={`${btnSolid} mt-5 w-full ${hasBlockingIssue ? 'pointer-events-none opacity-50' : ''}`}
-          >
-            Lanjutkan ke Pembayaran
-          </Link>
+          <div className="mt-5 flex flex-col gap-4">
+            {groups.map(({ group, subtotal, itemCount, blocked }) => (
+              <div key={group}>
+                <div className="mb-2 flex justify-between gap-2 text-sm">
+                  <span>
+                    {CHECKOUT_GROUP_LABELS[group]} ({itemCount})
+                  </span>
+                  <span className="font-semibold">{formatCurrency(subtotal)}</span>
+                </div>
+                {blocked ? (
+                  <p className="mb-2 text-xs text-red">
+                    Periksa stok barang dalam kelompok ini sebelum checkout.
+                  </p>
+                ) : null}
+                <Link
+                  href={`/checkout?group=${group}`}
+                  aria-disabled={blocked || pendingItemId !== null}
+                  onClick={(event) => {
+                    if (blocked || pendingItemId !== null) event.preventDefault();
+                  }}
+                  className={`${btnSolid} w-full ${blocked || pendingItemId !== null ? 'pointer-events-none opacity-50' : ''}`}
+                >
+                  Checkout {group === 'READY' ? 'barang ready' : 'barang PO'}
+                </Link>
+              </div>
+            ))}
+          </div>
           <Link href="/products" className={`${btnOutline} mt-2 w-full`}>
             Lanjutkan Belanja
           </Link>

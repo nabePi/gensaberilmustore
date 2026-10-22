@@ -2,15 +2,22 @@
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Script from 'next/script';
-import { useEffect, useRef, useState } from 'react';
+import { Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
 import { DestinationSelect } from '@/components/ui/DestinationSelect';
 import { blockNewlineKeyDown, sanitizeAddress } from '@/lib/address';
 import { dispatchCartUpdated } from '@/lib/cart-events';
+import {
+  CHECKOUT_GROUPS,
+  CHECKOUT_GROUP_LABELS,
+  checkoutGroupFor,
+  parseCheckoutGroup,
+  type CheckoutGroup,
+} from '@/lib/checkout-groups';
 import { formatCurrency } from '@/lib/format';
 import { btnOutline, btnSolid, inputBase } from '@/lib/styles';
 
@@ -79,6 +86,7 @@ type Cart = {
   items: {
     id: string;
     title: string;
+    isPreOrder: boolean;
     quantity: number;
     lineTotal: number;
     priceSnapshot: number;
@@ -208,9 +216,31 @@ const checkoutSchema = z
 type CheckoutFormValues = z.infer<typeof checkoutSchema>;
 
 export default function CheckoutPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="container-prototype py-16 text-center text-sm text-neutral-500">
+          Memuat checkout...
+        </div>
+      }
+    >
+      <CheckoutRouter />
+    </Suspense>
+  );
+}
+
+function CheckoutRouter() {
+  const params = useSearchParams();
+  const requestedGroup = parseCheckoutGroup(params.get('group'));
+  return <CheckoutForm key={requestedGroup ?? 'choose'} requestedGroup={requestedGroup} />;
+}
+
+function CheckoutForm({ requestedGroup }: { requestedGroup?: CheckoutGroup }) {
   const router = useRouter();
-  const [cart, setCart] = useState<Cart | null>(null);
+  const [fullCart, setFullCart] = useState<Cart | null>(null);
   const [affiliateDiscount, setAffiliateDiscount] = useState(0);
+  const [affiliateLoading, setAffiliateLoading] = useState(true);
+  const [affiliateError, setAffiliateError] = useState<string | null>(null);
   const [receivers, setReceivers] = useState<Receiver[]>([]);
   const [user, setUser] = useState<SessionUser | null>(null);
   const [ready, setReady] = useState(false);
@@ -221,6 +251,22 @@ export default function CheckoutPage() {
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const snapFailedRef = useRef(false);
+  const availableGroups = CHECKOUT_GROUPS.filter((group) =>
+    fullCart?.items.some((item) => checkoutGroupFor(item.isPreOrder) === group),
+  );
+  const checkoutGroup =
+    requestedGroup ?? (availableGroups.length === 1 ? availableGroups[0] : undefined);
+  const cart = useMemo(() => {
+    if (!fullCart || !checkoutGroup) return null;
+    const items = fullCart.items.filter(
+      (item) => checkoutGroupFor(item.isPreOrder) === checkoutGroup,
+    );
+    return {
+      items,
+      subtotal: items.reduce((sum, item) => sum + item.lineTotal, 0),
+      itemCount: items.reduce((sum, item) => sum + item.quantity, 0),
+    };
+  }, [fullCart, checkoutGroup]);
 
   const {
     register,
@@ -250,10 +296,9 @@ export default function CheckoutPage() {
 
   useEffect(() => {
     async function bootstrap() {
-      const [cartResponse, sessionResponse, affiliateDiscountResponse] = await Promise.all([
+      const [cartResponse, sessionResponse] = await Promise.all([
         fetch('/api/cart'),
         fetch('/api/auth/session'),
-        fetch('/api/affiliate/discount').catch(() => null),
       ]);
 
       const cartData: Cart = await cartResponse.json();
@@ -261,12 +306,7 @@ export default function CheckoutPage() {
         router.replace('/cart');
         return;
       }
-      setCart(cartData);
-
-      if (affiliateDiscountResponse?.ok) {
-        const affiliateData: { discountAmount: number } = await affiliateDiscountResponse.json();
-        setAffiliateDiscount(affiliateData.discountAmount);
-      }
+      setFullCart(cartData);
 
       const sessionData: { user: SessionUser | null } = await sessionResponse.json();
       setUser(sessionData.user);
@@ -289,6 +329,29 @@ export default function CheckoutPage() {
 
     bootstrap();
   }, [router, setValue]);
+
+  useEffect(() => {
+    if (!cart || !checkoutGroup) return;
+    let active = true;
+    setAffiliateLoading(true);
+    setAffiliateError(null);
+    fetch(`/api/affiliate/discount?checkoutGroup=${checkoutGroup}`)
+      .then(async (response) => {
+        if (!response.ok) throw new Error('Discount unavailable');
+        const data: { discountAmount: number } = await response.json();
+        if (active) setAffiliateDiscount(data.discountAmount);
+      })
+      .catch(() => {
+        if (active)
+          setAffiliateError('Gagal menghitung diskon. Muat ulang checkout sebelum melanjutkan.');
+      })
+      .finally(() => {
+        if (active) setAffiliateLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [cart, checkoutGroup]);
 
   useEffect(() => {
     if (!cart) return;
@@ -347,7 +410,12 @@ export default function CheckoutPage() {
       : selectedDestinationId;
 
   useEffect(() => {
-    if (!activeDestinationId || selectedShippingMethod === 'SELF_PICKUP') {
+    if (
+      !activeDestinationId ||
+      !checkoutGroup ||
+      !cart ||
+      selectedShippingMethod === 'SELF_PICKUP'
+    ) {
       setShippingOptions([]);
       setShippingError(null);
       setShippingLoading(false);
@@ -361,7 +429,7 @@ export default function CheckoutPage() {
     fetch('/api/shipping/tariff', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ destinationId: activeDestinationId }),
+      body: JSON.stringify({ destinationId: activeDestinationId, checkoutGroup }),
     })
       .then(async (response) => {
         const data = await response.json();
@@ -392,7 +460,7 @@ export default function CheckoutPage() {
       active = false;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeDestinationId, selectedShippingMethod]);
+  }, [activeDestinationId, selectedShippingMethod, checkoutGroup]);
 
   const shippingCost =
     selectedShippingMethod === 'SELF_PICKUP'
@@ -409,6 +477,7 @@ export default function CheckoutPage() {
   const total = Math.max(0, subtotal + shippingCost - discount - affiliateDiscount);
 
   async function onSubmit(values: CheckoutFormValues) {
+    if (!checkoutGroup || !cart?.items.length || affiliateLoading || affiliateError) return;
     setSubmitError(null);
     setSubmitting(true);
 
@@ -424,6 +493,7 @@ export default function CheckoutPage() {
             note: values.note,
             voucherCode: voucherResult && voucherResult.valid ? voucherResult.code : undefined,
             affiliateCode,
+            checkoutGroup,
           }
         : {
             receiverName: values.receiverName,
@@ -437,6 +507,7 @@ export default function CheckoutPage() {
             note: values.note,
             voucherCode: voucherResult && voucherResult.valid ? voucherResult.code : undefined,
             affiliateCode,
+            checkoutGroup,
           };
 
     try {
@@ -498,10 +569,59 @@ export default function CheckoutPage() {
     }
   }
 
-  if (!ready || !cart) {
+  if (!ready || !fullCart) {
     return (
       <div className="container-prototype py-16 text-center text-sm text-neutral-500">
         Memuat checkout...
+      </div>
+    );
+  }
+
+  if (!checkoutGroup) {
+    return (
+      <div className="container-prototype max-w-2xl py-12">
+        <h1 className="text-2xl font-bold text-foreground">Pilih barang yang ingin dibayar</h1>
+        <p className="mt-3 text-sm leading-relaxed text-neutral-600">
+          Produk PO dipesan terpisah karena jadwal pengirimannya berbeda. Barang kelompok lain tetap
+          tersimpan di keranjang. Ongkir dan pembayaran dihitung per pesanan.
+        </p>
+        <div className="mt-6 flex flex-col divide-y divide-neutral-200">
+          {availableGroups.map((group) => {
+            const items = fullCart.items.filter(
+              (item) => checkoutGroupFor(item.isPreOrder) === group,
+            );
+            return (
+              <div key={group} className="flex flex-wrap items-center justify-between gap-4 py-5">
+                <div>
+                  <h2 className="font-semibold">{CHECKOUT_GROUP_LABELS[group]}</h2>
+                  <p className="mt-1 text-sm text-neutral-600">
+                    {items.reduce((sum, item) => sum + item.quantity, 0)} barang ·{' '}
+                    {formatCurrency(items.reduce((sum, item) => sum + item.lineTotal, 0))}
+                  </p>
+                </div>
+                <Link href={`/checkout?group=${group}`} className={btnSolid}>
+                  Checkout {group === 'READY' ? 'barang ready' : 'barang PO'}
+                </Link>
+              </div>
+            );
+          })}
+        </div>
+        <Link href="/cart" className={`${btnOutline} mt-6`}>
+          Kembali ke Keranjang
+        </Link>
+      </div>
+    );
+  }
+  if (!cart || cart.items.length === 0) {
+    return (
+      <div className="container-prototype py-16">
+        <h1 className="text-xl font-bold">
+          Tidak ada {checkoutGroup === 'READY' ? 'barang ready' : 'barang PO'} untuk dibayar
+        </h1>
+        <p className="mt-3 text-sm text-neutral-600">Periksa kembali barang di keranjang Anda.</p>
+        <Link href="/cart" className={`${btnOutline} mt-5`}>
+          Kembali ke Keranjang
+        </Link>
       </div>
     );
   }
@@ -518,7 +638,17 @@ export default function CheckoutPage() {
           }}
         />
       ) : null}
-      <h1 className="mb-6 text-2xl font-bold text-foreground">Checkout</h1>
+      <h1 className="mb-3 text-2xl font-bold text-foreground">
+        Checkout {checkoutGroup === 'READY' ? 'barang ready' : 'barang PO'}
+      </h1>
+      <p className="mb-6 text-sm leading-relaxed text-neutral-600">
+        {checkoutGroup === 'PRE_ORDER'
+          ? 'Pesanan PO dikirim setelah barang siap.'
+          : 'Pesanan ini hanya berisi barang non-PO.'}
+        {fullCart.items.length > cart.items.length
+          ? ' Barang kelompok lain tetap di keranjang dan dapat dipesan terpisah.'
+          : ''}
+      </p>
 
       <form
         onSubmit={handleSubmit(onSubmit)}
@@ -918,6 +1048,14 @@ export default function CheckoutPage() {
               <span>{shippingLoading ? 'Menghitung...' : formatCurrency(shippingCost)}</span>
             </div>
             {shippingError ? <p className="text-xs text-red">{shippingError}</p> : null}
+            {affiliateLoading ? (
+              <p className="text-xs text-neutral-500">Menghitung diskon...</p>
+            ) : null}
+            {affiliateError ? (
+              <p role="alert" className="text-xs text-red">
+                {affiliateError}
+              </p>
+            ) : null}
             {promoSavings > 0 ? (
               <div className="flex justify-between text-green">
                 <span>Sudah termasuk hemat promo</span>
@@ -948,6 +1086,8 @@ export default function CheckoutPage() {
             type="submit"
             disabled={
               submitting ||
+              affiliateLoading ||
+              Boolean(affiliateError) ||
               (selectedShippingMethod === 'JNE' &&
                 (!activeDestinationId || shippingLoading || Boolean(shippingError)))
             }

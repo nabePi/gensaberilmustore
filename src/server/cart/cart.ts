@@ -202,6 +202,7 @@ export function serializeCart(cart: CartWithItems) {
       productId: item.productId,
       slug: product.slug,
       title: product.title,
+      isPreOrder: product.isPreOrderActive,
       imageUrl: product.images[0]?.url ?? null,
       priceSnapshot: item.priceSnapshot,
       normalPrice: finalPrice,
