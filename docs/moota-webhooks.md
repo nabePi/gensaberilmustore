@@ -25,4 +25,6 @@ Gunakan pengaturan **Tampilkan Harga PO / pre-order aktif** yang sudah tersedia 
 
 Satu barang PO di dalam pesanan campuran menahan seluruh pembuatan resi otomatis. Pembayaran dan email tetap berjalan normal. Tombol **Generate Resi** manual tetap dapat dipakai admin ketika barang sudah siap. Penahanan PO berlaku juga untuk resi otomatis dari tombol Tandai Lunas admin, sehingga konsisten dengan webhook. Label PO dan penjelasannya ditampilkan pada popup detail order.
 
+Checkout baru memisahkan PO dan non-PO menjadi order berbeda; barang kelompok lain tetap tersimpan di keranjang. Guard pesanan campuran tetap berlaku untuk order lama. Lihat `docs/checkout-groups.md` untuk alur dan kontrak API.
+
 Deployment memerlukan migrasi `20261022000000_order_item_pre_order_snapshot` (`pnpm db:migrate`) sebelum aplikasi baru berjalan; Compose yang ada menjalankan layanan migrate sebelum app. Untuk order lama, pastikan produk PO ditandai aktif sebelum migrasi agar backfill menangkapnya.

@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
 import { sanitizeAddress } from '@/lib/address';
+import { CHECKOUT_GROUPS } from '@/lib/checkout-groups';
 import { isAllowedJneService } from '@/server/shipping/jne-tariff';
 
 export const ONLINE_PAYMENT_METHODS = ['BANK_TRANSFER', 'EWALLET', 'QRIS'] as const;
@@ -31,6 +32,7 @@ export const createOrderSchema = z
       z.string().uuid('Tujuan pengiriman tidak valid').optional(),
     ),
     note: z.string().trim().max(500).optional(),
+    checkoutGroup: z.enum(CHECKOUT_GROUPS).optional(),
     useReceiverId: z.string().uuid('useReceiverId tidak valid').optional(),
     shippingMethod: z.enum(SHIPPING_METHODS).default('JNE'),
     service: z
