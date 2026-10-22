@@ -21,6 +21,8 @@ const envSchema = z.object({
   // Payment gateway (Midtrans)
   MIDTRANS_SERVER_KEY: z.string().optional(),
   MIDTRANS_CLIENT_KEY: z.string().optional(),
+  MOOTA_BCA_WEBHOOK_SECRET: z.string().optional(),
+  MOOTA_QRIS_WEBHOOK_SECRET: z.string().optional(),
   NEXT_PUBLIC_MIDTRANS_CLIENT_KEY: z.string().optional(),
   MIDTRANS_IS_PRODUCTION: z
     .enum(['true', 'false'])
@@ -166,6 +168,8 @@ export const env = {
 
   midtransServerKey: rawEnv.MIDTRANS_SERVER_KEY,
   midtransClientKey: rawEnv.MIDTRANS_CLIENT_KEY,
+  mootaBcaWebhookSecret: rawEnv.MOOTA_BCA_WEBHOOK_SECRET,
+  mootaQrisWebhookSecret: rawEnv.MOOTA_QRIS_WEBHOOK_SECRET,
   midtransIsProduction: rawEnv.MIDTRANS_IS_PRODUCTION ?? false,
   midtransSnapEnabled: rawEnv.NEXT_PUBLIC_MIDTRANS_SNAP_ENABLED ?? false,
 

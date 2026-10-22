@@ -42,7 +42,7 @@ export const POST = withAuth<RouteContext>(
       );
     }
 
-    const result = await generateAirwaybillForOrder(order.id);
+    const result = await generateAirwaybillForOrder(order.id, prisma, { allowPreOrder: true });
     if (!result.ok) {
       return NextResponse.json({ error: result.error }, { status: 502 });
     }

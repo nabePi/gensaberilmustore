@@ -3,9 +3,9 @@ import type {
   Order,
   OrderItem,
   OrderStatus,
-  Prisma,
   PrismaClient,
 } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 
 import { applyMemberRateOverride, computeItemCommission } from '@/server/affiliate/rate';
 import { totalWithManualPaymentCode } from '@/server/payment/manual-qris';
@@ -43,10 +43,22 @@ export async function applyOrderStatusTransition(
     );
   }
 
-  const updated = await tx.order.update({
-    where: { id: order.id },
-    data: { status: toStatus },
-  });
+  let updated: Order;
+  try {
+    // A webhook and an admin action may have read the same prior status.
+    // Only the first transition may create notifications or commissions.
+    updated = await tx.order.update({
+      where: { id: order.id, status: order.status },
+      data: { status: toStatus },
+    });
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') {
+      throw new OrderStatusTransitionError(
+        'Status pesanan sudah berubah. Muat ulang detail pesanan.',
+      );
+    }
+    throw error;
+  }
 
   await tx.orderStatusHistory.create({
     data: {

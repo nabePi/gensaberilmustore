@@ -488,6 +488,7 @@ model OrderItem {
   titleSnapshot           String
   priceSnapshot           Int
   discountPercentSnapshot Int
+  isPreOrderSnapshot      Boolean @default(false)
   quantity                Int
   lineTotal               Int
 
