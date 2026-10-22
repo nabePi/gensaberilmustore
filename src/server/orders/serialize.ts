@@ -40,6 +40,7 @@ export function serializeAdminOrderListItem(order: OrderListItem) {
     receiverName: order.receiverName,
     receiverPhone: order.receiverPhone,
     source: order.source,
+    paymentMethod: order.paymentMethod,
     affiliateCode: order.affiliateCode,
     airwaybillNumber: order.airwaybillNumber,
     shippingMethod: order.shippingMethod,
