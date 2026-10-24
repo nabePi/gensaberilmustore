@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.16.0](https://github.com/nabePi/gensaberilmustore/compare/v0.15.0...v0.16.0) (2026-10-22)
+
+
+### Features
+
+* **orders:** preserve JNE delivery proof and webhook payloads ([#125](https://github.com/nabePi/gensaberilmustore/issues/125)) ([c31c909](https://github.com/nabePi/gensaberilmustore/commit/c31c90910c18f883bbc863a529952afb202537ad))
+
 ## [0.15.0](https://github.com/nabePi/gensaberilmustore/compare/v0.14.0...v0.15.0) (2026-10-22)
 
 
