@@ -1,13 +1,16 @@
 import type { Prisma } from '@prisma/client';
 import { z } from 'zod';
 
-export const MIN_WITHDRAWAL_AMOUNT = 50_000;
+import { MIN_WITHDRAWAL_AMOUNT } from '@/lib/affiliate-withdrawal';
+import { formatCurrency } from '@/lib/format';
+
+export { MIN_WITHDRAWAL_AMOUNT } from '@/lib/affiliate-withdrawal';
 
 export const createWithdrawalSchema = z.object({
   amount: z
     .number({ invalid_type_error: 'Jumlah harus berupa angka' })
     .int('Jumlah harus bilangan bulat')
-    .min(MIN_WITHDRAWAL_AMOUNT, 'Pencairan minimal Rp50.000'),
+    .min(MIN_WITHDRAWAL_AMOUNT, `Pencairan minimal ${formatCurrency(MIN_WITHDRAWAL_AMOUNT)}`),
 });
 
 /**

@@ -2,6 +2,7 @@ import { Prisma } from '@prisma/client';
 import { NextRequest, NextResponse } from 'next/server';
 
 import { prisma } from '@/lib/db';
+import { formatCurrency } from '@/lib/format';
 import {
   MIN_WITHDRAWAL_AMOUNT,
   createWithdrawalSchema,
@@ -63,7 +64,9 @@ export const POST = withAuth(async (request: NextRequest, { user }) => {
       async (tx) => {
         const available = await getWithdrawableBalance(tx, profile.id);
         if (available < MIN_WITHDRAWAL_AMOUNT) {
-          throw new WithdrawalError('Komisi masuk belum mencapai Rp50.000');
+          throw new WithdrawalError(
+            `Komisi masuk belum mencapai ${formatCurrency(MIN_WITHDRAWAL_AMOUNT)}`,
+          );
         }
         if (amount > available) {
           throw new WithdrawalError('Jumlah melebihi komisi masuk yang tersedia');

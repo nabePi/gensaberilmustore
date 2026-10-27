@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useCallback, useEffect, useState } from 'react';
 
+import { AFFILIATE_WITHDRAWAL_TERMS } from '@/lib/affiliate-withdrawal';
 import { formatCurrency } from '@/lib/format';
 import { badgeBase, btnSolid, cardBase, inputBase } from '@/lib/styles';
 
@@ -138,10 +139,31 @@ export default function MemberAfiliasiPencairanPage() {
           Komisi dari order selesai, setelah dikurangi pencairan yang sudah Anda ajukan.
         </p>
 
+        <section
+          id="withdrawal-terms"
+          aria-labelledby="withdrawal-terms-title"
+          className="mt-4 border-t border-neutral-200 pt-4"
+        >
+          <h2 id="withdrawal-terms-title" className="text-sm font-semibold text-foreground">
+            Syarat & Ketentuan Pencairan
+          </h2>
+          <ul className="mt-2 list-disc space-y-1.5 pl-5 text-sm text-neutral-600">
+            {AFFILIATE_WITHDRAWAL_TERMS.map((term) => (
+              <li key={term}>{term}</li>
+            ))}
+          </ul>
+          <Link
+            href="/terms"
+            className="mt-2 inline-block text-xs font-medium text-brand hover:underline"
+          >
+            Lihat Syarat & Ketentuan lengkap
+          </Link>
+        </section>
+
         {canWithdraw ? (
           <form onSubmit={handleSubmit} className="mt-4 flex flex-col gap-3 sm:max-w-sm" noValidate>
             <label className="flex flex-col gap-1 text-sm font-medium text-foreground">
-              Jumlah pencairan (Rp)
+              Jumlah pengajuan (Rp)
               <input
                 type="number"
                 inputMode="numeric"
@@ -152,7 +174,9 @@ export default function MemberAfiliasiPencairanPage() {
                 onChange={(event) => setAmountInput(event.target.value)}
                 placeholder={`${data.minAmount} - ${data.available}`}
                 className={inputBase}
-                aria-describedby="withdraw-error"
+                aria-describedby={
+                  formError ? 'withdrawal-terms withdraw-error' : 'withdrawal-terms'
+                }
               />
             </label>
             <button
@@ -196,7 +220,7 @@ export default function MemberAfiliasiPencairanPage() {
             <table className="w-full text-left text-sm">
               <thead>
                 <tr className="border-b border-neutral-200 text-neutral-500">
-                  <th className="py-2 pr-4">Jumlah</th>
+                  <th className="py-2 pr-4">Jumlah Pengajuan</th>
                   <th className="py-2 pr-4">Tanggal Pengajuan</th>
                   <th className="py-2 pr-4">Tanggal Berhasil Dicairkan</th>
                   <th className="py-2">Status</th>
