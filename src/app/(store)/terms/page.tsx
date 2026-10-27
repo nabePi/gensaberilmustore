@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 
 import { LegalPage } from '@/components/ui/LegalPage';
+import { AFFILIATE_WITHDRAWAL_TERMS } from '@/lib/affiliate-withdrawal';
 
 export const metadata: Metadata = {
   title: 'Syarat & Ketentuan',
@@ -13,7 +14,7 @@ export default function TermsPage() {
   return (
     <LegalPage
       title="Syarat & Ketentuan"
-      updatedAt="22 Agustus 2026"
+      updatedAt="27 Oktober 2026"
       intro={
         <p>
           Selamat datang di GenSa Berilmu, toko daring milik PT. Generasi Shalahuddin Berilmu
@@ -146,6 +147,9 @@ export default function TermsPage() {
                 tautan tersebut, dan dibayarkan ke rekening bank yang didaftarkan afiliasi.
               </p>
               <ul className="list-disc space-y-1.5 pl-5">
+                {AFFILIATE_WITHDRAWAL_TERMS.map((term) => (
+                  <li key={term}>{term}</li>
+                ))}
                 <li>
                   Afiliasi dilarang menggunakan tautan referral miliknya sendiri untuk pembelian
                   pribadi guna memperoleh komisi.

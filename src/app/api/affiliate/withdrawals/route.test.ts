@@ -89,18 +89,22 @@ describe('/api/affiliate/withdrawals', () => {
   });
 
   it('rejects when earned commission is below the minimum', async () => {
-    const { cookie } = await setup(40000);
-    expect((await post(cookie, { amount: 50000 })).status).toBe(400);
+    const { cookie } = await setup(24999);
+    const response = await post(cookie, { amount: 25000 });
+    expect(response.status).toBe(400);
+    expect((await response.json()).error).toBe('Komisi masuk belum mencapai Rp25.000');
   });
 
   it('rejects amounts under the minimum or above the balance', async () => {
     const { cookie } = await setup(120000);
-    expect((await post(cookie, { amount: 49999 })).status).toBe(400);
+    const belowMinimum = await post(cookie, { amount: 24999 });
+    expect(belowMinimum.status).toBe(400);
+    expect((await belowMinimum.json()).error).toBe('Pencairan minimal Rp25.000');
     expect((await post(cookie, { amount: 120001 })).status).toBe(400);
   });
 
   it('creates a REQUESTED withdrawal and reduces the available balance', async () => {
-    const { cookie } = await setup(120000);
+    const { cookie } = await setup(95000);
     const response = await post(cookie, { amount: 70000 });
     expect(response.status).toBe(201);
     expect((await response.json()).status).toBe('REQUESTED');
@@ -110,13 +114,28 @@ describe('/api/affiliate/withdrawals', () => {
         new NextRequest('http://localhost/api/affiliate/withdrawals', { headers: { cookie } }),
       )
     ).json();
-    expect(json.available).toBe(50000);
+    expect(json.available).toBe(25000);
+    expect(json.minAmount).toBe(25000);
     expect(json.withdrawals).toHaveLength(1);
 
     // Remaining balance is exactly the minimum, so withdrawing it again works; a third does not.
-    expect((await post(cookie, { amount: 50000 })).status).toBe(201);
-    expect((await post(cookie, { amount: 50000 })).status).toBe(400);
+    expect((await post(cookie, { amount: 25000 })).status).toBe(201);
+    expect((await post(cookie, { amount: 25000 })).status).toBe(400);
   });
+
+  it.each([25000, 40000])(
+    'accepts an available balance below the old minimum (%i)',
+    async (amount) => {
+      const { cookie, profile } = await setup(amount);
+      const response = await post(cookie, { amount });
+      expect(response.status).toBe(201);
+      const withdrawal = await response.json();
+      expect(withdrawal).toMatchObject({ amount, status: 'REQUESTED', bankName: 'BCA' });
+      expect(
+        await prisma.affiliateWithdrawal.count({ where: { affiliateProfileId: profile.id } }),
+      ).toBe(1);
+    },
+  );
 
   it('allows only one of two concurrent requests to spend the same balance', async () => {
     const { cookie } = await setup(60000);
