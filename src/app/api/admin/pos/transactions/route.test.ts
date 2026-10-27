@@ -1,12 +1,32 @@
 import { randomUUID } from 'node:crypto';
 
 import { NextRequest } from 'next/server';
-import { afterAll, describe, expect, it } from 'vitest';
+import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { GET, POST } from '@/app/api/admin/pos/transactions/route';
 import { prisma } from '@/lib/db';
 import { hashPassword } from '@/server/auth/password';
 import { ADMIN_SESSION_COOKIE_NAME, createSession } from '@/server/auth/session';
+import { createSnapTransaction } from '@/server/payment/midtrans';
+
+const { sendEmail, createGatewayTransaction } = vi.hoisted(() => ({
+  sendEmail: vi.fn(),
+  createGatewayTransaction: vi.fn(),
+}));
+vi.mock('@/server/notify/transport', () => ({ sendEmail }));
+vi.mock('midtrans-client', () => ({
+  Snap: class {
+    createTransaction = createGatewayTransaction;
+  },
+  CoreApi: class {},
+}));
+
+beforeEach(() => {
+  sendEmail.mockReset().mockResolvedValue({ success: true, providerId: 'pos-test-email' });
+  createGatewayTransaction
+    .mockReset()
+    .mockResolvedValue({ token: 'snap-test', redirect_url: 'https://example.com/payment' });
+});
 
 const createdEmails: string[] = [];
 const createdProductIds: string[] = [];
@@ -65,6 +85,7 @@ function buildRequest(
 }
 
 afterAll(async () => {
+  await prisma.notification.deleteMany({ where: { relatedOrderId: { in: createdOrderIds } } });
   await prisma.order.deleteMany({ where: { id: { in: createdOrderIds } } });
   await prisma.voucher.deleteMany({ where: { code: { in: createdVoucherCodes } } });
   await prisma.product.deleteMany({ where: { id: { in: createdProductIds } } });
@@ -178,7 +199,7 @@ describe('POST /api/admin/pos/transactions', () => {
     expect(response.status).toBe(400);
   });
 
-  it('rejects when customerPhone is missing', async () => {
+  it('accepts an email without a phone and sends the requested invoice', async () => {
     const { cookie } = await createAdminCookie();
     const product = await createProduct({ stock: 5 });
 
@@ -195,10 +216,17 @@ describe('POST /api/admin/pos/transactions', () => {
       ),
     );
 
-    expect(response.status).toBe(400);
+    expect(response.status).toBe(201);
+    const json = await response.json();
+    createdOrderIds.push(json.orderId);
+    expect(await prisma.order.findUnique({ where: { id: json.orderId } })).toMatchObject({
+      receiverPhone: '',
+      receiverEmail: 'budi@example.com',
+    });
+    expect(sendEmail).toHaveBeenCalledTimes(1);
   });
 
-  it('rejects when customerEmail is missing or invalid', async () => {
+  it('accepts a phone without an email and does not create an invoice notification', async () => {
     const { cookie } = await createAdminCookie();
     const product = await createProduct({ stock: 5 });
 
@@ -215,7 +243,136 @@ describe('POST /api/admin/pos/transactions', () => {
       ),
     );
 
-    expect(response.status).toBe(400);
+    expect(response.status).toBe(201);
+    const json = await response.json();
+    createdOrderIds.push(json.orderId);
+    expect(await prisma.order.findUnique({ where: { id: json.orderId } })).toMatchObject({
+      receiverPhone: '081234567890',
+      receiverEmail: null,
+    });
+    expect(await prisma.notification.count({ where: { relatedOrderId: json.orderId } })).toBe(0);
+    expect(sendEmail).not.toHaveBeenCalled();
+  });
+
+  describe.each(['POS_CASH', 'POS_QRIS', 'POS_GATEWAY'])(
+    '%s without customer contacts',
+    (paymentMethod) => {
+      it.each([undefined, '', '   ', null])(
+        'accepts empty/missing contacts (%s)',
+        async (contact) => {
+          const { cookie } = await createAdminCookie();
+          const product = await createProduct({ stock: 5 });
+          const response = await POST(
+            buildRequest(
+              'POST',
+              {
+                items: [{ productId: product.id, quantity: 1 }],
+                paymentMethod,
+                customerName: 'Walk-in customer',
+                customerPhone: contact,
+                customerEmail: contact,
+                sendInvoiceEmail: true,
+              },
+              cookie,
+            ),
+          );
+          expect(response.status).toBe(201);
+          const json = await response.json();
+          createdOrderIds.push(json.orderId);
+          expect(await prisma.order.findUnique({ where: { id: json.orderId } })).toMatchObject({
+            receiverPhone: '',
+            receiverEmail: null,
+            status: paymentMethod === 'POS_GATEWAY' ? 'AWAITING_PAYMENT' : 'COMPLETED',
+          });
+          expect(
+            (await prisma.product.findUniqueOrThrow({ where: { id: product.id } })).stock,
+          ).toBe(4);
+          expect(await prisma.notification.count({ where: { relatedOrderId: json.orderId } })).toBe(
+            0,
+          );
+          expect(sendEmail).not.toHaveBeenCalled();
+        },
+      );
+    },
+  );
+
+  it.each([{ customerPhone: '123' }, { customerEmail: 'not-an-email' }])(
+    'still rejects malformed non-empty contacts (%j)',
+    async (contacts) => {
+      const { cookie } = await createAdminCookie();
+      const product = await createProduct();
+      const response = await POST(
+        buildRequest(
+          'POST',
+          {
+            items: [{ productId: product.id, quantity: 1 }],
+            paymentMethod: 'POS_CASH',
+            customerName: 'Buyer',
+            ...contacts,
+          },
+          cookie,
+        ),
+      );
+      expect(response.status).toBe(400);
+      expect((await prisma.product.findUniqueOrThrow({ where: { id: product.id } })).stock).toBe(
+        10,
+      );
+    },
+  );
+
+  it('respects invoice opt-out even when a valid email is supplied', async () => {
+    const { cookie } = await createAdminCookie();
+    const product = await createProduct();
+    const response = await POST(
+      buildRequest(
+        'POST',
+        {
+          items: [{ productId: product.id, quantity: 1 }],
+          paymentMethod: 'POS_CASH',
+          customerName: 'Buyer',
+          customerEmail: 'buyer@example.com',
+          sendInvoiceEmail: false,
+        },
+        cookie,
+      ),
+    );
+    expect(response.status).toBe(201);
+    const json = await response.json();
+    createdOrderIds.push(json.orderId);
+    expect(await prisma.notification.count({ where: { relatedOrderId: json.orderId } })).toBe(0);
+    expect(sendEmail).not.toHaveBeenCalled();
+  });
+
+  it('omits missing contacts from the subsequent gateway request', async () => {
+    const { cookie } = await createAdminCookie();
+    const product = await createProduct();
+    const response = await POST(
+      buildRequest(
+        'POST',
+        {
+          items: [{ productId: product.id, quantity: 1 }],
+          paymentMethod: 'POS_GATEWAY',
+          customerName: 'Buyer',
+        },
+        cookie,
+      ),
+    );
+    expect(response.status).toBe(201);
+    const json = await response.json();
+    createdOrderIds.push(json.orderId);
+    const order = await prisma.order.findUniqueOrThrow({
+      where: { id: json.orderId },
+      include: { items: true, destination: { select: { cityName: true } } },
+    });
+    await createSnapTransaction(order);
+    expect(createGatewayTransaction).toHaveBeenCalledWith(
+      expect.objectContaining({
+        customer_details: expect.objectContaining({ first_name: 'Buyer' }),
+      }),
+    );
+    const details = createGatewayTransaction.mock.calls[0]![0].customer_details;
+    expect(details).not.toHaveProperty('phone');
+    expect(details).not.toHaveProperty('email');
   });
 
   it('applies a valid POS voucher discount', async () => {

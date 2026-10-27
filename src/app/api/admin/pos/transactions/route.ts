@@ -36,6 +36,7 @@ export const POST = withAuth(
     }
 
     const data = parsed.data;
+    const invoiceEmail = data.sendInvoiceEmail ? data.customerEmail : undefined;
 
     try {
       const products = await prisma.product.findMany({
@@ -151,8 +152,8 @@ export const POST = withAuth(
           data: {
             orderNumber,
             receiverName: data.customerName,
-            receiverPhone: data.customerPhone,
-            receiverEmail: data.customerEmail,
+            receiverPhone: data.customerPhone ?? '',
+            receiverEmail: data.customerEmail ?? null,
             receiverAddress: '-',
             receiverNote: data.note ?? null,
             subtotal,
@@ -214,11 +215,11 @@ export const POST = withAuth(
           });
         }
 
-        if (data.sendInvoiceEmail) {
+        if (invoiceEmail) {
           await tx.notification.create({
             data: {
               channel: 'EMAIL',
-              recipient: data.customerEmail,
+              recipient: invoiceEmail,
               template: 'POS_INVOICE',
               relatedOrderId: createdOrder.id,
               payloadJson: {
@@ -253,7 +254,7 @@ export const POST = withAuth(
         return createdOrder;
       });
 
-      if (data.sendInvoiceEmail) {
+      if (invoiceEmail) {
         await dispatchPendingNotificationsForOrder(order.id);
       }
 

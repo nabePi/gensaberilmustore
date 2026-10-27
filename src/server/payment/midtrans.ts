@@ -65,7 +65,7 @@ export async function createSnapTransaction(
       ...(order.receiverEmail && EMAIL_REGEX.test(order.receiverEmail)
         ? { email: order.receiverEmail }
         : {}),
-      phone: order.receiverPhone,
+      ...(order.receiverPhone ? { phone: order.receiverPhone } : {}),
       shipping_address: {
         address: order.receiverAddress,
         city: order.destination?.cityName,

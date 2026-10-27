@@ -1,5 +1,9 @@
 import { z } from 'zod';
 
+function emptyContactToUndefined(value: unknown) {
+  return value === null || (typeof value === 'string' && !value.trim()) ? undefined : value;
+}
+
 export const createPosTransactionSchema = z.object({
   items: z
     .array(
@@ -13,15 +17,21 @@ export const createPosTransactionSchema = z.object({
     required_error: 'Metode pembayaran wajib diisi',
   }),
   customerName: z.string().trim().min(1, 'Nama pelanggan wajib diisi'),
-  customerPhone: z
-    .string()
-    .trim()
-    .min(1, 'Nomor telepon wajib diisi')
-    .refine((value) => {
-      const digits = value.replace(/\D/g, '').replace(/^0+/, '');
-      return digits.length >= 8 && digits.length <= 13;
-    }, 'Nomor telepon tidak valid'),
-  customerEmail: z.string().trim().min(1, 'Email pelanggan wajib diisi').email('Email tidak valid'),
+  customerPhone: z.preprocess(
+    emptyContactToUndefined,
+    z
+      .string()
+      .trim()
+      .refine((value) => {
+        const digits = value.replace(/\D/g, '').replace(/^0+/, '');
+        return digits.length >= 8 && digits.length <= 13;
+      }, 'Nomor telepon tidak valid')
+      .optional(),
+  ),
+  customerEmail: z.preprocess(
+    emptyContactToUndefined,
+    z.string().trim().email('Email tidak valid').optional(),
+  ),
   note: z.string().trim().min(1).optional(),
   voucherCode: z
     .string()

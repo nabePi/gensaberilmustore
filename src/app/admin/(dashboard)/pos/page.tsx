@@ -532,12 +532,12 @@ export default function AdminPosPage() {
       return;
     }
     const phoneDigits = customerPhone.trim().replace(/\D/g, '').replace(/^0+/, '');
-    if (phoneDigits.length < 8 || phoneDigits.length > 13) {
-      setCheckoutError('Nomor telepon/WhatsApp pelanggan wajib diisi dengan benar');
+    if (customerPhone.trim() && (phoneDigits.length < 8 || phoneDigits.length > 13)) {
+      setCheckoutError('Nomor telepon/WhatsApp pelanggan tidak valid');
       return;
     }
-    if (!isValidEmail(customerEmail.trim())) {
-      setCheckoutError('Email pelanggan wajib diisi dengan format yang benar');
+    if (customerEmail.trim() && !isValidEmail(customerEmail.trim())) {
+      setCheckoutError('Email pelanggan harus diisi dengan format yang benar');
       return;
     }
     setCheckingOut(true);
@@ -550,10 +550,10 @@ export default function AdminPosPage() {
         items: cart.map((line) => ({ productId: line.productId, quantity: line.quantity })),
         paymentMethod,
         customerName: customerName.trim(),
-        customerPhone: normalizePhone(customerPhone),
-        customerEmail: customerEmail.trim(),
+        customerPhone: customerPhone.trim() ? normalizePhone(customerPhone) : undefined,
+        customerEmail: customerEmail.trim() || undefined,
         note: note.trim() || undefined,
-        sendInvoiceEmail,
+        sendInvoiceEmail: sendInvoiceEmail && Boolean(customerEmail.trim()),
         voucherCode: voucherResult?.valid ? voucherResult.code : undefined,
         manualDiscount,
       }),
@@ -964,7 +964,7 @@ export default function AdminPosPage() {
 
           <div className="flex flex-col gap-1">
             <label htmlFor="posCustomerPhone" className="text-xs font-medium text-neutral-600">
-              Telepon / WhatsApp <span className="text-red">*</span>
+              Telepon / WhatsApp (opsional)
             </label>
             <div className="flex">
               <span className="flex h-11 items-center rounded-lg rounded-r-none border border-r-0 border-neutral-300 bg-neutral-50 px-3 text-sm text-neutral-600">
@@ -984,7 +984,7 @@ export default function AdminPosPage() {
 
           <div className="flex flex-col gap-1">
             <label htmlFor="posCustomerEmail" className="text-xs font-medium text-neutral-600">
-              Email Pelanggan <span className="text-red">*</span>
+              Email Pelanggan (opsional)
             </label>
             <input
               id="posCustomerEmail"
@@ -1003,12 +1003,17 @@ export default function AdminPosPage() {
             <input
               id="posSendInvoiceEmail"
               type="checkbox"
-              checked={sendInvoiceEmail}
+              checked={sendInvoiceEmail && isValidEmail(customerEmail.trim())}
+              disabled={!isValidEmail(customerEmail.trim())}
+              aria-describedby="posInvoiceEmailHelp"
               onChange={(e) => setSendInvoiceEmail(e.target.checked)}
               className="h-4 w-4 rounded border-neutral-300"
             />
             Kirim invoice ke email
           </label>
+          <p id="posInvoiceEmailHelp" className="text-xs text-neutral-500">
+            Isi email pelanggan jika ingin mengirim invoice.
+          </p>
 
           <div className="flex flex-col gap-1">
             <label htmlFor="posNotes" className="text-xs font-medium text-neutral-600">
