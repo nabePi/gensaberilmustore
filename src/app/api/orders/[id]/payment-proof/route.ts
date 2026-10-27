@@ -1,3 +1,4 @@
+import { Prisma } from '@prisma/client';
 import { NextRequest, NextResponse } from 'next/server';
 
 import { prisma } from '@/lib/db';
@@ -63,14 +64,21 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
     const url = await savePaymentProofImage(order.id, bytes, extension);
     const previousProofUrl = order.paymentProofUrl;
 
-    const updated = await prisma.order.update({
-      where: { id: order.id },
-      data: {
-        paymentProofUrl: url,
-        paymentProofUploadedAt: new Date(),
-        paymentClaimedAt: order.paymentClaimedAt ?? new Date(),
-      },
-    });
+    const updated = await prisma.order
+      .update({
+        where: { id: order.id, status: 'AWAITING_PAYMENT' },
+        data: {
+          paymentProofUrl: url,
+          paymentProofUploadedAt: new Date(),
+          paymentClaimedAt: order.paymentClaimedAt ?? new Date(),
+        },
+      })
+      .catch(async (error: unknown) => {
+        // Uploading may take time. If expiry/payment won the race, do not attach a
+        // proof to a terminal order or leave the newly uploaded file orphaned.
+        await deletePaymentProofImageFile(url).catch(() => {});
+        throw error;
+      });
 
     if (previousProofUrl) {
       await deletePaymentProofImageFile(previousProofUrl);
@@ -82,6 +90,12 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
       paymentClaimedAt: updated.paymentClaimedAt,
     });
   } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') {
+      return NextResponse.json(
+        { error: 'Status pesanan sudah berubah. Muat ulang pesanan.' },
+        { status: 409 },
+      );
+    }
     console.error('Payment proof upload failed', error);
     const hint = isR2Enabled()
       ? 'Gagal mengunggah ke R2. Periksa kredensial R2_ACCESS_KEY_ID/R2_SECRET_ACCESS_KEY dan izin bucket.'

@@ -1209,6 +1209,14 @@ Memproses semua notifikasi `FAILED` dengan `attempts < 3` dan `nextRetryAt <= no
 
 Respons `200 { "retried": <jumlah> }`. Error `401 "Unauthorized"`.
 
+## `POST /api/cron/expire-unpaid-orders`
+
+**Auth:** Wajib `Authorization: Bearer <CRON_SECRET>`. Tanpa konfigurasi secret membalas 503; header salah/tidak ada membalas 401.
+
+Membatalkan maksimal 50 order `ONLINE` yang masih `AWAITING_PAYMENT` dan berusia minimal 24 jam, tanpa klaim/bukti pembayaran atau sesi gateway. Mengembalikan stok dan mencatat pembatalan oleh sistem dalam transaksi. Respons `200 { "cancelled": <jumlah>, "hasMore": <boolean>, "cutoffAt": <ISO UTC> }`; kegagalan database membalas 500.
+
+Dokploy menjalankan `node /app/scripts/expire-unpaid-orders.mjs` pada service `app` setiap 15 menit (`*/15 * * * *`). Lihat [panduan pembatalan pesanan kedaluwarsa](expire-unpaid-orders.md) untuk pengaturan dan pengecualian lengkap.
+
 ---
 
 # Q. Admin — Laporan
