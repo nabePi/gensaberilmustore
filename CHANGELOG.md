@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.17.0](https://github.com/nabePi/gensaberilmustore/compare/v0.16.0...v0.17.0) (2026-10-27)
+
+
+### Features
+
+* **orders:** expire unpaid orders after 24 hours ([#127](https://github.com/nabePi/gensaberilmustore/issues/127)) ([1d6bea7](https://github.com/nabePi/gensaberilmustore/commit/1d6bea77bd1fb89b5bc28c0031b1c50c82116636))
+
 ## [0.16.0](https://github.com/nabePi/gensaberilmustore/compare/v0.15.0...v0.16.0) (2026-10-22)
 
 
