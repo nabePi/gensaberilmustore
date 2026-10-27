@@ -540,8 +540,10 @@ Kasir cepat untuk penjualan offline (event/pameran buku). Transaksi POS langsung
   - `updateQuantity` selalu di-clamp: `max(1, min(qty, stock))`
 - **Total** (besar, warna brand)
 - **Metode Pembayaran** — select: **Tunai** (`POS_CASH`) / **QRIS** (`POS_QRIS`) / **Transfer** (`POS_TRANSFER`)
-- **Nama Pelanggan** (opsional)
+- **Nama Pelanggan** (wajib)
 - **Telepon** (opsional)
+- **Email Pelanggan** (opsional)
+- **Kirim invoice ke email** — hanya aktif bila email valid diisi. Tanpa email checkout tetap dapat dilakukan.
 - **Catatan** (opsional, textarea)
 - Tombol **Checkout** (`Memproses...` saat submit), disabled bila keranjang kosong
 
@@ -549,7 +551,9 @@ Badge di header halaman menampilkan total item di keranjang.
 
 ### Checkout POS
 
-`POST /api/admin/pos/transactions` dengan `{ items: [{ productId, quantity }], paymentMethod, customerName?, customerPhone?, note? }`.
+`POST /api/admin/pos/transactions` dengan `{ items: [{ productId, quantity }], paymentMethod, customerName, customerPhone?, customerEmail?, sendInvoiceEmail?, note? }`.
+
+Nomor telepon dan email boleh tidak dikirim, kosong, whitespace, atau null. Jika diisi, formatnya tetap diperiksa. Telepon kosong tidak diubah menjadi `62`; disimpan sebagai string kosong, sedangkan email kosong disimpan sebagai null. Invoice email hanya dibuat bila alamat valid tersedia dan opsi kirim invoice aktif.
 
 Yang dilakukan server (satu transaksi):
 
@@ -564,19 +568,20 @@ Yang dilakukan server (satu transaksi):
    total    = max(0, subtotal - discount)      ← tanpa ongkir
 8. Buat Order:
      source: 'POS'
-     status: 'PAID'            ← langsung lunas
+     status: 'COMPLETED' untuk tunai/QRIS; 'AWAITING_PAYMENT' untuk gateway
      shippingCost: 0
-     receiverName: customerName ?? 'Walk-in Customer'
-     receiverPhone: customerPhone ?? '-'
-     receiverEmail / receiverAddress / receiverCity : '-'
+     receiverName: customerName
+     receiverPhone: customerPhone ?? ''
+     receiverEmail: customerEmail ?? null
+     receiverAddress: '-'
      posCashierUserId: user.id  ← admin yang login
      + OrderItem snapshot
-     + OrderStatusHistory { fromStatus: PAID, toStatus: PAID, note: 'Transaksi POS dibuat' }
+     + OrderStatusHistory dengan status awal dan catatan transaksi POS
 9. Bila ada voucher → buat VoucherRedemption (userId: null)
 10. Respons 201 { orderId, orderNumber }
 ```
 
-**Konsekuensi penting** dari pembuatan langsung di status `PAID` (tidak melewati `applyOrderStatusTransition`): efek samping status `PAID` **tidak** dijalankan. Artinya transaksi POS **tidak** mengirim email dan **tidak** membuat `AffiliateConversion`. Ini memang wajar untuk penjualan tatap muka (tidak ada email pembeli — kolomnya `'-'`, dan tidak ada atribusi afiliasi), tetapi perlu disadari sebagai perilaku yang berbeda dari pesanan online.
+Invoice `POS_INVOICE` dibuat setelah transaksi bila email tersedia dan `sendInvoiceEmail` aktif. Tanpa email, tidak ada notifikasi dibuat atau dikirim. Transaksi POS tidak membuat `AffiliateConversion`.
 
 Field `voucherCode`, `manualDiscount`, dan `manualDiscountReason` didukung API tetapi **belum ada kontrolnya di UI POS**.
 

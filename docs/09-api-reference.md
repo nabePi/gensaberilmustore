@@ -907,6 +907,8 @@ Request:
   "paymentMethod": "POS_CASH",
   "customerName": "Budi",
   "customerPhone": "0812...",
+  "customerEmail": "budi@example.com",
+  "sendInvoiceEmail": true,
   "note": "...",
   "voucherCode": "POSGROSIR",
   "manualDiscount": 5000,
@@ -914,20 +916,22 @@ Request:
 }
 ```
 
-| Field                  | Aturan                                                 |
-| ---------------------- | ------------------------------------------------------ |
-| `items`                | minimal 1; `quantity` ≥ 1                              |
-| `paymentMethod`        | `POS_CASH` \| `POS_QRIS` \| `POS_TRANSFER`             |
-| `customerName`         | opsional → default `'Walk-in Customer'`                |
-| `customerPhone`        | opsional → default `'-'`                               |
-| `note`                 | opsional                                               |
-| `voucherCode`          | opsional, otomatis uppercase, divalidasi channel `POS` |
-| `manualDiscount`       | int ≥ 0, default 0; tidak boleh > subtotal             |
-| `manualDiscountReason` | opsional                                               |
+| Field                  | Aturan                                                                                    |
+| ---------------------- | ----------------------------------------------------------------------------------------- |
+| `items`                | minimal 1; `quantity` ≥ 1                                                                 |
+| `paymentMethod`        | `POS_CASH` \| `POS_QRIS` \| `POS_GATEWAY`                                                 |
+| `customerName`         | wajib, tidak boleh kosong setelah trim                                                    |
+| `customerPhone`        | opsional; kosong/null/tidak dikirim disimpan sebagai string kosong; jika diisi divalidasi |
+| `customerEmail`        | opsional; kosong/null/tidak dikirim disimpan sebagai null; jika diisi harus email valid   |
+| `sendInvoiceEmail`     | boolean, default true; email invoice hanya dibuat bila email pelanggan tersedia           |
+| `note`                 | opsional                                                                                  |
+| `voucherCode`          | opsional, otomatis uppercase, divalidasi channel `POS`                                    |
+| `manualDiscount`       | int ≥ 0, default 0; tidak boleh > subtotal                                                |
+| `manualDiscountReason` | opsional                                                                                  |
 
 Respons `201`: `{ "orderId", "orderNumber" }`
 
-Pesanan dibuat langsung dengan `status: 'PAID'`, `source: 'POS'`, `shippingCost: 0`, dan `posCashierUserId` = admin pemanggil. Karena tidak melewati `applyOrderStatusTransition`, **tidak** ada email dan **tidak** ada `AffiliateConversion`.
+Pesanan dibuat dengan `source: 'POS'`, `shippingCost: 0`, dan `posCashierUserId` = admin pemanggil. Tunai/QRIS langsung `COMPLETED`; gateway `AWAITING_PAYMENT`. Invoice `POS_INVOICE` hanya dijadwalkan/dikirim bila `sendInvoiceEmail: true` dan email valid tersedia. Tanpa email transaksi tetap berhasil tanpa notifikasi ke alamat kosong. Tidak membuat `AffiliateConversion`. Kontak kosong juga tidak diteruskan sebagai field kosong ke Midtrans saat membuat transaksi gateway.
 
 Error `400`: `Produk tidak ditemukan atau tidak aktif` · `Stok produk "<judul>" tidak mencukupi` · `Diskon manual tidak boleh melebihi subtotal` · pesan alasan voucher.
 
