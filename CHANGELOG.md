@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.18.0](https://github.com/nabePi/gensaberilmustore/compare/v0.17.0...v0.18.0) (2026-10-27)
+
+
+### Features
+
+* **affiliate:** lower withdrawal minimum and display payout terms ([#129](https://github.com/nabePi/gensaberilmustore/issues/129)) ([d7a2ab1](https://github.com/nabePi/gensaberilmustore/commit/d7a2ab1be80001adc4c1d52815515d9f8f1cb6f0))
+* **pos:** make customer phone and email optional ([#131](https://github.com/nabePi/gensaberilmustore/issues/131)) ([c6095ad](https://github.com/nabePi/gensaberilmustore/commit/c6095add7885f1335e1963ba996550a097a120cb))
+
 ## [0.17.0](https://github.com/nabePi/gensaberilmustore/compare/v0.16.0...v0.17.0) (2026-10-27)
 
 
