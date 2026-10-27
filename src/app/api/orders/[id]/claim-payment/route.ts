@@ -1,3 +1,4 @@
+import { Prisma } from '@prisma/client';
 import { NextRequest, NextResponse } from 'next/server';
 
 import { prisma } from '@/lib/db';
@@ -25,13 +26,23 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
     return NextResponse.json({ error: 'Pesanan tidak dapat diklaim' }, { status: 400 });
   }
 
-  const updated =
-    order.paymentClaimedAt !== null
-      ? order
-      : await prisma.order.update({
-          where: { id },
-          data: { paymentClaimedAt: new Date() },
-        });
+  try {
+    const updated =
+      order.paymentClaimedAt !== null
+        ? order
+        : await prisma.order.update({
+            where: { id, status: 'AWAITING_PAYMENT' },
+            data: { paymentClaimedAt: new Date() },
+          });
 
-  return NextResponse.json({ paymentClaimedAt: updated.paymentClaimedAt });
+    return NextResponse.json({ paymentClaimedAt: updated.paymentClaimedAt });
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') {
+      return NextResponse.json(
+        { error: 'Status pesanan sudah berubah. Muat ulang pesanan.' },
+        { status: 409 },
+      );
+    }
+    throw error;
+  }
 }
