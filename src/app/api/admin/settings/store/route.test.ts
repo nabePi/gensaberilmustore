@@ -103,4 +103,31 @@ describe('PUT /api/admin/settings/store', () => {
     expect(json.setting.qrisStaticCode).toBe(validStaticQris());
     expect(Number(json.setting.defaultCommissionPercent)).toBe(7.5);
   });
+
+  it('rejects an invalid POS QRIS static code', async () => {
+    const cookie = await createAdminCookie();
+    const response = await PUT(
+      buildRequest('PUT', { defaultCommissionPercent: 5, posQrisStaticCode: 'bukan-qris' }, cookie),
+    );
+    const json = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(json.issues.posQrisStaticCode[0]).toMatch(/000201/);
+  });
+
+  it('saves the POS QRIS static code separately from the store one', async () => {
+    const cookie = await createAdminCookie();
+    const response = await PUT(
+      buildRequest(
+        'PUT',
+        { defaultCommissionPercent: 5, posQrisStaticCode: validStaticQris() },
+        cookie,
+      ),
+    );
+    const json = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(json.setting.posQrisStaticCode).toBe(validStaticQris());
+    expect(json.setting.qrisStaticCode).toBeNull();
+  });
 });

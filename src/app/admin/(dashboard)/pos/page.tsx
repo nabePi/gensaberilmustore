@@ -203,6 +203,7 @@ type PosReceiptState = {
   paymentMethod: PosPaymentMethod;
   paymentStatus: 'paid' | 'checking' | 'awaiting' | 'cancelled';
   total?: number;
+  cashReceived?: number;
   qrisImageDataUrl?: string | null;
 };
 
@@ -240,6 +241,7 @@ export default function AdminPosPage() {
   const [voucherLoading, setVoucherLoading] = useState(false);
   const [publicVouchers, setPublicVouchers] = useState<PublicVoucher[]>([]);
   const [manualDiscountInput, setManualDiscountInput] = useState('');
+  const [cashReceivedInput, setCashReceivedInput] = useState('');
   const [checkingOut, setCheckingOut] = useState(false);
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
   const snapFailedRef = useRef(false);
@@ -418,6 +420,8 @@ export default function AdminPosPage() {
   const manualDiscount = Math.max(0, parseInt(manualDiscountInput, 10) || 0);
   const totalDiscount = Math.min(cartTotal, voucherDiscount + manualDiscount);
   const grandTotal = Math.max(0, cartTotal - totalDiscount);
+  const cashReceived = parseInt(cashReceivedInput, 10) || 0;
+  const cashChange = cashReceived - grandTotal;
 
   useEffect(() => {
     if (cart.length === 0) return;
@@ -540,6 +544,10 @@ export default function AdminPosPage() {
       setCheckoutError('Email pelanggan harus diisi dengan format yang benar');
       return;
     }
+    if (paymentMethod === 'POS_CASH' && cashReceivedInput && cashReceived < grandTotal) {
+      setCheckoutError('Uang diterima kurang dari total belanja');
+      return;
+    }
     setCheckingOut(true);
     setCheckoutError(null);
 
@@ -573,6 +581,7 @@ export default function AdminPosPage() {
       qrisImageDataUrl?: string | null;
     } = await response.json();
     const currentPaymentMethod = paymentMethod;
+    const currentCashReceived = cashReceivedInput ? cashReceived : undefined;
 
     setCart([]);
     setCustomerName('');
@@ -583,6 +592,7 @@ export default function AdminPosPage() {
     setVoucherResult(null);
     setPublicVouchers([]);
     setManualDiscountInput('');
+    setCashReceivedInput('');
     loadHistory();
 
     if (currentPaymentMethod === 'POS_CASH') {
@@ -591,6 +601,8 @@ export default function AdminPosPage() {
         orderNumber: data.orderNumber,
         paymentMethod: 'POS_CASH',
         paymentStatus: 'paid',
+        total: data.total,
+        cashReceived: currentCashReceived,
       });
       setCheckingOut(false);
       return;
@@ -948,6 +960,47 @@ export default function AdminPosPage() {
             </select>
           </div>
 
+          {paymentMethod === 'POS_CASH' ? (
+            <div className="flex flex-col gap-2 rounded-lg border border-neutral-200 bg-neutral-50 p-3">
+              <label htmlFor="posCashReceived" className="text-xs font-medium text-neutral-600">
+                Uang Diterima dari Pelanggan
+              </label>
+              <input
+                id="posCashReceived"
+                type="text"
+                inputMode="numeric"
+                placeholder="0"
+                value={cashReceivedInput}
+                onChange={(e) => setCashReceivedInput(e.target.value.replace(/\D/g, ''))}
+                className={adminInputBase}
+              />
+              <div className="flex flex-wrap gap-2">
+                {[...new Set([grandTotal, 50000, 100000])]
+                  .filter((amount) => amount > 0 && (amount === grandTotal || amount >= grandTotal))
+                  .map((amount) => (
+                    <button
+                      key={amount}
+                      type="button"
+                      onClick={() => setCashReceivedInput(String(amount))}
+                      className="rounded-full border border-neutral-300 bg-white px-3 py-1 text-xs font-medium text-neutral-600 hover:border-brand-300"
+                    >
+                      {amount === grandTotal ? 'Uang pas' : formatCurrency(amount)}
+                    </button>
+                  ))}
+              </div>
+              <div className="flex items-center justify-between" aria-live="polite">
+                <span className="text-sm font-semibold text-foreground">
+                  {cashReceivedInput && cashChange < 0 ? 'Kurang' : 'Kembalian'}
+                </span>
+                <strong
+                  className={`text-lg ${cashReceivedInput && cashChange < 0 ? 'text-red' : 'text-brand'}`}
+                >
+                  {formatCurrency(cashReceivedInput ? Math.abs(cashChange) : 0)}
+                </strong>
+              </div>
+            </div>
+          ) : null}
+
           <div className="flex flex-col gap-1">
             <label htmlFor="posCustomerName" className="text-xs font-medium text-neutral-600">
               Nama Pelanggan <span className="text-red">*</span>
@@ -1117,6 +1170,29 @@ export default function AdminPosPage() {
             )}
             <p className="text-lg font-bold text-foreground">{receipt.orderNumber}</p>
           </div>
+
+          {receipt.paymentMethod === 'POS_CASH' && receipt.cashReceived != null ? (
+            <div className="mb-4 flex flex-col gap-1 rounded-lg bg-neutral-50 p-3 text-sm">
+              <div className="flex justify-between">
+                <span className="text-neutral-600">Total</span>
+                <span className="font-medium text-foreground">
+                  {formatCurrency(receipt.total ?? 0)}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-neutral-600">Uang diterima</span>
+                <span className="font-medium text-foreground">
+                  {formatCurrency(receipt.cashReceived)}
+                </span>
+              </div>
+              <div className="flex justify-between text-base">
+                <span className="font-semibold text-foreground">Kembalian</span>
+                <strong className="text-brand">
+                  {formatCurrency(Math.max(0, receipt.cashReceived - (receipt.total ?? 0)))}
+                </strong>
+              </div>
+            </div>
+          ) : null}
 
           {receipt.paymentMethod === 'POS_QRIS' ? (
             <div className="mb-4 flex flex-col items-center gap-2 text-center">

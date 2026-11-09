@@ -262,7 +262,7 @@ export const POST = withAuth(
       if (order.paymentMethod === 'POS_QRIS') {
         const storeSetting = await prisma.storeSetting.findUnique({ where: { id: 1 } });
         qrisImageDataUrl = await tryGenerateDynamicQrisDataUrl(
-          storeSetting?.qrisStaticCode,
+          storeSetting?.posQrisStaticCode ?? storeSetting?.qrisStaticCode,
           order.total,
         );
       }

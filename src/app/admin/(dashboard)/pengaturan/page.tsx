@@ -7,6 +7,7 @@ import { adminBtnPrimary, adminCardBase, adminInputBase } from '@/lib/admin/styl
 
 export default function AdminPengaturanPage() {
   const [qrisStaticCode, setQrisStaticCode] = useState('');
+  const [posQrisStaticCode, setPosQrisStaticCode] = useState('');
   const [defaultCommissionPercent, setDefaultCommissionPercent] = useState('0');
 
   const [loading, setLoading] = useState(true);
@@ -21,6 +22,7 @@ export default function AdminPengaturanPage() {
         const data = await response.json();
         if (data.setting) {
           setQrisStaticCode(data.setting.qrisStaticCode ?? '');
+          setPosQrisStaticCode(data.setting.posQrisStaticCode ?? '');
           setDefaultCommissionPercent(String(data.setting.defaultCommissionPercent));
         }
       }
@@ -38,6 +40,7 @@ export default function AdminPengaturanPage() {
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({
         qrisStaticCode,
+        posQrisStaticCode,
         defaultCommissionPercent: Number(defaultCommissionPercent),
       }),
     });
@@ -68,7 +71,7 @@ export default function AdminPengaturanPage() {
           Tempel kode mentah (string, bukan gambar) dari QRIS statis toko. Dapatkan dengan scan QRIS
           statis cetak/kartu toko pakai aplikasi pembaca QR biasa (bukan aplikasi bank), lalu salin
           teksnya. Kalau diisi, nominal pembayaran akan otomatis muncul saat pelanggan scan QRIS di
-          checkout dan POS — tidak perlu ketik manual lagi. Kosongkan untuk memakai gambar QRIS
+          checkout toko online — tidak perlu ketik manual lagi. Kosongkan untuk memakai gambar QRIS
           statis lama (nominal harus diketik manual oleh pembayar).
         </p>
         <textarea
@@ -76,6 +79,22 @@ export default function AdminPengaturanPage() {
           value={qrisStaticCode}
           onChange={(e) => setQrisStaticCode(e.target.value)}
           placeholder="00020101021126...6304XXXX"
+          className={`${adminInputBase} font-mono text-xs`}
+        />
+      </div>
+
+      <div className={`flex flex-col gap-3 p-4 ${adminCardBase}`}>
+        <h3 className="font-semibold text-foreground">QRIS Dinamis POS</h3>
+        <p className="text-xs text-neutral-500">
+          Kode QRIS terpisah yang hanya dipakai di halaman POS (kasir). Caranya sama seperti di
+          atas: tempel kode mentah dari QRIS statis. Kalau dikosongkan, POS memakai QRIS Dinamis
+          toko online di atas.
+        </p>
+        <textarea
+          rows={3}
+          value={posQrisStaticCode}
+          onChange={(e) => setPosQrisStaticCode(e.target.value)}
+          placeholder="00020101021162...6304XXXX"
           className={`${adminInputBase} font-mono text-xs`}
         />
       </div>
