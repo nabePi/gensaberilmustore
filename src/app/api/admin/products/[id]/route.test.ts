@@ -211,7 +211,7 @@ describe('DELETE /api/admin/products/[id]', () => {
     expect(response.status).toBe(404);
   });
 
-  it('soft-deletes a product by setting isActive to false', async () => {
+  it('soft-deletes a product: sets deletedAt, deactivates it and frees the SKU', async () => {
     const cookie = await createAdminCookie();
     const product = await createProduct();
 
@@ -219,6 +219,13 @@ describe('DELETE /api/admin/products/[id]', () => {
     expect(response.status).toBe(204);
 
     const updated = await prisma.product.findUnique({ where: { id: product.id } });
+    expect(updated?.deletedAt).not.toBeNull();
     expect(updated?.isActive).toBe(false);
+    expect(updated?.sku).not.toBe(product.sku);
+
+    const again = await DELETE(buildRequest('DELETE', undefined, cookie), context(product.id));
+    expect(again.status).toBe(404);
+    const get = await GET(buildRequest('GET', undefined, cookie), context(product.id));
+    expect(get.status).toBe(404);
   });
 });

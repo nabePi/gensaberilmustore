@@ -262,6 +262,7 @@ model Product {
   pageCount        Int
   publishYear      Int
   isActive         Boolean        @default(true)
+  deletedAt        DateTime?
   channel          ProductChannel @default(BOTH)
   position         Int            @default(0)
   ribbonType       RibbonType?
@@ -285,6 +286,7 @@ model Product {
   @@index([slug])
   @@index([sku])
   @@index([isActive])
+  @@index([deletedAt])
   @@index([channel])
   @@index([position])
   @@index([coverType])

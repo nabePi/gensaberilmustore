@@ -13,8 +13,8 @@ export const GET = withAuth<RouteContext>(
   async (_request: NextRequest, { params }) => {
     const { id } = await params;
 
-    const product = await prisma.product.findUnique({
-      where: { id },
+    const product = await prisma.product.findFirst({
+      where: { id, deletedAt: null },
       include: {
         images: true,
         categories: { select: { category: { select: { id: true, name: true, slug: true } } } },
@@ -39,7 +39,7 @@ export const PUT = withAuth<RouteContext>(
   async (request: NextRequest, { params }) => {
     const { id } = await params;
 
-    const existing = await prisma.product.findUnique({ where: { id } });
+    const existing = await prisma.product.findFirst({ where: { id, deletedAt: null } });
     if (!existing) {
       return NextResponse.json({ error: 'Produk tidak ditemukan' }, { status: 404 });
     }
@@ -175,12 +175,26 @@ export const DELETE = withAuth<RouteContext>(
   async (_request: NextRequest, { params }) => {
     const { id } = await params;
 
-    const existing = await prisma.product.findUnique({ where: { id }, select: { id: true } });
+    const existing = await prisma.product.findFirst({
+      where: { id, deletedAt: null },
+      select: { id: true, sku: true, slug: true },
+    });
     if (!existing) {
       return NextResponse.json({ error: 'Produk tidak ditemukan' }, { status: 404 });
     }
 
-    await prisma.product.update({ where: { id }, data: { isActive: false } });
+    // Soft delete: baris tetap ada sehingga relasi (pesanan, keranjang, afiliasi) tidak ikut
+    // terhapus lewat cascade. SKU/slug diberi akhiran agar nilainya bisa dipakai produk baru.
+    const stamp = Date.now();
+    await prisma.product.update({
+      where: { id },
+      data: {
+        deletedAt: new Date(stamp),
+        isActive: false,
+        sku: `${existing.sku}~deleted-${stamp}`,
+        slug: `${existing.slug}~deleted-${stamp}`,
+      },
+    });
 
     return new NextResponse(null, { status: 204 });
   },
