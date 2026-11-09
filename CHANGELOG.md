@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.18.1](https://github.com/nabePi/gensaberilmustore/compare/v0.18.0...v0.18.1) (2026-11-09)
+
+
+### Bug Fixes
+
+* **admin:** hapus produk memakai soft delete (deletedAt) ([#132](https://github.com/nabePi/gensaberilmustore/issues/132)) ([f304143](https://github.com/nabePi/gensaberilmustore/commit/f304143a2ebde8d5cfded8270816afbf27784721))
+
 ## [0.18.0](https://github.com/nabePi/gensaberilmustore/compare/v0.17.0...v0.18.0) (2026-10-27)
 
 
