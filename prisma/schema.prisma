@@ -671,6 +671,7 @@ model StoreSetting {
   id                       Int      @id @default(1)
   defaultCommissionPercent Decimal  @default(5) @db.Decimal(5, 2)
   qrisStaticCode           String?
+  posQrisStaticCode        String?
   updatedAt                DateTime @updatedAt
 }
 

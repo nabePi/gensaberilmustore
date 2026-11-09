@@ -26,11 +26,13 @@ export const PUT = withAuth(
       );
     }
 
-    if (parsed.data.qrisStaticCode) {
-      const qrisError = validateStaticQris(parsed.data.qrisStaticCode);
+    for (const field of ['qrisStaticCode', 'posQrisStaticCode'] as const) {
+      const code = parsed.data[field];
+      if (!code) continue;
+      const qrisError = validateStaticQris(code);
       if (qrisError) {
         return NextResponse.json(
-          { error: 'Validasi gagal', issues: { qrisStaticCode: [qrisError] } },
+          { error: 'Validasi gagal', issues: { [field]: [qrisError] } },
           { status: 400 },
         );
       }
