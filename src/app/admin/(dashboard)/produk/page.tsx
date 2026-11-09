@@ -112,8 +112,12 @@ export default function AdminProdukPage() {
   async function handleDelete() {
     if (!deleteTarget) return;
     setDeleting(true);
-    await fetch(`/api/admin/products/${deleteTarget.id}`, { method: 'DELETE' });
+    const response = await fetch(`/api/admin/products/${deleteTarget.id}`, { method: 'DELETE' });
     setDeleting(false);
+    if (!response.ok) {
+      window.alert('Gagal menghapus produk. Coba lagi.');
+      return;
+    }
     setDeleteTarget(null);
     loadProducts();
   }
@@ -325,8 +329,8 @@ export default function AdminProdukPage() {
       {deleteTarget ? (
         <AdminModal title="Hapus Produk" onClose={() => setDeleteTarget(null)}>
           <p className="text-sm text-neutral-600">
-            Yakin ingin menghapus <strong>{deleteTarget.title}</strong>? Produk akan dinonaktifkan
-            dan tidak tampil di toko.
+            Yakin ingin menghapus <strong>{deleteTarget.title}</strong>? Produk tidak akan tampil
+            lagi di toko maupun daftar ini. Riwayat pesanan tetap tersimpan.
           </p>
           <div className="mt-4 flex justify-end gap-2">
             <button type="button" onClick={() => setDeleteTarget(null)} className={adminBtnOutline}>

@@ -33,7 +33,7 @@ export const GET = withAuth(
 
     const { page, limit, q, categoryId, isActive, channel, channelFilter } = parsed.data;
 
-    const where: Prisma.ProductWhereInput = {};
+    const where: Prisma.ProductWhereInput = { deletedAt: null };
 
     if (categoryId) {
       where.categories = { some: { categoryId } };
