@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.19.0](https://github.com/nabePi/gensaberilmustore/compare/v0.18.1...v0.19.0) (2026-11-09)
+
+
+### Features
+
+* **pos:** tambah qris dinamis khusus pos dan kalkulator kembalian tunai ([#134](https://github.com/nabePi/gensaberilmustore/issues/134)) ([e346317](https://github.com/nabePi/gensaberilmustore/commit/e346317651eb2045b8b3e9e1c7d5f84b9ba69c78))
+
 ## [0.18.1](https://github.com/nabePi/gensaberilmustore/compare/v0.18.0...v0.18.1) (2026-11-09)
 
 
