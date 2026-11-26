@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.20.0](https://github.com/nabePi/gensaberilmustore/compare/v0.19.0...v0.20.0) (2026-11-26)
+
+
+### Features
+
+* **admin:** filter channel exact match dan tombol export csv produk ([#136](https://github.com/nabePi/gensaberilmustore/issues/136)) ([95aa5ea](https://github.com/nabePi/gensaberilmustore/commit/95aa5ea467c367676db6f2c3de843b50d28b212c))
+
+
+### Bug Fixes
+
+* **admin:** hapus kolom deskripsi, daftar isi, highlight, url gambar dari export produk ([#138](https://github.com/nabePi/gensaberilmustore/issues/138)) ([981f8bf](https://github.com/nabePi/gensaberilmustore/commit/981f8bf021d405daa680b4693959ab3caa9654e3))
+
 ## [0.19.0](https://github.com/nabePi/gensaberilmustore/compare/v0.18.1...v0.19.0) (2026-11-09)
 
 
