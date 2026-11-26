@@ -124,7 +124,39 @@ describe('GET /api/admin/orders/export', () => {
     expect(Array.from(bytes.slice(0, 3))).toEqual([0xef, 0xbb, 0xbf]);
     expect(csv).toContain('orderNumber,createdAt,status,source');
     expect(csv).toContain(marker);
-    expect(csv).toContain(`${product.title} x1`);
+    expect(csv).toContain('productId,sku,itemTitle,quantity,unitPrice,discountPercent,lineTotal');
+    expect(csv).toContain(product.id);
+    expect(csv).toContain(product.sku);
+    expect(csv).toContain(product.title);
+  });
+
+  it('writes one row per item and keeps order totals on the first row only', async () => {
+    const cookie = await createAdminCookie();
+    const marker = randomUUID();
+    const { order, product } = await createOrder({ receiverName: marker, total: 15000 });
+    const second = await createProduct();
+    await prisma.orderItem.create({
+      data: {
+        orderId: order.id,
+        productId: second.id,
+        titleSnapshot: second.title,
+        priceSnapshot: second.finalPrice,
+        discountPercentSnapshot: 0,
+        quantity: 2,
+        lineTotal: second.finalPrice * 2,
+      },
+    });
+
+    const response = await GET(buildRequest(cookie, `?q=${marker}`));
+    const csv = await response.text();
+    const rows = csv.split('\r\n').filter((line) => line.includes(order.orderNumber));
+
+    expect(rows).toHaveLength(2);
+    const firstRow = rows.find((row) => row.includes(product.sku)) ?? '';
+    const secondRow = rows.find((row) => row.includes(second.sku)) ?? '';
+    expect(firstRow).toContain(',10000,5000,15000,');
+    expect(secondRow).not.toContain(',15000,');
+    expect(secondRow).toContain(`,2,${second.finalPrice},0,${second.finalPrice * 2}`);
   });
 
   it('rejects an invalid status filter', async () => {
