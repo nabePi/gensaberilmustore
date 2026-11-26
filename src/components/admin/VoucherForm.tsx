@@ -158,7 +158,7 @@ export function VoucherForm({
           <Field label="Kanal" error={errors.channel?.message}>
             <select {...register('channel')} className={adminInputBase}>
               <option value="ALL">Semua Kanal</option>
-              <option value="ONLINE">Online</option>
+              <option value="ONLINE">Website</option>
               <option value="POS">POS</option>
             </select>
           </Field>

@@ -186,8 +186,8 @@ export default function AdminFulfillmentPage() {
           onChange={(e) => setSourceFilter(e.target.value as 'ALL' | 'ONLINE' | 'POS')}
           className={adminInputBase}
         >
-          <option value="ALL">Semua Sumber</option>
-          <option value="ONLINE">Online</option>
+          <option value="ALL">Semua Channel</option>
+          <option value="ONLINE">Website</option>
           <option value="POS">POS</option>
         </select>
       </div>
@@ -245,7 +245,7 @@ export default function AdminFulfillmentPage() {
             <Th>No. Pesanan</Th>
             <Th>Penerima</Th>
             <Th>Tanggal</Th>
-            <Th>Sumber</Th>
+            <Th>Channel</Th>
             <Th>Status</Th>
             <Th className="text-right">Total</Th>
           </Thead>
@@ -272,7 +272,9 @@ export default function AdminFulfillmentPage() {
                   <span className="text-xs text-neutral-400">{order.receiverPhone}</span>
                 </Td>
                 <Td className="text-neutral-600">{formatOrderDate(order.createdAt)}</Td>
-                <Td className="text-neutral-600">{order.source === 'ONLINE' ? 'Online' : 'POS'}</Td>
+                <Td className="text-neutral-600">
+                  {order.source === 'ONLINE' ? 'Website' : 'POS'}
+                </Td>
                 <Td>
                   <span className={`${adminBadgeBase} ${ORDER_STATUS_BADGE_CLASSES[order.status]}`}>
                     {ORDER_STATUS_LABELS[order.status]}

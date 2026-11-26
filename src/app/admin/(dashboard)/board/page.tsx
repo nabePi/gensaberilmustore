@@ -104,7 +104,7 @@ function OrderCard({ order }: { order: BoardOrder }) {
       ) : null}
       <div className="mt-2 flex items-center justify-between text-xs">
         <span className="rounded-full bg-neutral-100 px-2 py-0.5 text-neutral-600">
-          {order.source === 'ONLINE' ? 'Online' : 'POS'}
+          {order.source === 'ONLINE' ? 'Website' : 'POS'}
         </span>
         <span className="font-semibold text-foreground">{formatCurrency(order.total)}</span>
       </div>
@@ -286,8 +286,8 @@ export default function AdminBoardPage() {
               onChange={(e) => setSource(e.target.value as 'ALL' | 'ONLINE' | 'POS')}
               className={adminInputBase}
             >
-              <option value="ALL">Semua Sumber</option>
-              <option value="ONLINE">Online</option>
+              <option value="ALL">Semua Channel</option>
+              <option value="ONLINE">Website</option>
               <option value="POS">POS</option>
             </select>
           </div>
