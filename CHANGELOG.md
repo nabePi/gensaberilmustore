@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.21.0](https://github.com/nabePi/gensaberilmustore/compare/v0.20.0...v0.21.0) (2026-11-26)
+
+
+### Features
+
+* **admin:** export pesanan satu baris per item dengan product id dan sku ([#141](https://github.com/nabePi/gensaberilmustore/issues/141)) ([a7afb07](https://github.com/nabePi/gensaberilmustore/commit/a7afb07298f4375b6d6f45431830a50fa7600396))
+* **admin:** filter channel di pesanan dan samakan istilah Website/POS ([#139](https://github.com/nabePi/gensaberilmustore/issues/139)) ([9ab5c05](https://github.com/nabePi/gensaberilmustore/commit/9ab5c05527848baa9f61384575772bd26ca75cd5))
+* **admin:** tambah kolom product id di export produk ([#142](https://github.com/nabePi/gensaberilmustore/issues/142)) ([f6b78d6](https://github.com/nabePi/gensaberilmustore/commit/f6b78d617db2fc7b3528758024ca8be85b0296d6))
+
 ## [0.20.0](https://github.com/nabePi/gensaberilmustore/compare/v0.19.0...v0.20.0) (2026-11-26)
 
 
