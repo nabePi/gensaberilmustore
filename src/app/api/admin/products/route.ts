@@ -4,18 +4,14 @@ import { z } from 'zod';
 
 import { prisma } from '@/lib/db';
 import { withAuth } from '@/server/auth';
+import { adminProductFilterSchema, buildAdminProductWhere } from '@/server/products/admin-filter';
 import { computeEffectivePrice } from '@/server/products/pricing';
-import { createProductSchema, PRODUCT_CHANNELS } from '@/server/products/schema';
+import { createProductSchema } from '@/server/products/schema';
 import { generateUniqueSlug } from '@/server/products/slug';
 
-const listAdminProductsQuerySchema = z.object({
+const listAdminProductsQuerySchema = adminProductFilterSchema.extend({
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(60).default(20),
-  q: z.string().trim().min(1).optional(),
-  categoryId: z.string().uuid().optional(),
-  isActive: z.enum(['active', 'inactive']).optional(),
-  channel: z.enum(['WEB', 'POS']).optional(),
-  channelFilter: z.enum(PRODUCT_CHANNELS).optional(),
 });
 
 export const GET = withAuth(
@@ -31,34 +27,8 @@ export const GET = withAuth(
       );
     }
 
-    const { page, limit, q, categoryId, isActive, channel, channelFilter } = parsed.data;
-
-    const where: Prisma.ProductWhereInput = { deletedAt: null };
-
-    if (categoryId) {
-      where.categories = { some: { categoryId } };
-    }
-
-    if (isActive) {
-      where.isActive = isActive === 'active';
-    }
-
-    if (channel) {
-      where.channel = { in: [channel, 'BOTH'] };
-    }
-
-    if (channelFilter) {
-      where.channel = channelFilter;
-    }
-
-    if (q) {
-      where.OR = [
-        { title: { contains: q, mode: 'insensitive' } },
-        { author: { contains: q, mode: 'insensitive' } },
-        { sku: { contains: q, mode: 'insensitive' } },
-        { isbn: { contains: q, mode: 'insensitive' } },
-      ];
-    }
+    const { page, limit, ...filter } = parsed.data;
+    const where = buildAdminProductWhere(filter);
 
     const [items, total] = await Promise.all([
       prisma.product.findMany({
