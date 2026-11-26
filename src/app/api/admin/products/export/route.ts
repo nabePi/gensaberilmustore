@@ -17,9 +17,6 @@ const CSV_HEADERS = [
   'Subjudul',
   'Penulis',
   'Penerbit',
-  'Deskripsi',
-  'Daftar Isi',
-  'Highlight',
   'Kategori',
   'Tag',
   'Harga',
@@ -42,7 +39,6 @@ const CSV_HEADERS = [
   'Pita',
   'Teks Pita',
   'Slug',
-  'URL Gambar',
   'Dibuat',
   'Diperbarui',
 ];
@@ -65,7 +61,6 @@ export const GET = withAuth(
       orderBy: { createdAt: 'desc' },
       take: MAX_EXPORT_ROWS,
       include: {
-        images: { orderBy: [{ isPrimary: 'desc' }, { position: 'asc' }], select: { url: true } },
         categories: { select: { category: { select: { name: true } } } },
         tags: { select: { tag: { select: { name: true } } } },
       },
@@ -78,9 +73,6 @@ export const GET = withAuth(
       product.subtitle,
       product.author,
       product.imprint ?? '',
-      product.description,
-      product.tocText ?? '',
-      product.highlightsText ?? '',
       product.categories.map(({ category }) => category.name).join('; '),
       product.tags.map(({ tag }) => tag.name).join('; '),
       product.price,
@@ -103,7 +95,6 @@ export const GET = withAuth(
       product.ribbonType ?? '',
       product.ribbonText ?? '',
       product.slug,
-      product.images.map((image) => image.url).join('; '),
       product.createdAt.toISOString(),
       product.updatedAt.toISOString(),
     ]);
