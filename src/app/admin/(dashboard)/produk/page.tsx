@@ -73,10 +73,9 @@ export default function AdminProdukPage() {
     if (q.trim()) params.set('q', q.trim());
     if (categoryId) params.set('categoryId', categoryId);
     if (isActive) params.set('isActive', isActive);
-    // WEB/POS harus ikut menampilkan produk BOTH karena BOTH tersedia di kedua channel;
-    // hanya filter "BOTH" itu sendiri yang perlu exact match.
-    if (channelFilter === 'BOTH') params.set('channelFilter', channelFilter);
-    else if (channelFilter) params.set('channel', channelFilter);
+    // Filter channel di admin selalu exact match: Website = WEB saja, POS = POS saja,
+    // Website & POS = BOTH saja.
+    if (channelFilter) params.set('channelFilter', channelFilter);
 
     const response = await fetch(`/api/admin/products?${params.toString()}`);
     if (response.ok) {
@@ -94,8 +93,7 @@ export default function AdminProdukPage() {
       if (q.trim()) params.set('q', q.trim());
       if (categoryId) params.set('categoryId', categoryId);
       if (isActive) params.set('isActive', isActive);
-      if (channelFilter === 'BOTH') params.set('channelFilter', channelFilter);
-      else if (channelFilter) params.set('channel', channelFilter);
+      if (channelFilter) params.set('channelFilter', channelFilter);
 
       const response = await fetch(`/api/admin/products?${params.toString()}`);
       if (response.ok) {
@@ -122,6 +120,13 @@ export default function AdminProdukPage() {
     loadProducts();
   }
 
+  // Export memakai filter yang sedang aktif (tanpa paginasi); file langsung terunduh.
+  const exportParams = new URLSearchParams();
+  if (q.trim()) exportParams.set('q', q.trim());
+  if (categoryId) exportParams.set('categoryId', categoryId);
+  if (isActive) exportParams.set('isActive', isActive);
+  if (channelFilter) exportParams.set('channelFilter', channelFilter);
+
   const totalPages = Math.max(1, Math.ceil(total / limit));
 
   return (
@@ -130,9 +135,17 @@ export default function AdminProdukPage() {
         title="Kelola Produk"
         description={`${total} produk ditemukan`}
         action={
-          <Link href="/admin/produk/baru" className={adminBtnPrimary}>
-            + Tambah Produk
-          </Link>
+          <div className="flex items-center gap-2">
+            <a
+              href={`/api/admin/products/export?${exportParams.toString()}`}
+              className={adminBtnOutline}
+            >
+              Export
+            </a>
+            <Link href="/admin/produk/baru" className={adminBtnPrimary}>
+              + Tambah Produk
+            </Link>
+          </div>
         }
       />
 
