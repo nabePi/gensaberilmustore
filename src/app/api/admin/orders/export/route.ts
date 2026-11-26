@@ -23,8 +23,13 @@ const CSV_HEADERS = [
   'total',
   'paymentMethod',
   'affiliateCode',
-  'itemCount',
-  'itemsSummary',
+  'productId',
+  'sku',
+  'itemTitle',
+  'quantity',
+  'unitPrice',
+  'discountPercent',
+  'lineTotal',
 ];
 
 function escapeCsvField(value: string): string {
@@ -99,32 +104,51 @@ export const GET = withAuth(
       orderBy: { createdAt: 'desc' },
       take: MAX_EXPORT_ROWS,
       include: {
-        items: { select: { titleSnapshot: true, quantity: true } },
+        items: {
+          select: {
+            productId: true,
+            titleSnapshot: true,
+            priceSnapshot: true,
+            discountPercentSnapshot: true,
+            quantity: true,
+            lineTotal: true,
+            product: { select: { sku: true } },
+          },
+        },
         destination: { select: { cityName: true } },
       },
     });
 
-    const rows = orders.map((order) => {
-      const itemsSummary = order.items
-        .map((item) => `${item.titleSnapshot} x${item.quantity}`)
-        .join('; ');
+    // Satu baris per item. Info pesanan diulang di tiap baris agar mudah difilter,
+    // tetapi nominal level pesanan hanya di baris pertama supaya SUM tidak dobel.
+    const rows = orders.flatMap((order) => {
+      const items = order.items.length > 0 ? order.items : [null];
 
-      return toCsvRow([
-        order.orderNumber,
-        order.createdAt.toISOString(),
-        order.status,
-        order.source,
-        order.receiverName,
-        order.receiverPhone,
-        order.destination?.cityName ?? '',
-        order.subtotal,
-        order.shippingCost,
-        order.total,
-        order.paymentMethod,
-        order.affiliateCode ?? '',
-        order.items.length,
-        itemsSummary,
-      ]);
+      return items.map((item, index) => {
+        const isFirstRow = index === 0;
+
+        return toCsvRow([
+          order.orderNumber,
+          order.createdAt.toISOString(),
+          order.status,
+          order.source,
+          order.receiverName,
+          order.receiverPhone,
+          order.destination?.cityName ?? '',
+          isFirstRow ? order.subtotal : '',
+          isFirstRow ? order.shippingCost : '',
+          isFirstRow ? order.total : '',
+          order.paymentMethod,
+          order.affiliateCode ?? '',
+          item?.productId ?? '',
+          item?.product?.sku ?? '',
+          item?.titleSnapshot ?? '',
+          item?.quantity ?? '',
+          item?.priceSnapshot ?? '',
+          item?.discountPercentSnapshot ?? '',
+          item?.lineTotal ?? '',
+        ]);
+      });
     });
 
     const csv = [toCsvRow(CSV_HEADERS), ...rows].join('\r\n');
