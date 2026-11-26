@@ -41,6 +41,11 @@ type AdminOrderListItem = {
   affiliateCode: string | null;
 };
 
+const CHANNEL_LABELS: Record<AdminOrderListItem['source'], string> = {
+  ONLINE: 'Website',
+  POS: 'POS',
+};
+
 const PAYMENT_METHOD_LABELS: Record<PaymentMethod, string> = {
   BANK_TRANSFER: 'Transfer BCA',
   QRIS: 'QRIS',
@@ -60,6 +65,7 @@ export default function AdminPesananPage() {
   const [q, setQ] = useState('');
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
+  const [channel, setChannel] = useState('');
   const [page, setPage] = useState(1);
   const [items, setItems] = useState<AdminOrderListItem[]>([]);
   const [total, setTotal] = useState(0);
@@ -76,6 +82,7 @@ export default function AdminPesananPage() {
       if (q.trim()) params.set('q', q.trim());
       if (dateFrom) params.set('dateFrom', dateFrom);
       if (dateTo) params.set('dateTo', dateTo);
+      if (channel) params.set('source', channel);
 
       const response = await fetch(`/api/admin/orders?${params.toString()}`);
       if (!response.ok) {
@@ -94,7 +101,7 @@ export default function AdminPesananPage() {
     return () => {
       active = false;
     };
-  }, [status, q, dateFrom, dateTo, page]);
+  }, [status, q, dateFrom, dateTo, channel, page]);
 
   const totalPages = Math.max(1, Math.ceil(total / limit));
 
@@ -104,6 +111,7 @@ export default function AdminPesananPage() {
     if (q.trim()) params.set('q', q.trim());
     if (dateFrom) params.set('dateFrom', dateFrom);
     if (dateTo) params.set('dateTo', dateTo);
+    if (channel) params.set('source', channel);
     return `/api/admin/orders/export?${params.toString()}`;
   }
 
@@ -147,7 +155,7 @@ export default function AdminPesananPage() {
         ))}
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-3">
+      <div className="grid gap-3 sm:grid-cols-4">
         <input
           type="search"
           aria-label="Cari nomor pesanan, penerima, telepon, atau total"
@@ -159,6 +167,19 @@ export default function AdminPesananPage() {
           }}
           className={adminInputBase}
         />
+        <select
+          aria-label="Filter channel"
+          value={channel}
+          onChange={(e) => {
+            setChannel(e.target.value);
+            setPage(1);
+          }}
+          className={adminInputBase}
+        >
+          <option value="">Semua Channel</option>
+          <option value="ONLINE">{CHANNEL_LABELS.ONLINE}</option>
+          <option value="POS">{CHANNEL_LABELS.POS}</option>
+        </select>
         <input
           type="date"
           value={dateFrom}
@@ -189,7 +210,7 @@ export default function AdminPesananPage() {
             <Th>No. Pesanan</Th>
             <Th>Penerima</Th>
             <Th>Tanggal & jam</Th>
-            <Th>Sumber</Th>
+            <Th>Channel</Th>
             <Th>Status</Th>
             <Th>Metode pembayaran</Th>
             <Th className="text-right">Total</Th>
@@ -204,7 +225,7 @@ export default function AdminPesananPage() {
                   <span className="text-xs text-neutral-400">{order.receiverPhone}</span>
                 </Td>
                 <Td className="text-neutral-600">{formatOrderDateTime(order.createdAt)}</Td>
-                <Td className="text-neutral-600">{order.source === 'ONLINE' ? 'Online' : 'POS'}</Td>
+                <Td className="text-neutral-600">{CHANNEL_LABELS[order.source]}</Td>
                 <Td>
                   <span className={`${adminBadgeBase} ${ORDER_STATUS_BADGE_CLASSES[order.status]}`}>
                     {ORDER_STATUS_LABELS[order.status]}

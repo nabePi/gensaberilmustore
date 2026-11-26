@@ -178,7 +178,7 @@ export function OrderDetailModal({
               <p className="text-base font-bold text-foreground">{order.orderNumber}</p>
               <p className="text-xs text-neutral-500">
                 {formatOrderDateTime(order.createdAt)} ·{' '}
-                {order.source === 'ONLINE' ? 'Online' : 'POS'}
+                {order.source === 'ONLINE' ? 'Website' : 'POS'}
               </p>
             </div>
             <div className="flex items-center gap-2">

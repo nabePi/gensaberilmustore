@@ -49,7 +49,7 @@ function formatPeriod(voucher: AdminVoucherListItem): string {
 
 const CHANNEL_LABELS: Record<AdminVoucherListItem['channel'], string> = {
   ALL: 'Semua',
-  ONLINE: 'Online',
+  ONLINE: 'Website',
   POS: 'POS',
 };
 
@@ -168,7 +168,7 @@ export default function AdminVoucherPage() {
         >
           <option value="">Semua Kanal</option>
           <option value="ALL">Semua (ALL)</option>
-          <option value="ONLINE">Online</option>
+          <option value="ONLINE">Website</option>
           <option value="POS">POS</option>
         </select>
         <select

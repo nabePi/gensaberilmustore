@@ -140,8 +140,8 @@ export default function AdminLaporanLengkapPage() {
               onChange={(e) => setSource(e.target.value as Source)}
               className={adminInputBase}
             >
-              <option value="ALL">Semua Sumber</option>
-              <option value="ONLINE">Online</option>
+              <option value="ALL">Semua Channel</option>
+              <option value="ONLINE">Website</option>
               <option value="POS">POS</option>
             </select>
             <button
@@ -247,10 +247,10 @@ export default function AdminLaporanLengkapPage() {
           </div>
 
           <div className="flex flex-col gap-3">
-            <h2 className="text-lg font-semibold text-foreground">Perbandingan POS vs Online</h2>
+            <h2 className="text-lg font-semibold text-foreground">Perbandingan Website vs POS</h2>
             <div className="grid gap-3 sm:grid-cols-2">
               <div className={`p-4 ${adminCardBase}`}>
-                <p className="text-xs text-neutral-500">Online</p>
+                <p className="text-xs text-neutral-500">Website</p>
                 <p className="mt-1 text-xl font-bold text-foreground">
                   {formatCurrency(report.sourceComparison.ONLINE.revenue)}
                 </p>
@@ -275,7 +275,7 @@ export default function AdminLaporanLengkapPage() {
                   <div className="h-2 bg-brand" style={{ width: `${onlinePct}%` }} />
                 </div>
                 <div className="mt-1 flex justify-between text-xs text-neutral-500">
-                  <span>Online {onlinePct}%</span>
+                  <span>Website {onlinePct}%</span>
                   <span>POS {100 - onlinePct}%</span>
                 </div>
               </div>
