@@ -11,6 +11,7 @@ const MAX_EXPORT_ROWS = 20000;
 const CHANNEL_LABELS = { WEB: 'Website', POS: 'POS', BOTH: 'Website & POS' } as const;
 
 const CSV_HEADERS = [
+  'Product ID',
   'SKU',
   'ISBN',
   'Judul',
@@ -67,6 +68,7 @@ export const GET = withAuth(
     });
 
     const rows = products.map((product) => [
+      product.id,
       product.sku,
       product.isbn ?? '',
       product.title,
