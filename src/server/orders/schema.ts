@@ -77,12 +77,25 @@ export const bulkOrderStatusUpdateSchema = z.object({
   toStatus: z.enum(ORDER_STATUSES, { required_error: 'Status tujuan wajib diisi' }),
 });
 
+const DATE_ONLY_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
+
+// Tanggal polos (YYYY-MM-DD) dari input date admin dihitung sebagai hari penuh WIB (UTC+7),
+// bukan tengah malam UTC. Nilai ISO lengkap (mis. dari board) dipakai apa adanya.
+function wibDateBoundary(edge: 'start' | 'end') {
+  return z.preprocess((value) => {
+    if (typeof value === 'string' && DATE_ONLY_PATTERN.test(value)) {
+      return `${value}T${edge === 'start' ? '00:00:00.000' : '23:59:59.999'}+07:00`;
+    }
+    return value;
+  }, z.coerce.date().optional());
+}
+
 export const listAdminOrdersQuerySchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(100).default(20),
   q: z.string().trim().min(1).optional(),
   source: z.enum(['ONLINE', 'POS', 'ALL']).default('ALL'),
-  dateFrom: z.coerce.date().optional(),
-  dateTo: z.coerce.date().optional(),
+  dateFrom: wibDateBoundary('start'),
+  dateTo: wibDateBoundary('end'),
   affiliateCode: z.string().trim().min(1).optional(),
 });
